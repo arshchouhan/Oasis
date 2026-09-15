@@ -1,5 +1,9 @@
-# Virtual environment
-myenv/
+# Virtual environment (venv internals only, NOT the Django project)
+myenv/Include/
+myenv/Lib/
+myenv/Scripts/
+myenv/pyvenv.cfg
+myenv/share/
 
 # Python
 __pycache__/
