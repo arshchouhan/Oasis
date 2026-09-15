@@ -1,0 +1,38 @@
+# Virtual environment
+myenv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Django
+*.sqlite3
+db.sqlite3
+*.log
+local_settings.py
+media/
+
+# Static files collected for production
+staticfiles/
+static_root/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+Desktop.ini
+ehthumbs.db
