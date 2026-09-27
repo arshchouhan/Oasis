@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Your Doctor | ClearEye{% endblock %}
+
+{% block content %}
+<style>
+    .fd-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 96px);
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 40px 40px;
+        position: relative;
+    }
+
+    .fd-center {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fd-bottom {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding-bottom: 20px;
+    }
+
+    .fd-title {
+        font-size: 24px;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface, #202124);
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .fd-search-wrapper {
+        display: flex;
+        align-items: center;
+        background: var(--md-sys-color-surface);
+        border-radius: 32px;
+        padding: 8px 12px 8px 16px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        max-width: 800px;
+        width: 100%;
+    }
+
+    .fd-search-wrapper:focus-within {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .fd-search-field {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 12px;
+        min-width: 0;
+    }
+
+    .fd-search-field .material-symbols-outlined {
+        color: #8c9094;
+        font-size: 20px;
+    }
+
+    .fd-search-field input {
+        width: 100%;
+        border: none;
+        outline: none;
+        font-size: 15px;
+        background: transparent;
+        color: var(--md-sys-color-on-surface, #202124);
+        font-family: inherit;
+    }
+
+    .fd-search-field input::placeholder {
+        color: #8c9094;
+    }
+
+    .fd-search-btn {
+        background: var(--md-sys-color-primary, #1a73e8);
+        color: white;
+        border: none;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 24px;
+        margin-left: 8px;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .fd-search-btn:hover {
+        opacity: 0.9;
+        transform: scale(1.05);
+    }
+
+    .fd-open-panes {
+        position: absolute;
+        top: 16px;
+        right: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 16px;
+        border-radius: 22px;
+        border: 1px solid #0b7285;
+        background: var(--md-sys-color-surface);
+        color: #087f8c;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s, box-shadow 0.2s;
+    }
+    .fd-open-panes:hover {
+        background: #f1fafb;
+        box-shadow: 0 2px 8px rgba(11, 114, 133, 0.12);
+    }
+    .fd-open-panes .material-symbols-outlined {
+        font-size: 18px;
+    }
+
+    .fd-connected-card {
+        width: min(100%, 620px);
+        background: var(--md-sys-color-surface, #fff);
+        border: 1px solid #dbe5f1;
+        border-radius: 20px;
+        padding: 28px;
+        box-sizing: border-box;
+        box-shadow: 0 8px 24px rgba(27, 73, 101, .08);
+    }
+    .fd-connected-top { display:flex; gap:16px; align-items:center; }
+    .fd-avatar { width:64px; height:64px; border-radius:50%; display:grid; place-items:center; background:#e8f0fe; color:#1967d2; flex:none; }
+    .fd-doctor-name { margin:0; font-size:20px; color:#0b315a; }
+    .fd-specialty { margin:4px 0 0; color:#5f6f82; font-size:14px; }
+    .fd-demo { display:inline-flex; margin-top:8px; padding:3px 8px; background:#fff7df; color:#9b6500; border-radius:20px; font-size:11px; font-weight:700; }
+    .fd-details { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:24px 0; }
+    .fd-detail { background:#f6f9fc; border-radius:12px; padding:12px; }
+    .fd-detail-label { font-size:11px; color:#63758a; margin-bottom:4px; }
+    .fd-detail-value { font-size:13px; font-weight:600; color:#102f52; }
+    .fd-disconnect { background:transparent; border:0; color:#6750a4; cursor:pointer; font:inherit; padding:0; }
+    .fd-help { color:#63758a; font-size:12px; max-width:620px; text-align:center; margin-top:14px; }
+    .fd-message { width:min(100%, 620px); padding:10px 14px; border-radius:10px; margin:0 0 14px; font-size:13px; background:#edf7ed; color:#1e6b32; }
+    .fd-message.error { background:#fce8e6; color:#a50e0e; }
+</style>
+
+<main class="fd-container">
+    <a href="{% url 'doctor_search' %}" class="fd-open-panes">
+        <span class="material-symbols-outlined">view_week</span>
+        Open doctor panes
+    </a>
+    <div class="fd-center">
+        {% if connected_doctor and not show_connection_form %}
+        <section class="fd-connected-card" aria-label="Connected doctor">
+            <div class="fd-connected-top">
+                <div class="fd-avatar"><span class="material-symbols-outlined">medical_services</span></div>
+                <div>
+                    <h1 class="fd-doctor-name">{{ connected_doctor.doctor_name }}</h1>
+                    {% if connected_doctor.specialty %}<p class="fd-specialty">{{ connected_doctor.specialty }}</p>{% endif %}
+                    {% if connected_doctor.is_demo %}<span class="fd-demo">DEMO PROVIDER PROFILE</span>{% endif %}
+                </div>
+            </div>
+            <div class="fd-details">
+                <div class="fd-detail"><div class="fd-detail-label">Clinic</div><div class="fd-detail-value">{{ connected_doctor.clinic_name }}</div></div>
+                <div class="fd-detail"><div class="fd-detail-label">Location</div><div class="fd-detail-value">{{ connected_doctor.clinic_address }}</div></div>
+                <div class="fd-detail"><div class="fd-detail-label">Contact</div><div class="fd-detail-value">{{ connected_doctor.phone }}</div></div>
+                <div class="fd-detail"><div class="fd-detail-label">Email</div><div class="fd-detail-value">{{ connected_doctor.doctor_email }}</div></div>
+                {% if connected_doctor.next_available %}<div class="fd-detail"><div class="fd-detail-label">Next available</div><div class="fd-detail-value">{{ connected_doctor.next_available }}</div></div>{% endif %}
+                {% if connected_doctor.review_count %}<div class="fd-detail"><div class="fd-detail-label">Rating</div><div class="fd-detail-value">★ {{ connected_doctor.rating }} · {{ connected_doctor.review_count }} reviews</div></div>{% endif %}
+            </div>
+            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="disconnect"><button class="fd-disconnect" type="submit">Disconnect this doctor</button></form>
+        </section>
+        {% else %}
+        <h1 class="fd-title">Connect to your doctor</h1>
+        <p class="fd-help">Enter your doctor’s or clinic’s email. We’ll send them a ClearEye connection request.</p>
+        <form class="fd-bottom" method="post" id="fdConnectForm">
+            {% csrf_token %}
+        <div class="fd-search-wrapper">
+            <div class="fd-search-field">
+                <span class="material-symbols-outlined">mail</span>
+                <input type="email" name="doctor_email" id="fdEmailInput" placeholder="doctor@clinic.com" required autocomplete="email">
+            </div>
+            <button type="submit" class="fd-search-btn">
+                <span class="material-symbols-outlined">link</span>
+            </button>
+        </div>
+        </form>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

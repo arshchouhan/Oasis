@@ -1,0 +1,24 @@
+<section class="care-timeline" aria-label="Referral thread timeline">
+  <header class="care-timeline-heading">
+    <div><h4>Thread timeline</h4><span>Referral #{{ patient.referral_id }}</span></div>
+    <span class="care-timeline-status">{{ patient.status }}</span>
+  </header>
+  <ol class="care-timeline-events">
+    {% for activity in patient.referral_activities %}
+    <li>
+      <span class="care-timeline-dot material-symbols-outlined" aria-hidden="true">{% if activity.action == 'created' %}send{% elif activity.action == 'accepted' %}task_alt{% elif activity.action == 'closed' %}check_circle{% else %}update{% endif %}</span>
+      <div class="care-timeline-event">
+        <strong>{% if activity.action == 'created' %}Referral started{% elif activity.action == 'accepted' %}Referral accepted{% elif activity.action == 'closed' %}Thread closed{% else %}{{ activity.action|capfirst }}{% endif %}</strong>
+        <span>Dr. {{ activity.actor.get_full_name|default:activity.actor.username }}</span>
+        {% if activity.detail %}<p>{{ activity.detail }}</p>{% endif %}
+        <time datetime="{{ activity.created_at|date:'c' }}">{{ activity.created_at|date:'d M Y, g:i A' }}</time>
+      </div>
+    </li>
+    {% empty %}
+    <li>
+      <span class="care-timeline-dot material-symbols-outlined" aria-hidden="true">send</span>
+      <div class="care-timeline-event"><strong>Referral started</strong><span>Dr. {{ patient.referring_doctor }}</span><time datetime="{{ patient.referred_at|date:'c' }}">{{ patient.referred_at|date:'d M Y, g:i A' }}</time></div>
+    </li>
+    {% endfor %}
+  </ol>
+</section>

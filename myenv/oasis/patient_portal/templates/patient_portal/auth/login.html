@@ -1,0 +1,24 @@
+{% extends 'patient_portal/auth/auth_base.html' %}
+{% block title %}Log in | ClearEye{% endblock %}
+{% block content %}
+<h1>Welcome back</h1>
+<p>{% if portal_role == 'doctor' %}Sign in to your doctor workspace.{% elif portal_role == 'patient' %}Sign in to your patient workspace.{% else %}Choose your account type to open the right dashboard.{% endif %}</p>
+<form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% if portal_role %}
+    <input type="hidden" name="account_type" value="{{ portal_role }}">
+    <div class="account-type-grid" aria-label="Account type"><span class="account-type-option">{{ portal_role|title }} account</span></div>
+    {% else %}
+    <div class="account-type-grid" role="group" aria-label="Account type">
+        <label class="account-type-option"><input type="radio" name="account_type" value="patient" {% if selected_account_type != 'doctor' %}checked{% endif %}> Patient</label>
+        <label class="account-type-option"><input type="radio" name="account_type" value="doctor" {% if selected_account_type == 'doctor' %}checked{% endif %}> Doctor</label>
+    </div>
+    {% endif %}
+    <div class="auth-field"><label for="identifier">Email or username</label><input id="identifier" name="identifier" autocomplete="username" required></div>
+    <div class="auth-field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
+    <button class="btn auth-submit" type="submit">Log in</button>
+</form>
+{% if portal_role != 'doctor' %}<a class="btn google-button" href="{% url 'google_login' %}">Continue with Google</a>{% endif %}
+<p class="auth-switch">New to ClearEye? {% if portal_role == 'doctor' %}<a href="{% url 'doctor_register' %}">Create a doctor account</a>{% else %}<a href="{% url 'register' %}">Create an account</a>{% endif %}</p>
+{% endblock %}

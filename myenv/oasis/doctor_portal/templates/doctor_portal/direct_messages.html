@@ -1,0 +1,109 @@
+{% extends "doctor_portal/base.html" %}
+
+{% block title %}Direct Messages | Doctor Portal{% endblock %}
+
+{% block content %}
+<style>
+    .doctor-dm { height:100%; min-height:0; display:flex; gap:16px; overflow:hidden; color:#10284a; }
+    .doctor-dm-list,.doctor-dm-chat { background:#fff; border-radius:28px; box-shadow:0 4px 12px rgba(0,0,0,.035); }
+    .doctor-dm-list { width:32%; min-width:270px; overflow:auto; padding:20px 14px; box-sizing:border-box; scrollbar-width:none; }
+    .doctor-dm-list::-webkit-scrollbar,.doctor-dm-body::-webkit-scrollbar { display:none; }
+    .doctor-dm-list-heading { display:flex; align-items:center; justify-content:space-between; margin:0 4px 16px 12px; }
+    .doctor-dm-list h1 { margin:0; font-size:24px; font-weight:500; }
+    .doctor-dm-close { width:36px; height:36px; display:grid; place-items:center; border:0; border-radius:50%; color:#526d8d; background:transparent; cursor:pointer; }
+    .doctor-dm-close:hover { background:#edf3f6; }
+    .doctor-dm-item { margin:4px 0; padding:10px; border-radius:14px; }
+    .doctor-dm-item.active,.doctor-dm-item:hover { background:#e8f4f3; }
+    .doctor-dm-thread { display:flex; align-items:center; gap:11px; color:inherit; text-decoration:none; }
+    .doctor-dm-avatar { width:40px; height:40px; flex:0 0 40px; border-radius:50%; display:grid; place-items:center; background:#dcecff; color:#1968bd; font-size:13px; font-weight:700; }
+    .doctor-dm-thread strong,.doctor-dm-thread small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .doctor-dm-thread small { margin-top:3px; color:#698098; font-size:12px; }
+    .doctor-dm-actions { display:flex; gap:7px; margin:9px 0 0 51px; }
+    .doctor-dm-actions button { width:29px; height:29px; display:grid; place-items:center; border:0; border-radius:50%; cursor:pointer; }
+    .doctor-dm-accept { background:#087f8c; color:#fff; } .doctor-dm-decline { background:#fbe8e7; color:#b33a32; }
+    .doctor-dm-state { margin:8px 0 0 51px; color:#607590; font-size:12px; }
+    .doctor-dm-chat { min-width:0; flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .doctor-dm-head { display:flex; align-items:center; gap:12px; padding:18px 22px; border-bottom:1px solid #e2ebf1; }
+    .doctor-dm-head h2 { margin:0; font-size:17px; } .doctor-dm-head small { color:#698098; }
+    .doctor-dm-body { flex:1; min-height:0; overflow:auto; padding:28px clamp(56px, 11vw, 168px); display:flex; flex-direction:column; gap:10px; scrollbar-width:none; }
+    .doctor-dm-message-wrap { display:flex; flex-direction:column; gap:4px; max-width:72%; }
+    .doctor-dm-message-wrap.outgoing { align-self:flex-end; align-items:flex-end; } .doctor-dm-message-wrap.incoming { align-self:flex-start; }
+    .doctor-dm-time { color:#526d8d; font-size:11px; }
+    .doctor-dm-message { width:fit-content; max-width:100%; padding:9px 13px; border-radius:21px; background:#e6eef8; color:#10284a; line-height:1.4; overflow-wrap:anywhere; word-break:break-word; }
+    .doctor-dm-message-wrap.outgoing .doctor-dm-message { background:#087f8c; color:#fff; }
+    .doctor-dm-message.compact { width:46px; height:46px; box-sizing:border-box; display:grid; place-items:center; padding:0; border-radius:50%; }
+    .doctor-dm-empty { margin:auto; max-width:420px; text-align:center; color:#607590; } .doctor-dm-empty h3 { color:#10284a; font-size:24px; margin:12px 0 8px; }
+    .doctor-dm-compose { display:flex; gap:10px; width:calc(100% - 40px); max-width:860px; margin:0 auto 16px; padding:10px; box-sizing:border-box; border:1px solid #e2ebf1; border-radius:28px; background:#f5f8fb; }
+    .doctor-dm-compose input { min-width:0; flex:1; border:0; outline:0; background:transparent; padding:12px 14px; font:inherit; color:#10284a; }
+    .doctor-dm-compose button { width:42px; height:42px; border:0; border-radius:50%; display:grid; place-items:center; background:#087f8c; color:#fff; cursor:pointer; }
+    .doctor-dm-list.is-closed { width:0; min-width:0; padding-left:0; padding-right:0; opacity:0; overflow:hidden; transform:translateX(-12px); }
+    .doctor-dm-chat.is-closed { flex:0; width:0; min-width:0; opacity:0; overflow:hidden; transform:translateX(12px); }
+    .doctor-dm-list,.doctor-dm-chat { transition:width .28s ease, min-width .28s ease, flex .28s ease, padding .28s ease, opacity .2s ease, transform .28s ease; }
+    @media (max-width:800px) { .doctor-dm { gap:10px; } .doctor-dm-list { width:38%; min-width:200px; } .doctor-dm-body { padding:22px; } }
+</style>
+<section class="doctor-dm">
+    <aside class="doctor-dm-list" data-doctor-pane="list">
+        <div class="doctor-dm-list-heading"><h1>Direct messages</h1><button type="button" class="doctor-dm-close" data-close-pane="list" aria-label="Close direct message list"><span class="material-symbols-outlined">close</span></button></div>
+        {% for item in thread_items %}
+            <div class="doctor-dm-item {% if thread and item.thread.id == thread.id %}active{% endif %}">
+                <a class="doctor-dm-thread" href="{% url 'doctor_direct_messages' item.thread.id %}">
+                    <span class="doctor-dm-avatar">{{ item.thread.patient.first_name|first|default:item.thread.patient.username|first }}{{ item.thread.patient.last_name|first }}</span>
+                    <span><strong>{{ item.thread.patient.get_full_name|default:item.thread.patient.username }}</strong><small>{{ item.thread.patient.email }}</small></span>
+                </a>
+                {% if item.connection_request and item.connection_request.status == 'pending' %}
+                    <form class="doctor-dm-actions" method="post" action="{% url 'doctor_connection_request_decision' item.thread.id %}">
+                        {% csrf_token %}
+                        <button class="doctor-dm-accept" type="submit" name="decision" value="accept" title="Accept connection"><span class="material-symbols-outlined" style="font-size:18px;">check</span></button>
+                        <button class="doctor-dm-decline" type="submit" name="decision" value="decline" title="Decline connection"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+                    </form>
+                {% elif item.connection_request %}<div class="doctor-dm-state">{{ item.connection_request.get_status_display }}</div>{% endif %}
+            </div>
+        {% empty %}<p style="padding:12px;color:#698098;line-height:1.5;">Patient connection chats will appear here.</p>{% endfor %}
+    </aside>
+    <main class="doctor-dm-chat" data-doctor-pane="chat">
+        {% if thread %}
+            <header class="doctor-dm-head"><span class="doctor-dm-avatar">{{ thread.patient.first_name|first|default:thread.patient.username|first }}{{ thread.patient.last_name|first }}</span><span><h2>{{ thread.patient.get_full_name|default:thread.patient.username }}</h2><small>{% if connection_request %}{{ connection_request.get_status_display }} connection request{% else %}Patient conversation{% endif %}</small></span><button type="button" class="doctor-dm-close" style="margin-left:auto;" data-close-pane="chat" aria-label="Close conversation"><span class="material-symbols-outlined">close</span></button></header>
+            <div class="doctor-dm-body">
+                {% if connection_request and connection_request.status == 'pending' %}
+                    <div class="doctor-dm-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2;">person_add</span><h3>Connection request pending</h3><p>Accept this patient's request using the check button on the left to start chatting.</p></div>
+                {% elif connection_request and connection_request.status == 'declined' %}
+                    <div class="doctor-dm-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#899aaa;">block</span><h3>Connection declined</h3><p>This conversation is not available for replies.</p></div>
+                {% else %}
+                    {% for message in thread.messages.all %}<div class="doctor-dm-message-wrap {% if message.sender_id == request.user.id %}outgoing{% else %}incoming{% endif %}"><small class="doctor-dm-time">{{ message.created_at|date:'d M, g:i A' }}</small><div class="doctor-dm-message {% if message.body|length <= 2 %}compact{% endif %}">{{ message.body }}</div></div>{% empty %}<div class="doctor-dm-empty"><span class="doctor-dm-avatar" style="margin:auto;">{{ thread.patient.first_name|first|default:thread.patient.username|first }}</span><h3>{{ thread.patient.get_full_name|default:thread.patient.username }}</h3><p>You are connected. Send a message to begin.</p></div>{% endfor %}
+                {% endif %}
+            </div>
+            {% if connection_request and connection_request.status == 'accepted' %}<form method="post" class="doctor-dm-compose">{% csrf_token %}<input name="body" maxlength="2000" autocomplete="off" placeholder="Write a message"><button type="submit" aria-label="Send"><span class="material-symbols-outlined">send</span></button></form>{% endif %}
+        {% else %}<header class="doctor-dm-head"><h2>Direct messages</h2><button type="button" class="doctor-dm-close" style="margin-left:auto;" data-close-pane="chat" aria-label="Close conversation"><span class="material-symbols-outlined">close</span></button></header><div class="doctor-dm-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2;">forum</span><h3>Direct messages</h3><p>Patient connection requests and conversations will appear in the panel on the left.</p></div>{% endif %}
+    </main>
+</section>
+<script>
+    (() => {
+        const panes = {
+            list: document.querySelector('[data-doctor-pane="list"]'),
+            chat: document.querySelector('[data-doctor-pane="chat"]'),
+        };
+        document.querySelectorAll('[data-close-pane]').forEach((button) => button.addEventListener('click', () => {
+            const pane = panes[button.dataset.closePane];
+            if (!pane) return;
+            pane.classList.add('is-closed');
+            if (Object.values(panes).every((item) => item && item.classList.contains('is-closed'))) {
+                window.location.assign('{% url "doctor_dashboard" %}');
+            }
+        }));
+
+        // New messages live at the bottom of the conversation.  Keep the
+        // scroll position there when the composer gains focus or its value
+        // changes, rather than allowing the workspace to jump upward.
+        const messageBody = document.querySelector('.doctor-dm-body');
+        const composerInput = document.querySelector('.doctor-dm-compose input');
+        const scrollToNewest = () => {
+            if (messageBody) messageBody.scrollTop = messageBody.scrollHeight;
+        };
+        requestAnimationFrame(scrollToNewest);
+        if (composerInput) {
+            composerInput.addEventListener('focus', scrollToNewest);
+            composerInput.addEventListener('input', scrollToNewest);
+        }
+    })();
+</script>
+{% endblock %}

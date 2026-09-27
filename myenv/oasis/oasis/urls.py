@@ -3,31 +3,31 @@ URL configuration for oasis project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/6.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path
-from app1 import views
+from django.conf import settings
+from django.conf.urls.static import static
+from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import include, path
+
+from oasis import views as core_views
+from patient_portal import auth_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.home, name='home'),
-    path('dashboard/', views.home, name='dashboard'),
-    path('symptom-tracker/', views.home, name='symptom_tracker'),
-    path('screen-time/', views.home, name='screen_time'),
-    path('treatments/', views.home, name='treatments'),
-    path('environment/', views.home, name='environment'),
-    path('reports/', views.home, name='reports'),
-    path('consult/', views.home, name='consult'),
-    path('learn/', views.home, name='learn'),
-    path('profile/', views.home, name='profile'),
+    # Public site entry points. The home page is intentionally independent of
+    # either portal so it can grow into the public ClearEye landing page.
+    path('', core_views.site_home, name='site_home'),
+    path('login/', auth_views.login_view, name='site_login'),
+    path('register/', auth_views.register, name='site_register'),
+    path('logout/', auth_views.logout_view, name='site_logout'),
+    path('auth/google/', auth_views.google_login, name='site_google_login'),
+    path('auth/google/callback/', auth_views.google_callback, name='site_google_callback'),
+    path('pt/', include('patient_portal.urls')),
+    path('dr/', include('doctor_portal.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

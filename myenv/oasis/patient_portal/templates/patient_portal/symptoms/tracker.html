@@ -1,0 +1,2204 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Symptom Tracker | ClearEye{% endblock %}
+
+{% block content %}
+<style>
+    /* ===================================================
+       SYMPTOM TRACKER — Un-nested Direct Sibling Panes
+       Fixed height containment matching empty layout with
+       interactive Right Pane Options Selector & Sibling Restore.
+       =================================================== */
+
+    /* Main workspace hosting sibling panes directly on the app canvas */
+    .st-workspace {
+        display: flex;
+        gap: 16px;
+        width: 100%;
+        height: calc(100vh - 96px);
+        max-height: calc(100vh - 96px);
+        align-items: stretch;
+        box-sizing: border-box;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    /* --- Sibling Pane Base Styling (Matching Empty Layout Height & Roundness) --- */
+    .st-pane {
+        background: var(--md-sys-color-surface);
+        border-radius: var(--md-sys-shape-corner-card); /* 28px */
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+        transition: flex 0.3s ease, max-width 0.3s ease, opacity 0.2s ease;
+    }
+
+    .st-left-pane {
+        flex: 0 0 65%;
+        max-width: 65%;
+        min-width: 0;
+    }
+
+    .st-right-pane {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Dynamic Expansion Modes when a sibling pane is closed */
+    .st-workspace.left-only .st-left-pane {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+
+    .st-workspace.left-only .st-right-pane {
+        display: none !important;
+    }
+
+    .st-workspace.right-only .st-right-pane {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+
+    .st-workspace.right-only .st-left-pane {
+        display: none !important;
+    }
+
+    @media (max-width: 960px) {
+        .st-workspace {
+            flex-direction: column;
+            height: auto;
+            max-height: none;
+        }
+        .st-left-pane, .st-right-pane {
+            flex: 1 1 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: none;
+        }
+    }
+
+    /* --- Pane Header --- */
+    .st-pane-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px 14px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        background: transparent;
+        flex-shrink: 0;
+    }
+
+    .st-pane-title-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .st-pane-icon {
+        font-size: 22px;
+        color: var(--md-sys-color-primary);
+    }
+
+    .st-pane-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--md-sys-color-on-surface);
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .st-pane-subtitle {
+        color: #5f6368;
+        font-size: 12px;
+        margin: 2px 0 0;
+    }
+
+    .st-pane-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* --- Sibling Pane Restore Buttons --- */
+    .st-btn-restore {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: rgba(29, 97, 172, 0.08);
+        color: var(--md-sys-color-accent-blue);
+        border: 1px solid rgba(29, 97, 172, 0.25);
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .st-btn-restore:hover {
+        background: rgba(29, 97, 172, 0.16);
+        border-color: var(--md-sys-color-accent-blue);
+    }
+
+    .st-btn-restore .material-symbols-outlined {
+        font-size: 16px;
+    }
+
+    /* Show restore button when its counterpart sibling is closed */
+    .st-workspace.left-only #restoreRightBtn {
+        display: inline-flex !important;
+    }
+
+    .st-workspace.right-only #restoreLeftBtn {
+        display: inline-flex !important;
+    }
+
+    /* --- Right Pane Option Selector Tabs --- */
+    .st-pane-options {
+        display: flex;
+        gap: 3px;
+        background: rgba(0, 0, 0, 0.05);
+        padding: 3px;
+        border-radius: 50px;
+    }
+
+    .st-option-btn {
+        padding: 4px 11px;
+        border-radius: 50px;
+        font-size: 11px;
+        font-weight: 500;
+        border: none;
+        background: transparent;
+        color: #5f6368;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .st-option-btn.active {
+        background: #ffffff;
+        color: var(--md-sys-color-accent-blue);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .st-btn-filled {
+        background: var(--md-sys-color-accent-blue);
+        color: #fff;
+        border: none;
+        padding: 7px 16px;
+        border-radius: var(--md-sys-shape-corner-pill);
+        font-weight: 500;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: background 0.2s;
+    }
+
+    .st-btn-filled:hover {
+        background: #164d8a;
+    }
+
+    .st-btn-outline {
+        background: transparent;
+        color: var(--md-sys-color-accent-blue);
+        border: 1px solid var(--md-sys-color-accent-blue);
+        padding: 7px 16px;
+        border-radius: var(--md-sys-shape-corner-pill);
+        font-weight: 500;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: background 0.2s;
+    }
+
+    .st-btn-outline:hover {
+        background: rgba(29, 97, 172, 0.05);
+    }
+
+    .st-pane-close-btn {
+        background: transparent;
+        border: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #5f6368;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .st-pane-close-btn:hover {
+        background: rgba(0, 0, 0, 0.08);
+        color: var(--md-sys-color-on-surface);
+    }
+
+    .st-pane-close-btn .material-symbols-outlined {
+        font-size: 18px;
+    }
+
+    /* --- Pane Content Viewport (Scrollable with clean thin bar) --- */
+    .st-pane-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 18px 24px 24px;
+        scrollbar-width: none;
+    }
+
+    .st-pane-body::-webkit-scrollbar {
+        display: none;
+    }
+
+    .st-pane-body::-webkit-scrollbar-thumb {
+        background: #d0d5dd;
+        border-radius: 4px;
+    }
+
+    .st-section-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--md-sys-color-on-surface);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .st-divider {
+        height: 1px;
+        background: #F1F3F4;
+        margin: 8px 0 12px;
+    }
+
+    .st-card-meta {
+        font-size: 12px;
+        color: #9aa0a6;
+    }
+
+    .st-assessment-summary {
+        margin-top: 18px;
+        border: 1px solid #e6edf5;
+        background: linear-gradient(135deg, #f5fbfb, #f6f9ff);
+        border-radius: 14px;
+        padding: 14px;
+    }
+    .st-assessment-summary h3, .st-care-section h3 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        color: #10284a;
+    }
+    .st-assessment-summary p, .st-care-section p {
+        margin: 0;
+        color: #5c7190;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+    .st-care-section { margin-top: 18px; }
+    .st-care-list { display: grid; gap: 9px; margin-top: 10px; }
+    .st-care-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 10px;
+        border-radius: 11px;
+        background: #fafcff;
+        border: 1px solid #edf1f6;
+    }
+    .st-care-item .material-symbols-outlined { color: #147d87; font-size: 18px; }
+    .st-care-item strong { color: #183153; display: block; font-size: 12px; margin-bottom: 2px; }
+    .st-care-item span:last-child { color: #647895; font-size: 11px; line-height: 1.35; }
+    .st-care-disclaimer { margin-top: 16px; color: #8a6a29; font-size: 10px; line-height: 1.4; }
+    /* Replace the legacy webcam result/suggestion block in every supported browser. */
+    #viewResults, .st-assessment-summary, .st-care-section { display:none !important; }
+    .st-advanced-upload { margin:4px 0 0; padding:4px 0 18px; background:transparent; }
+    .st-advanced-upload-head { display:flex; align-items:flex-start; gap:12px; padding:8px 2px 16px; }
+    .st-advanced-upload-head .material-symbols-outlined { color:#087e8b; font-size:27px; }
+    .st-advanced-upload-head h3 { margin:0 0 4px; color:#10284a; font-size:16px; }
+    .st-advanced-upload-head p { margin:0; color:#607590; font-size:12px; line-height:1.45; }
+    .st-upload-dropzone { display:flex; flex-direction:column; align-items:center; box-sizing:border-box; width:100%; margin:0; padding:25px 12px; border:1.5px dashed #82b6c1; border-radius:16px; text-align:center; background:#f7fbfc; cursor:pointer; }
+    .st-upload-dropzone:hover { background:#edf8f8; border-color:#087e8b; }
+    .st-upload-dropzone .material-symbols-outlined { color:#1d61ac; font-size:30px; }
+    .st-upload-dropzone strong { display:block; color:#17375e; font-size:13px; margin:7px 0 3px; }
+    .st-upload-dropzone span:last-child { color:#637a97; font-size:11px; }
+    .st-upload-file { display:none; }
+    .st-upload-status { display:none; margin:0 14px 13px; padding:9px 10px; color:#087e8b; background:#ebf8f6; border-radius:8px; font-size:11px; }
+    .st-advanced-list { padding:16px 0 0; }
+    .st-advanced-list h4 { margin:0 0 8px; color:#526d8d; font-size:11px; font-weight:600; }
+    .st-advanced-item { display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid #f0f3f6; }
+    .st-advanced-item .material-symbols-outlined { color:#b77b18; font-size:18px; }
+    .st-advanced-item strong { display:block; color:#17375e; font-size:12px; }
+    .st-advanced-item small { color:#71829a; font-size:10px; }
+    .st-workspace.right-only .st-right-pane .st-pane-body { padding-left:32px; padding-right:32px; }
+    .st-workspace.right-only .st-advanced-upload { max-width:700px; margin-left:auto; margin-right:auto; }
+    .st-workspace.right-only .st-upload-dropzone { min-height:230px; justify-content:center; padding:38px 24px; }
+    .st-workspace.right-only .st-upload-dropzone .material-symbols-outlined { font-size:46px; }
+    .st-workspace.right-only .st-upload-dropzone strong { font-size:16px; margin-top:12px; }
+    .st-workspace.right-only .st-upload-dropzone span:last-child { font-size:12px; }
+
+    .st-link {
+        color: var(--md-sys-color-accent-blue);
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .st-link:hover {
+        text-decoration: underline;
+    }
+
+    /* ===================================================
+       PAGE-SPECIFIC EMPTY DASHBOARD LAYOUT
+       =================================================== */
+    .st-empty-container {
+        width: 100%;
+        height: calc(100vh - 96px);
+        box-sizing: border-box;
+    }
+
+    .st-empty-card {
+        background: var(--md-sys-color-surface);
+        border-radius: var(--md-sys-shape-corner-card); /* 28px */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 24px;
+        text-align: center;
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+
+    .st-empty-illustration-wrapper {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .st-empty-icon-circle {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #EAF3F2 0%, #DCEEEB 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--md-sys-color-primary);
+        z-index: 2;
+        box-shadow: 0 8px 24px rgba(0, 106, 106, 0.12);
+    }
+
+    .st-empty-icon-circle .material-symbols-outlined {
+        font-size: 42px;
+    }
+
+    .st-empty-pulse-ring {
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        border: 2px dashed rgba(0, 106, 106, 0.25);
+        animation: rotatePulse 12s linear infinite;
+    }
+
+    @keyframes rotatePulse {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .st-empty-title {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: var(--md-sys-color-on-surface);
+        margin: 0 0 8px 0;
+    }
+
+    .st-empty-subtitle {
+        font-size: 13px;
+        color: #5f6368;
+        max-width: 480px;
+        margin: 0 0 28px 0;
+        line-height: 1.5;
+    }
+
+    .st-empty-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 36px;
+    }
+
+    .st-empty-features {
+        display: flex;
+        gap: 20px;
+        max-width: 640px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .st-empty-feat-card {
+        flex: 1;
+        background: #F8FAFD;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        border-radius: 16px;
+        padding: 20px 18px;
+        text-align: left;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .st-empty-feat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+        border-color: rgba(29, 97, 172, 0.2);
+    }
+
+    .st-empty-feat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+
+    .st-empty-feat-icon.blue { background: #E8F0FE; color: var(--md-sys-color-accent-blue); }
+    .st-empty-feat-icon.teal { background: #EAF3F2; color: var(--md-sys-color-primary); }
+
+    .st-empty-feat-card h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--md-sys-color-on-surface);
+        margin: 0 0 4px 0;
+    }
+
+    .st-empty-feat-card p {
+        font-size: 11px;
+        color: #5f6368;
+        margin: 0 0 10px 0;
+        line-height: 1.4;
+    }
+
+    /* ===================================================
+       SCANNER PANE INTERNAL STYLES
+       =================================================== */
+    .st-scan-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .st-scan-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--md-sys-color-primary);
+    }
+
+    .st-scan-badge .material-symbols-outlined {
+        font-size: 16px;
+    }
+
+    .st-eye-toggle {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .st-eye-toggle-btn {
+        padding: 5px 14px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid #d0d5dd;
+        background: transparent;
+        color: #5f6368;
+        transition: all 0.2s;
+    }
+
+    .st-eye-toggle-btn.active {
+        background: var(--md-sys-color-accent-blue);
+        color: #fff;
+        border-color: var(--md-sys-color-accent-blue);
+    }
+
+    .st-scanner-preview {
+        position: relative;
+        width: 100%;
+        height: 250px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1a2332 0%, #0d1526 50%, #111827 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    .st-iris-placeholder {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 40%,
+                rgba(110, 200, 190, 0.45) 0%,
+                rgba(40, 80, 100, 0.5) 35%,
+                rgba(15, 15, 25, 0.9) 55%,
+                rgba(0, 0, 0, 1) 65%,
+                rgba(15, 15, 25, 0.9) 70%,
+                rgba(70, 140, 130, 0.4) 85%,
+                transparent 100%);
+        box-shadow: 0 0 40px rgba(0, 180, 160, 0.12), inset 0 0 30px rgba(0, 0, 0, 0.4);
+        position: relative;
+    }
+
+    .st-iris-placeholder::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #000 60%, rgba(0, 0, 0, 0) 100%);
+    }
+
+    .st-scan-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 155px;
+        height: 155px;
+        border: 1.5px dashed rgba(255, 255, 255, 0.35);
+        border-radius: 12px;
+        pointer-events: none;
+    }
+
+    .st-scan-frame::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        background: #4da6ff;
+        border: 1.5px solid rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+    }
+
+    .st-overlay-tags {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .st-tag {
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        backdrop-filter: blur(6px);
+    }
+
+    .st-tag .material-symbols-outlined {
+        font-size: 13px;
+    }
+
+    .st-tag-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--md-sys-color-primary);
+        border-radius: 50%;
+    }
+
+    .st-capture-btn {
+        position: absolute;
+        bottom: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 7px 20px;
+        border-radius: 50px;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: #fff;
+        font-weight: 500;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+
+    .st-capture-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .st-capture-btn .material-symbols-outlined {
+        font-size: 16px;
+    }
+
+    /* ====== Material-Style Capture Hero ====== */
+    .st-capture-hero {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 16px;
+        padding: 28px 4px 20px 4px;
+        background: transparent;
+        border-radius: 0;
+        margin-bottom: 18px;
+        border: none;
+        min-height: 0;
+        box-sizing: border-box;
+    }
+
+    .st-hero-col {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        justify-self: end;
+        max-width: 360px;
+        width: 100%;
+        padding-top: 0;
+        min-height: 0;
+    }
+
+    .st-hero-col--center {
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        justify-self: center;
+        padding: 0 0 0 4px;
+        min-width: 0;
+        min-height: 0;
+        width: 100%;
+    }
+
+    .st-hero-title {
+        font-size: clamp(22px, 2.4vw, 28px);
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.3px;
+    }
+
+    .st-hero-subtitle {
+        font-size: clamp(13px, 1.4vw, 14.5px);
+        color: #475569;
+        line-height: 1.5;
+        margin: 0 0 20px 0;
+        font-weight: 400;
+    }
+
+    .st-hero-tips {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .st-hero-tip {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .st-hero-tip-icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #dbeafe;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .st-hero-tip-icon .material-symbols-outlined {
+        font-size: 22px;
+    }
+
+    .st-hero-tip-title {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 2px 0 3px 0;
+    }
+
+    .st-hero-tip-desc {
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    /* Center capture circle */
+    .st-capture-ring {
+        position: relative;
+        width: min(320px, 78%, 30vw);
+        aspect-ratio: 1 / 1;
+        max-width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .st-capture-ring-outer {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 2px solid #c7ddff;
+        opacity: 0.7;
+    }
+
+    .st-capture-ring-dashed {
+        position: absolute;
+        inset: clamp(18px, 7%, 30px);
+        border-radius: 50%;
+        border: 1.5px dashed #a3bce0;
+        opacity: 0.75;
+    }
+
+    .st-capture-ring-progress {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: conic-gradient(#60a5fa 0deg 70deg, #93c5fd 220deg 320deg, transparent 320deg 360deg);
+        -webkit-mask: radial-gradient(circle, transparent 66%, #000 67%);
+                mask: radial-gradient(circle, transparent 66%, #000 67%);
+        opacity: 0.85;
+    }
+
+    .st-capture-core {
+        position: relative;
+        z-index: 2;
+        width: clamp(92px, 33%, 132px);
+        height: clamp(92px, 33%, 132px);
+        border-radius: 50%;
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 18px 40px rgba(59, 130, 246, 0.2);
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        user-select: none;
+    }
+
+    .st-capture-core:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 22px 46px rgba(59, 130, 246, 0.26);
+    }
+
+    .st-capture-core .material-symbols-outlined {
+        font-size: clamp(36px, 15%, 56px);
+        color: #1e40af;
+    }
+
+    .st-capture-preview {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        object-position: center;
+        /* Full circular footage; JavaScript gently recentres on both eyes. */
+        transform: scale(1);
+        transform-origin: center center;
+        transition: transform .18s ease-out;
+    }
+
+    .st-capture-core.camera-active .material-symbols-outlined {
+        display: none;
+    }
+
+    /* The active camera fills the complete circular scanner. */
+    .st-capture-ring.camera-active .st-capture-core {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0f172a;
+        box-shadow: 0 18px 40px rgba(59, 130, 246, 0.28);
+    }
+
+    .st-capture-ring.camera-active .st-capture-ring-progress,
+    .st-capture-ring.camera-active .st-capture-ring-dashed,
+    .st-capture-ring.camera-active .st-capture-ring-outer {
+        z-index: 4;
+        pointer-events: none;
+    }
+
+
+    .st-capture-cta {
+        margin-top: 14px;
+        text-align: center;
+        z-index: 2;
+        cursor: pointer;
+    }
+
+    .st-capture-cta-title {
+        font-size: 20px;
+        font-weight: 650;
+        color: #0f172a;
+        margin: 0 0 6px 0;
+    }
+
+    .st-capture-cta-sub {
+        font-size: 13.5px;
+        color: #64748b;
+        margin: 0;
+    }
+
+    /* Right-side feature badges */
+    .st-hero-badges {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .st-hero-badge {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .st-hero-badge--green {
+        background: rgba(220, 252, 231, 0.6);
+    }
+
+    .st-hero-badge--blue {
+        background: rgba(219, 234, 254, 0.55);
+    }
+
+    .st-hero-badge--purple {
+        background: rgba(243, 232, 255, 0.55);
+    }
+
+    .st-hero-badge-icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .st-hero-badge--green .st-hero-badge-icon {
+        background: #bbf7d0;
+        color: #15803d;
+    }
+
+    .st-hero-badge--blue .st-hero-badge-icon {
+        background: #bfdbfe;
+        color: #1d4ed8;
+    }
+
+    .st-hero-badge--purple .st-hero-badge-icon {
+        background: #e9d5ff;
+        color: #7e22ce;
+    }
+
+    .st-hero-badge-icon .material-symbols-outlined {
+        font-size: 22px;
+    }
+
+    .st-hero-badge-title {
+        font-size: 14px;
+        font-weight: 650;
+        color: #0f172a;
+        margin: 2px 0 3px 0;
+    }
+
+    .st-hero-badge-desc {
+        font-size: 12.5px;
+        color: #52607a;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    @media (max-width: 900px) {
+        .st-capture-hero {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 12px 4px 24px 4px;
+        }
+        .st-hero-col {
+            max-width: none;
+        }
+        .st-hero-col--center {
+            padding: 8px 0 0 0;
+            border-top: none;
+        }
+        .st-capture-ring { width: min(300px, 85%); }
+    }
+
+    .st-captures-strip {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px 16px;
+        padding-bottom: 6px;
+    }
+
+    .st-captures-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .st-thumb {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .st-thumb-img {
+        width: 100%;
+        height: 72px;
+        border-radius: 12px;
+        border: 1.5px solid transparent;
+        transition: border-color 0.2s;
+        display: block;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .st-thumb.active .st-thumb-img {
+        border-color: var(--md-sys-color-accent-blue);
+    }
+
+    .st-thumb-label {
+        font-size: 11.5px;
+        color: #9aa0a6;
+        text-align: left;
+        line-height: 1.35;
+    }
+
+    .st-thumb-label strong {
+        color: #5f6368;
+        font-weight: 600;
+        display: block;
+        font-size: 13px;
+    }
+
+    .st-add-thumb {
+        width: 100%;
+        height: 72px;
+        border-radius: 12px;
+        border: 1px dashed #d0d5dd;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #9aa0a6;
+        font-size: 11.5px;
+        cursor: pointer;
+        gap: 2px;
+        transition: border-color 0.15s, color 0.15s;
+    }
+
+    .st-add-thumb:hover {
+        border-color: var(--md-sys-color-accent-blue);
+        color: var(--md-sys-color-accent-blue);
+    }
+
+    .st-add-thumb .material-symbols-outlined {
+        font-size: 16px;
+    }
+
+    .st-info-thumb {
+        flex-direction: row;
+        gap: 8px;
+        font-size: 12px;
+        color: #64748b;
+        cursor: default;
+        border-style: solid;
+        border-color: #e2e8f0;
+        background: #f8fafc;
+    }
+
+    .st-info-thumb:hover {
+        border-color: #e2e8f0;
+        color: #64748b;
+    }
+
+    .st-info-thumb .material-symbols-outlined {
+        font-size: 18px;
+        color: #475569;
+    }
+
+    .st-placeholder-eye { background: linear-gradient(135deg, #b0bec5 0%, #78909c 100%); }
+    .st-placeholder-tear { background: linear-gradient(135deg, #B0E5E3 0%, #80c8c4 100%); }
+    .st-placeholder-redness { background: linear-gradient(135deg, #c5d8f0 0%, #9ab8df 100%); }
+    .st-placeholder-surface { background: linear-gradient(135deg, #DCEEEB 0%, #a8d5cf 100%); }
+    .st-placeholder-blink { background: linear-gradient(135deg, #d0dff5 0%, #a0bce0 100%); }
+
+    .st-history-list { padding: 0; }
+    .st-history-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px solid #F1F3F4;
+    }
+    .st-history-row:last-child { border-bottom: none; }
+    .st-history-thumb {
+        width: 36px;
+        height: 26px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #DCEEEB 0%, #b0d4cf 100%);
+        flex-shrink: 0;
+    }
+    .st-history-body { flex: 1; min-width: 0; }
+    .st-history-when {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .st-history-detail {
+        font-size: 11px;
+        color: #9aa0a6;
+        margin-top: 1px;
+    }
+    .st-trend {
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 1px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .st-trend .material-symbols-outlined { font-size: 13px; }
+    .st-trend.up { color: #1D4E8F; }
+    .st-trend.down { color: var(--md-sys-color-primary); }
+
+    /* ===================================================
+       ANALYSIS PANE INTERNAL STYLES
+       =================================================== */
+    .st-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: #F1F3F4;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    .st-stat {
+        background: #fff;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .st-stat-top {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 0;
+    }
+    .st-stat-icon {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        opacity: 0.75;
+    }
+    .st-stat-icon .material-symbols-outlined { font-size: 14px; }
+    .st-stat-icon.red { color: var(--md-sys-color-accent-blue); }
+    .st-stat-icon.blue { color: #1D4E8F; }
+    .st-stat-icon.green { color: var(--md-sys-color-primary); }
+    .st-stat-icon.amber { color: #2E7D8A; }
+
+    .st-stat-label {
+        font-size: 10.5px;
+        font-weight: 500;
+        color: #9aa0a6;
+        letter-spacing: 0.02em;
+    }
+    .st-stat-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 4px;
+    }
+    .st-stat-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--md-sys-color-on-surface);
+        line-height: 1;
+    }
+    .st-stat-value sup {
+        font-size: 0.65rem;
+        font-weight: 400;
+        color: #9aa0a6;
+        margin-left: 2px;
+    }
+    .st-stat-severity {
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+    }
+    .st-stat-severity.Moderate { color: #2E7D8A; }
+    .st-stat-severity.High { color: #1D4E8F; }
+    .st-stat-severity.Mild { color: var(--md-sys-color-primary); }
+
+    .st-progress {
+        height: 2px;
+        background: #F1F3F4;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 3px;
+    }
+    .st-progress-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.6s ease;
+        background: #1D61AC;
+    }
+    .st-progress-fill[data-severity="High"] { background: #1D4E8F; }
+    .st-progress-fill[data-severity="Moderate"] { background: #2E7D8A; }
+    .st-progress-fill[data-severity="Mild"] { background: #006A6A; }
+    .st-progress-fill[data-severity="Elevated"] { background: #1D61AC; }
+
+    .st-cat-color-moderate { color: #2E7D8A; }
+    .st-cat-color-elevated { color: #1D61AC; }
+    .st-cat-color-normal { color: #006A6A; }
+    .st-cat-color-good { color: #006A6A; }
+    .st-cat-color-high { color: #1D4E8F; }
+    .st-cat-color-mild { color: #006A6A; }
+
+    .st-detail-rows { padding: 0; }
+    .st-detail-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid #F1F3F4;
+    }
+    .st-detail-row:last-child { border-bottom: none; }
+    .st-detail-row .material-symbols-outlined {
+        font-size: 15px;
+        color: #9aa0a6;
+        flex-shrink: 0;
+    }
+    .st-detail-name {
+        flex: 1;
+        font-size: 12px;
+        color: #5f6368;
+        font-weight: 400;
+    }
+    .st-detail-status {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 0;
+    }
+
+    .st-info-banner {
+        margin: 12px 0 16px;
+        background: var(--md-sys-color-background);
+        border-radius: 8px;
+        padding: 10px 14px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .st-info-banner .material-symbols-outlined {
+        color: var(--md-sys-color-accent-blue);
+        font-size: 16px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+    .st-info-banner strong {
+        display: block;
+        font-size: 12px;
+        color: var(--md-sys-color-on-surface);
+        margin-bottom: 1px;
+    }
+    .st-info-banner p {
+        font-size: 11px;
+        color: #5f6368;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .st-rec-list { padding: 0; }
+    .st-rec-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px solid #F1F3F4;
+        cursor: pointer;
+        transition: opacity 0.15s;
+    }
+    .st-rec-item:last-child { border-bottom: none; }
+    .st-rec-item:hover { opacity: 0.75; }
+    .st-rec-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .st-rec-icon .material-symbols-outlined { font-size: 15px; }
+    .st-rec-icon.drops { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); }
+    .st-rec-icon.screen { background: #E8F0FE; color: var(--md-sys-color-accent-blue); }
+    .st-rec-icon.leaf { background: var(--md-sys-color-background); color: var(--md-sys-color-primary); }
+
+    .st-rec-body { flex: 1; min-width: 0; }
+    .st-rec-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface);
+        margin-bottom: 1px;
+    }
+    .st-rec-desc {
+        font-size: 11px;
+        color: #9aa0a6;
+    }
+    .st-rec-arrow { color: #d0d5dd; flex-shrink: 0; }
+    .st-rec-arrow .material-symbols-outlined { font-size: 18px; display: block; }
+</style>
+
+<!-- ===== MAIN WORKSPACE (DIRECT UN-NESTED SIBLING PANES) ===== -->
+<div class="st-workspace" id="stWorkspace">
+
+    <!-- ========== SIBLING PANE 1: EYE SCANNER (~65% width, expands to 100% when right closed) ========== -->
+    <div class="st-pane st-left-pane" id="leftPane">
+        <div class="st-pane-header">
+            <div class="st-pane-title-group">
+                <span class="material-symbols-outlined st-pane-icon">remove_red_eye</span>
+                <div>
+                    <h1 class="st-pane-title">Symptom Tracker</h1>
+                </div>
+            </div>
+            <div class="st-pane-header-actions">
+                <!-- Button to restore right pane when closed -->
+                <button class="st-btn-restore" id="restoreRightBtn" title="Reopen Analysis Results Pane">
+                    <span class="material-symbols-outlined">monitoring</span>
+                    Analysis Results
+                </button>
+                <button class="st-pane-close-btn" data-close="left" title="Close Eye Scanner Pane">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="st-pane-body">
+            <!-- Material-style Capture Hero -->
+            <div class="st-capture-hero">
+                <div class="st-hero-col">
+                    <h2 class="st-hero-title">Capture your eye</h2>
+                    <p class="st-hero-subtitle">Take a clear photo in good lighting for accurate tracking.</p>
+                    <div class="st-hero-tips">
+                        <div class="st-hero-tip">
+                            <div class="st-hero-tip-icon">
+                                <span class="material-symbols-outlined">light_mode</span>
+                            </div>
+                            <div>
+                                <div class="st-hero-tip-title">Use natural light</div>
+                                <p class="st-hero-tip-desc">Avoid direct glare</p>
+                            </div>
+                        </div>
+                        <div class="st-hero-tip">
+                            <div class="st-hero-tip-icon">
+                                <span class="material-symbols-outlined">center_focus_strong</span>
+                            </div>
+                            <div>
+                                <div class="st-hero-tip-title">Keep your eye in focus</div>
+                                <p class="st-hero-tip-desc">Hold steady for a clear image</p>
+                            </div>
+                        </div>
+                        <div class="st-hero-tip">
+                            <div class="st-hero-tip-icon">
+                                <span class="material-symbols-outlined">water_drop</span>
+                            </div>
+                            <div>
+                                <div class="st-hero-tip-title">Remove glasses</div>
+                                <p class="st-hero-tip-desc">If possible</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="st-hero-col st-hero-col--center">
+                    <div class="st-capture-ring">
+                        <div class="st-capture-ring-outer"></div>
+                        <div class="st-capture-ring-progress"></div>
+                        <div class="st-capture-ring-dashed"></div>
+                        <div class="st-capture-core" id="captureCoreBtn" title="Capture">
+                            <span class="material-symbols-outlined">videocam</span>
+                        </div>
+                    </div>
+                    <div class="st-capture-cta">
+                        <div class="st-capture-cta-title" id="captureCtaTitle">Start 1-minute assessment</div>
+                        <p class="st-capture-cta-sub">Allow camera access, then record your natural blink pattern.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ========== SIBLING PANE 2: ANALYSIS RESULTS (~35% width, expands to 100% when left closed) ========== -->
+    <div class="st-pane st-right-pane" id="rightPane">
+        <div class="st-pane-header">
+            <div class="st-pane-title-group">
+                <span class="material-symbols-outlined st-pane-icon">monitoring</span>
+            </div>
+            <div class="st-pane-header-actions">
+                <!-- Button to restore left pane when closed -->
+                <button class="st-btn-restore" id="restoreLeftBtn" title="Reopen Eye Scanner Pane">
+                    <span class="material-symbols-outlined">remove_red_eye</span>
+                    Eye Scanner
+                </button>
+                <!-- Interactive Right Pane View Option Selector Tabs -->
+                <div class="st-pane-options">
+                    <button class="st-option-btn active" data-view="results">Check Reports</button>
+                </div>
+                <button class="st-pane-close-btn" data-close="right" title="Close Pane">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="st-pane-body">
+            <!-- View 1: Stat Grid Results -->
+            <div id="viewResults">
+                <div class="st-stats-grid">
+                    {% for result in scan_results %}
+                    <div class="st-stat">
+                        <div class="st-stat-top">
+                            <div
+                                class="st-stat-icon {% if result.severity == 'Moderate' %}red{% elif result.severity == 'High' %}blue{% elif result.severity == 'Mild' %}green{% else %}amber{% endif %}">
+                                <span class="material-symbols-outlined">{{ result.icon }}</span>
+                            </div>
+                            <span class="st-stat-label">{{ result.label }}</span>
+                        </div>
+                        <div class="st-stat-row">
+                            <div class="st-stat-value">{{ result.score }}<sup>/ {{ result.max }}</sup></div>
+                            <div class="st-stat-severity {{ result.severity }}">{{ result.severity }}</div>
+                        </div>
+                        {% widthratio result.score result.max 100 as pct %}
+                        <div class="st-progress">
+                            <div class="st-progress-fill" data-pct="{{ pct }}" data-severity="{{ result.severity }}">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <section class="st-assessment-summary">
+                <h3>Latest assessment</h3>
+                {% if assessment and assessment.tracking_quality >= 15 %}
+                {% if assessment.blink_rate < 10 %}
+                <p>You blinked {{ assessment.blink_count }} times ({{ assessment.blink_rate|floatformat:1 }}/min), below the typical resting range. This can happen during focused screen work. Tracking confidence was {{ assessment.tracking_quality }}%.</p>
+                {% elif assessment.blink_rate <= 25 %}
+                <p>You blinked {{ assessment.blink_count }} times ({{ assessment.blink_rate|floatformat:1 }}/min), which is within a typical resting range. Tracking confidence was {{ assessment.tracking_quality }}%.</p>
+                {% else %}
+                <p>You blinked {{ assessment.blink_count }} times ({{ assessment.blink_rate|floatformat:1 }}/min), above the typical resting range. Tracking confidence was {{ assessment.tracking_quality }}%.</p>
+                {% endif %}
+                {% else %}
+                <p>Complete a one-minute assessment to receive your personalised blink and eye-care summary.</p>
+                {% endif %}
+            </section>
+
+            <section class="st-care-section">
+                <h3>Today’s eye-care suggestions</h3>
+                <div class="st-care-list">
+                    {% if assessment and assessment.blink_rate < 10 %}
+                    <div class="st-care-item">
+                        <span class="material-symbols-outlined">touch_app</span>
+                        <div><strong>Build in full blinks</strong><span>Your rate was {{ assessment.blink_rate|floatformat:1 }}/min. For the next hour, take a 20-second screen break every 20 minutes and do 5 slow, complete blinks.</span></div>
+                    </div>
+                    {% elif assessment and assessment.blink_rate > 25 %}
+                    <div class="st-care-item">
+                        <span class="material-symbols-outlined">self_improvement</span>
+                        <div><strong>Reduce eye irritation triggers</strong><span>Your rate was {{ assessment.blink_rate|floatformat:1 }}/min. Try a short screen break and avoid rubbing your eyes; recheck later in calmer lighting.</span></div>
+                    </div>
+                    {% else %}
+                    <div class="st-care-item">
+                        <span class="material-symbols-outlined">monitoring</span>
+                        <div><strong>Maintain your current pattern</strong><span>Your {{ assessment.blink_rate|floatformat:1 }}/min rate looks steady. Repeat at the end of a screen-heavy session to compare it with this baseline.</span></div>
+                    </div>
+                    {% endif %}
+                    {% if assessment and assessment.redness_score >= 3 %}
+                    <div class="st-care-item">
+                        <span class="material-symbols-outlined">remove_red_eye</span>
+                        <div><strong>Give your eyes a recovery break</strong><span>The visual redness estimate was {{ assessment.redness_score|floatformat:1 }}/10. Avoid contacts or eye makeup if they feel irritated, and seek care if redness persists or is painful.</span></div>
+                    </div>
+                    {% elif assessment %}
+                    <div class="st-care-item">
+                        <span class="material-symbols-outlined">remove_red_eye</span>
+                        <div><strong>No strong redness signal detected</strong><span>Your visual estimate was {{ assessment.redness_score|floatformat:1 }}/10 in this lighting. Continue monitoring changes rather than treating this as a diagnosis.</span></div>
+                    </div>
+                    {% endif %}
+                    {% if assessment and assessment.tracking_quality < 70 %}
+                    <div class="st-care-item">
+                        <span class="material-symbols-outlined">center_focus_strong</span>
+                        <div><strong>Improve your next reading</strong><span>Tracking was {{ assessment.tracking_quality }}%. Face a window or soft lamp and keep your face centred for a more dependable comparison.</span></div>
+                    </div>
+                    {% elif assessment %}
+                    <div class="st-care-item">
+                        <span class="material-symbols-outlined">verified</span>
+                        <div><strong>Reliable recording conditions</strong><span>Tracking was {{ assessment.tracking_quality }}%, so this is a useful baseline for your next comparison.</span></div>
+                    </div>
+                    {% endif %}
+                </div>
+                <p class="st-care-disclaimer">This tool is for personal tracking, not diagnosis. Seek urgent care for severe pain, sudden vision changes, injury, or persistent redness.</p>
+            </section>
+
+            <section class="st-advanced-upload" aria-labelledby="advancedScanTitle">
+                <div class="st-advanced-upload-head">
+                    <span class="material-symbols-outlined">add_a_photo</span>
+                    <div>
+                        <h3 id="advancedScanTitle">Advanced eye scans</h3>
+                        <p>Upload high-resolution eye images for checks that a standard webcam recording cannot measure.</p>
+                    </div>
+                </div>
+                <label class="st-upload-dropzone" for="advancedScanFiles">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                    <strong>Upload high-resolution images</strong>
+                    <span>JPG, PNG, or HEIC · close, well-lit eye images</span>
+                </label>
+                <input class="st-upload-file" id="advancedScanFiles" type="file" accept="image/jpeg,image/png,image/heic" multiple>
+                <div class="st-upload-status" id="advancedUploadStatus"></div>
+                <div class="st-advanced-list">
+                    <h4>High-resolution image checks</h4>
+                    <div class="st-advanced-item"><span class="material-symbols-outlined">visibility</span><div><strong>Redness / conjunctival hyperemia</strong><small>High-resolution eye surface image required</small></div></div>
+                    <div class="st-advanced-item"><span class="material-symbols-outlined">science</span><div><strong>Tear-film breakup (NIBUT)</strong><small>Placido-mire or infrared eye image required</small></div></div>
+                    <div class="st-advanced-item"><span class="material-symbols-outlined">photo_camera</span><div><strong>Tear meniscus height</strong><small>Calibrated close lower-eyelid image required</small></div></div>
+                </div>
+            </section>
+
+            <!-- View 2: Analysis Details -->
+            <div id="viewDetails">
+            </div>
+
+            <!-- View 3: Recommendations -->
+            <div id="viewRecs">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== PAGE-SPECIFIC EMPTY DASHBOARD LAYOUT ===== -->
+<!-- Displayed on /symptom-tracker/ when all sibling panes are closed -->
+<div class="st-empty-container" id="stEmptyContainer" style="display: none;">
+    <div class="st-empty-card">
+        <div class="st-empty-illustration-wrapper">
+            <div class="st-empty-icon-circle">
+                <span class="material-symbols-outlined">remove_red_eye</span>
+            </div>
+            <div class="st-empty-pulse-ring"></div>
+        </div>
+        
+        <h2 class="st-empty-title">Symptom Tracker Workspace</h2>
+        <p class="st-empty-subtitle">All workspace panes have been closed for this session. You can reopen your eye scanner or live analysis results anytime below.</p>
+        
+        <div class="st-empty-actions">
+            <button class="st-btn-filled" id="reopenAllPanesBtn" style="padding: 10px 24px; font-size: 13px;">
+                <span class="material-symbols-outlined">space_dashboard</span>
+                Reopen Workspace Panes
+            </button>
+            <button class="st-btn-outline" id="reopenScannerBtn" style="padding: 10px 24px; font-size: 13px;">
+                <span class="material-symbols-outlined">photo_camera</span>
+                Start Eye Scan
+            </button>
+            <button class="st-btn-outline" id="reopenAnalysisBtn" style="padding: 10px 24px; font-size: 13px;">
+                <span class="material-symbols-outlined">monitoring</span>
+                Analysis Results
+            </button>
+        </div>
+
+        <!-- Dedicated Feature Highlight Cards -->
+        <div class="st-empty-features">
+            <div class="st-empty-feat-card" id="cardReopenLeft">
+                <div class="st-empty-feat-icon teal">
+                    <span class="material-symbols-outlined">remove_red_eye</span>
+                </div>
+                <h3>Eye Scanner Pane</h3>
+                <p>Capture high-resolution ocular images & record visible redness scores.</p>
+                <span class="st-link">Open Scanner →</span>
+            </div>
+            <div class="st-empty-feat-card" id="cardReopenRight">
+                <div class="st-empty-feat-icon blue">
+                    <span class="material-symbols-outlined">monitoring</span>
+                </div>
+                <h3>Live Metrics & Care</h3>
+                <p>Track tear film stability, dryness levels & personalized care recommendations.</p>
+                <span class="st-link">Open Metrics →</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'symptomTrackerViewState';
+
+    function saveState(state) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+    function loadState() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { return null; }
+    }
+
+    /* Set progress fill width from data-pct */
+    document.querySelectorAll('.st-progress-fill[data-pct]').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+    });
+
+    /* Eye toggle interaction */
+    document.querySelectorAll('.st-eye-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.st-eye-toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const overlayLabel = document.querySelector('.st-overlay-tags .st-tag:first-child');
+            if (overlayLabel) {
+                overlayLabel.innerHTML = '<span class="material-symbols-outlined">visibility</span> ' +
+                    (btn.dataset.eye === 'left' ? 'Left Eye' : 'Right Eye');
+            }
+            const state = loadState() || {};
+            state.eye = btn.dataset.eye;
+            saveState(state);
+        });
+    });
+
+    /* Direct Sibling Pane Close & Page-Specific Empty State Interaction */
+    const workspace = document.getElementById('stWorkspace');
+    const emptyContainer = document.getElementById('stEmptyContainer');
+
+    function showPageEmptyState(save = true) {
+        if (workspace) workspace.style.display = 'none';
+        if (emptyContainer) emptyContainer.style.display = 'block';
+        if (save) saveState({ ...(loadState() || {}), view: 'empty' });
+    }
+
+    function restoreWorkspace(mode, save = true) {
+        if (workspace) {
+            workspace.style.display = 'flex';
+            if (mode === 'all') {
+                workspace.classList.remove('left-only', 'right-only');
+            } else if (mode === 'left') {
+                workspace.classList.remove('right-only');
+                workspace.classList.add('left-only');
+            } else if (mode === 'right') {
+                workspace.classList.remove('left-only');
+                workspace.classList.add('right-only');
+            }
+        }
+        if (emptyContainer) emptyContainer.style.display = 'none';
+        if (save) {
+            const state = loadState() || {};
+            state.view = 'workspace';
+            state.mode = mode;
+            saveState(state);
+        }
+    }
+
+    document.querySelectorAll('.st-pane-close-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = btn.dataset.close;
+
+            if (target === 'right') {
+                if (workspace.classList.contains('left-only')) {
+                    showPageEmptyState();
+                } else if (workspace.classList.contains('right-only')) {
+                    showPageEmptyState();
+                } else {
+                    workspace.classList.add('left-only');
+                    restoreWorkspace('left', true);
+                }
+            } else if (target === 'left') {
+                if (workspace.classList.contains('right-only')) {
+                    showPageEmptyState();
+                } else if (workspace.classList.contains('left-only')) {
+                    showPageEmptyState();
+                } else {
+                    workspace.classList.add('right-only');
+                    restoreWorkspace('right', true);
+                }
+            }
+        });
+    });
+
+    /* Reopen buttons in empty state and pane headers */
+    document.querySelectorAll('.st-btn-restore').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            restoreWorkspace('all');
+        });
+    });
+
+    document.getElementById('reopenAllPanesBtn')?.addEventListener('click', () => restoreWorkspace('all'));
+    document.getElementById('reopenScannerBtn')?.addEventListener('click', () => restoreWorkspace('all'));
+    document.getElementById('reopenAnalysisBtn')?.addEventListener('click', () => restoreWorkspace('all'));
+    document.getElementById('cardReopenLeft')?.addEventListener('click', () => restoreWorkspace('all'));
+    document.getElementById('cardReopenRight')?.addEventListener('click', () => restoreWorkspace('all'));
+
+    /* One-minute video assessment. MediaPipe measures eyelid motion locally while recording. */
+    const captureButton = document.getElementById('captureCoreBtn');
+    const captureRing = document.querySelector('.st-capture-ring');
+    const captureCta = document.querySelector('.st-capture-cta');
+    const captureCtaTitle = document.getElementById('captureCtaTitle');
+    const capturePrompt = document.querySelector('.st-capture-cta-sub');
+    let cameraStream;
+    let cameraPreview;
+    let scanStep = 'start';
+    let leftEyeImage;
+    let rightEyeImage;
+    let mediaRecorder;
+    let recordingChunks = [];
+    let recordingStartedAt;
+    let recordingTimer;
+    let blinkCount = 0;
+    let blinkWasClosed = false;
+    let leftEyeWasClosing = false;
+    let rightEyeWasClosing = false;
+    let lastBlinkAt = 0;
+    let blinkStartedAt = 0;
+    let blinkPeakScore = 0;
+    let blinkMinimumOpening = 1;
+    let blinkDurations = [];
+    let interblinkIntervals = [];
+    let incompleteBlinks = 0;
+    let eyeOpeningTotal = 0;
+    let eyeOpeningSamples = 0;
+    let leftEarTotal = 0;
+    let rightEarTotal = 0;
+    let trackedFrames = 0;
+    let analysedFrames = 0;
+    let rednessEstimate = 0;
+    let recordingRemaining = 60;
+    let faceLandmarker;
+    let detectorReady = false;
+    let detectorAnimationFrame;
+    let isEyeAligned = false;
+    let lastVideoTimestamp = -1;
+    let detectedLandmarks;
+    let detectedBlendshapes;
+
+    // Bundled locally so the detector does not rely on a browser CDN request.
+    const MEDIAPIPE_WASM_URL = "{% static 'vendor/mediapipe/wasm' %}";
+    const MEDIAPIPE_MODEL_URL = "{% static 'vendor/mediapipe/face_landmarker.task' %}";
+
+    async function initialiseEyeDetector() {
+        if (faceLandmarker) return true;
+        try {
+            const vision = await import("{% static 'vendor/mediapipe/vision_bundle.mjs' %}");
+            const filesetResolver = await vision.FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_URL);
+            faceLandmarker = await vision.FaceLandmarker.createFromOptions(filesetResolver, {
+                baseOptions: { modelAssetPath: MEDIAPIPE_MODEL_URL },
+                runningMode: 'VIDEO',
+                numFaces: 1,
+                outputFaceBlendshapes: true,
+                minFaceDetectionConfidence: 0.4,
+                minFacePresenceConfidence: 0.4,
+                minTrackingConfidence: 0.4,
+            });
+            return true;
+        } catch (error) {
+            console.warn('Eye alignment model could not start.', error);
+            return false;
+        }
+    }
+
+    function selectedEyeLandmarks(landmarks, eyeSide = scanStep) {
+        // MediaPipe face-mesh eye contours. The user positions the requested eye in the square.
+        const indexes = eyeSide === 'left'
+            ? [33, 133, 160, 144, 153, 158]
+            : [263, 362, 387, 373, 380, 385];
+        return indexes.map(index => landmarks[index]);
+    }
+
+    function eyeIsInsideTarget(landmarks) {
+        const leftEye = selectedEyeLandmarks(landmarks, 'left');
+        const rightEye = selectedEyeLandmarks(landmarks, 'right');
+        if (leftEye.some(point => !point) || rightEye.some(point => !point)) return false;
+        const leftCenter = leftEye.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
+        const rightCenter = rightEye.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
+        const centerX = (leftCenter.x / leftEye.length + rightCenter.x / rightEye.length) / 2;
+        const centerY = (leftCenter.y / leftEye.length + rightCenter.y / rightEye.length) / 2;
+        const eyeDistance = Math.abs(leftCenter.x / leftEye.length - rightCenter.x / rightEye.length);
+        // Both eyes just need to be visible within the circular preview; do
+        // not require the old narrow square target to start an assessment.
+        return eyeDistance > 0.07 && eyeDistance < 0.72 && Math.abs(centerX - 0.5) < 0.32 && Math.abs(centerY - 0.5) < 0.30;
+    }
+
+    function autoFrameEyes(landmarks) {
+        if (!cameraPreview || !landmarks) return;
+        const leftEye = selectedEyeLandmarks(landmarks, 'left');
+        const rightEye = selectedEyeLandmarks(landmarks, 'right');
+        if (leftEye.some(point => !point) || rightEye.some(point => !point)) return;
+        const left = leftEye.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
+        const right = rightEye.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), { x: 0, y: 0 });
+        const leftX = left.x / leftEye.length, leftY = left.y / leftEye.length;
+        const rightX = right.x / rightEye.length, rightY = right.y / rightEye.length;
+        const focusX = (leftX + rightX) / 2, focusY = (leftY + rightY) / 2;
+        const eyeDistance = Math.abs(leftX - rightX);
+        const zoom = Math.min(1.55, Math.max(1.04, 0.20 / Math.max(eyeDistance, 0.13)));
+        const translateX = (0.5 - focusX) * (zoom - 1) * 100;
+        const translateY = (0.47 - focusY) * (zoom - 1) * 100;
+        cameraPreview.style.transform = `translate(${translateX}%, ${translateY}%) scale(${zoom})`;
+    }
+
+    function eyeCropBounds(landmarks, eyeSide) {
+        const eye = selectedEyeLandmarks(landmarks, eyeSide);
+        if (eye.some(point => !point)) return null;
+
+        const xs = eye.map(point => point.x);
+        const ys = eye.map(point => point.y);
+        const centerX = (Math.min(...xs) + Math.max(...xs)) / 2;
+        const centerY = (Math.min(...ys) + Math.max(...ys)) / 2;
+        const eyeWidth = Math.max(...xs) - Math.min(...xs);
+        const eyeHeight = Math.max(...ys) - Math.min(...ys);
+        // Very close single-eye crop: retain only a small eyelid margin.
+        const size = Math.min(0.15, Math.max(eyeWidth * 1.4, eyeHeight * 2.6, 0.065));
+        return { centerX, centerY, size };
+    }
+
+    function updateAlignmentState(aligned) {
+        if (scanStep !== 'ready') return;
+        if (aligned === isEyeAligned) return;
+        isEyeAligned = aligned;
+        if (aligned) {
+            updateCaptureCopy('Eyes detected — start recording', 'Keep both eyes in the frame and click to begin the one-minute assessment.');
+        } else {
+            updateCaptureCopy('Position both eyes', 'Centre your face and keep both eyes clearly visible.');
+        }
+    }
+
+    function eyeOpenness(landmarks, side) {
+        const eye = selectedEyeLandmarks(landmarks, side);
+        if (eye.some(point => !point)) return null;
+        const width = Math.abs(eye[0].x - eye[1].x);
+        const height = Math.abs(eye[2].y - eye[4].y);
+        return width ? height / width : null;
+    }
+
+    function measureFrame(landmarks, blendshapes) {
+        if (scanStep !== 'recording' || !landmarks) return;
+        analysedFrames += 1;
+        const left = eyeOpenness(landmarks, 'left');
+        const right = eyeOpenness(landmarks, 'right');
+        if (left === null || right === null) return;
+        trackedFrames += 1;
+        const averageOpening = (left + right) / 2;
+        eyeOpeningTotal += averageOpening;
+        eyeOpeningSamples += 1;
+        leftEarTotal += left;
+        rightEarTotal += right;
+        const blinkScores = Object.fromEntries((blendshapes || []).map(item => [item.categoryName, item.score]));
+        // Count full blinks and partial/one-eye blinks. Blendshapes lead when available;
+        // eyelid openness keeps detection working for a gentle partial blink.
+        const leftClosing = (blinkScores.eyeBlinkLeft || 0) > 0.24 || left < 0.23;
+        const rightClosing = (blinkScores.eyeBlinkRight || 0) > 0.24 || right < 0.23;
+        const closed = leftClosing || rightClosing;
+        const now = performance.now();
+        const closureScore = Math.max(blinkScores.eyeBlinkLeft || 0, blinkScores.eyeBlinkRight || 0);
+        const beginningOfBlink = (leftClosing && !leftEyeWasClosing) || (rightClosing && !rightEyeWasClosing);
+        if (closed && beginningOfBlink && now - lastBlinkAt > 220) {
+            if (lastBlinkAt) interblinkIntervals.push(now - lastBlinkAt);
+            blinkCount += 1;
+            lastBlinkAt = now;
+            blinkStartedAt = now;
+            blinkPeakScore = closureScore;
+            blinkMinimumOpening = averageOpening;
+        } else if (closed && blinkStartedAt) {
+            blinkPeakScore = Math.max(blinkPeakScore, closureScore);
+            blinkMinimumOpening = Math.min(blinkMinimumOpening, averageOpening);
+        }
+        if (!closed && blinkWasClosed && blinkStartedAt) {
+            const duration = now - blinkStartedAt;
+            if (duration >= 40 && duration <= 1200) blinkDurations.push(duration);
+            if (blinkPeakScore < 0.55 && blinkMinimumOpening > 0.13) incompleteBlinks += 1;
+            blinkStartedAt = 0;
+        }
+        blinkWasClosed = closed;
+        leftEyeWasClosing = leftClosing;
+        rightEyeWasClosing = rightClosing;
+        if (analysedFrames % 12 === 0) {
+            updateCaptureCopy(
+                `Recording — 0:${String(Math.max(0, recordingRemaining)).padStart(2, '0')} · ${blinkCount} blinks`,
+                `Eye tracking ${Math.round(trackedFrames / analysedFrames * 100)}% · blink naturally.`,
+            );
+        }
+    }
+
+    function detectEyePosition() {
+        if (!faceLandmarker || !cameraPreview || cameraPreview.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+            detectorAnimationFrame = requestAnimationFrame(detectEyePosition);
+            return;
+        }
+        const timestamp = performance.now();
+        if (timestamp > lastVideoTimestamp) {
+            const result = faceLandmarker.detectForVideo(cameraPreview, timestamp);
+            lastVideoTimestamp = timestamp;
+            detectedLandmarks = result.faceLandmarks?.[0];
+            detectedBlendshapes = result.faceBlendshapes?.[0]?.categories || [];
+            autoFrameEyes(detectedLandmarks);
+            updateAlignmentState(Boolean(detectedLandmarks && eyeIsInsideTarget(detectedLandmarks)));
+            measureFrame(detectedLandmarks, detectedBlendshapes);
+        }
+        detectorAnimationFrame = requestAnimationFrame(detectEyePosition);
+    }
+
+    async function startCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            if (capturePrompt) capturePrompt.textContent = 'Camera access is unavailable in this browser.';
+            return;
+        }
+
+        if (cameraStream) return true;
+
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                },
+                audio: false
+            });
+
+            cameraPreview = document.createElement('video');
+            cameraPreview.className = 'st-capture-preview';
+            cameraPreview.autoplay = true;
+            cameraPreview.muted = true;
+            cameraPreview.playsInline = true;
+            cameraPreview.srcObject = cameraStream;
+            captureButton?.append(cameraPreview);
+            await new Promise((resolve, reject) => {
+                cameraPreview.onloadedmetadata = resolve;
+                cameraPreview.onerror = reject;
+            });
+            await cameraPreview.play();
+            captureButton?.classList.add('camera-active');
+            captureRing?.classList.add('camera-active');
+            updateCaptureCopy('Loading eye detector…', 'Please hold your face in view.');
+            if (await initialiseEyeDetector()) {
+                detectorReady = true;
+                detectorAnimationFrame = requestAnimationFrame(detectEyePosition);
+            } else {
+                updateCaptureCopy('Eye detector could not load', 'Check your internet connection, refresh the page, and try again.');
+            }
+            return true;
+        } catch (error) {
+            if (capturePrompt) {
+                capturePrompt.textContent = error.name === 'NotAllowedError'
+                    ? 'Camera permission was denied. Please allow it and try again.'
+                    : 'Unable to access the camera. Check that it is available and try again.';
+            }
+            return false;
+        }
+    }
+
+    function updateCaptureCopy(title, message) {
+        if (captureCtaTitle) captureCtaTitle.textContent = title;
+        if (capturePrompt) capturePrompt.textContent = message;
+    }
+
+    async function waitForCameraFrame() {
+        if (!cameraPreview) return false;
+        if (cameraPreview.videoWidth && cameraPreview.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) return true;
+        return new Promise(resolve => {
+            const timeout = window.setTimeout(() => resolve(false), 2500);
+            cameraPreview.addEventListener('loadeddata', () => {
+                window.clearTimeout(timeout);
+                resolve(Boolean(cameraPreview.videoWidth));
+            }, { once: true });
+        });
+    }
+
+    function detectEyeForCapture() {
+        if (!faceLandmarker || !cameraPreview || !cameraPreview.videoWidth) return detectedLandmarks;
+        try {
+            const result = faceLandmarker.detectForVideo(cameraPreview, performance.now());
+            return result.faceLandmarks?.[0] || detectedLandmarks;
+        } catch (error) {
+            return detectedLandmarks;
+        }
+    }
+
+    async function captureFrame(eyeSide) {
+        if (!(await waitForCameraFrame())) return null;
+        const landmarks = detectEyeForCapture();
+        const bounds = landmarks ? eyeCropBounds(landmarks, eyeSide) : null;
+        const canvas = document.createElement('canvas');
+        canvas.width = 768;
+        canvas.height = 768;
+        const sourceWidth = cameraPreview.videoWidth;
+        const sourceHeight = cameraPreview.videoHeight;
+        const cropSize = Math.min(sourceWidth, sourceHeight) * (bounds?.size || 0.32);
+        const sourceX = Math.max(0, Math.min(sourceWidth - cropSize, ((bounds?.centerX || 0.5) * sourceWidth) - (cropSize / 2)));
+        const sourceY = Math.max(0, Math.min(sourceHeight - cropSize, ((bounds?.centerY || 0.5) * sourceHeight) - (cropSize / 2)));
+        canvas.getContext('2d').drawImage(
+            cameraPreview,
+            sourceX, sourceY, cropSize, cropSize,
+            0, 0, canvas.width, canvas.height,
+        );
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    }
+
+    function getCsrfToken() {
+        return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+    }
+
+    function stopCamera() {
+        window.clearInterval(recordingTimer);
+        cancelAnimationFrame(detectorAnimationFrame);
+        detectorAnimationFrame = undefined;
+        isEyeAligned = false;
+        detectedLandmarks = undefined;
+        detectedBlendshapes = undefined;
+        cameraStream?.getTracks().forEach(track => track.stop());
+        cameraStream = undefined;
+        cameraPreview?.remove();
+        cameraPreview = undefined;
+        captureButton?.classList.remove('camera-active');
+        captureRing?.classList.remove('camera-active');
+    }
+
+    async function saveCompletedScan() {
+        const formData = new FormData();
+        formData.append('left_image', leftEyeImage, 'left-eye.jpg');
+        formData.append('right_image', rightEyeImage, 'right-eye.jpg');
+        formData.append('recording', new Blob(recordingChunks, { type: mediaRecorder?.mimeType || 'video/webm' }), 'eye-assessment.webm');
+        const elapsed = Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000));
+        formData.append('duration_seconds', elapsed);
+        formData.append('blink_count', blinkCount);
+        formData.append('blink_rate', (blinkCount / elapsed * 60).toFixed(1));
+        formData.append('incomplete_blink_rate', blinkCount ? (incompleteBlinks / blinkCount * 100).toFixed(1) : 0);
+        formData.append('complete_blink_count', Math.max(0, blinkCount - incompleteBlinks));
+        formData.append('average_interblink_interval', interblinkIntervals.length ? (interblinkIntervals.reduce((sum, value) => sum + value, 0) / interblinkIntervals.length / 1000).toFixed(2) : 0);
+        formData.append('average_blink_duration', blinkDurations.length ? Math.round(blinkDurations.reduce((sum, value) => sum + value, 0) / blinkDurations.length) : 0);
+        formData.append('average_eye_opening', eyeOpeningSamples ? (eyeOpeningTotal / eyeOpeningSamples).toFixed(3) : 0);
+        formData.append('left_ear', eyeOpeningSamples ? (leftEarTotal / eyeOpeningSamples).toFixed(3) : 0);
+        formData.append('right_ear', eyeOpeningSamples ? (rightEarTotal / eyeOpeningSamples).toFixed(3) : 0);
+        formData.append('tracking_quality', analysedFrames ? Math.round(trackedFrames / analysedFrames * 100) : 0);
+        formData.append('redness_score', rednessEstimate.toFixed(1));
+        const response = await fetch('{% url "save_eye_scan" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': decodeURIComponent(getCsrfToken()) },
+            body: formData,
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Unable to save the eye scan.');
+        return payload;
+    }
+
+    function estimateVisualRedness() {
+        if (!cameraPreview?.videoWidth || !detectedLandmarks) return 0;
+        const canvas = document.createElement('canvas');
+        canvas.width = 160; canvas.height = 120;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        context.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        let score = 0; let samples = 0;
+        for (let index = 0; index < pixels.length; index += 16) {
+            const red = pixels[index], green = pixels[index + 1], blue = pixels[index + 2];
+            if (red > 55 && green > 35 && blue > 25) { score += Math.max(0, red - (green + blue) / 2); samples += 1; }
+        }
+        return samples ? Math.min(10, (score / samples) / 10) : 0;
+    }
+
+    function beginRecording() {
+        if (!window.MediaRecorder) {
+            updateCaptureCopy('Recording unavailable', 'This browser does not support video recording. Please use a current Chrome or Edge browser.');
+            return;
+        }
+        try {
+            recordingChunks = [];
+            blinkCount = 0; blinkWasClosed = false; leftEyeWasClosing = false; rightEyeWasClosing = false; lastBlinkAt = performance.now();
+            blinkStartedAt = 0; blinkPeakScore = 0; blinkMinimumOpening = 1; blinkDurations = []; interblinkIntervals = []; incompleteBlinks = 0; eyeOpeningTotal = 0; eyeOpeningSamples = 0;
+            leftEarTotal = 0; rightEarTotal = 0;
+            trackedFrames = 0; analysedFrames = 0;
+            const preferredTypes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+            const mimeType = preferredTypes.find(type => MediaRecorder.isTypeSupported(type));
+            mediaRecorder = mimeType ? new MediaRecorder(cameraStream, { mimeType }) : new MediaRecorder(cameraStream);
+            mediaRecorder.ondataavailable = event => { if (event.data.size) recordingChunks.push(event.data); };
+            mediaRecorder.onstop = finishRecording;
+            recordingStartedAt = Date.now();
+            scanStep = 'recording';
+            mediaRecorder.start(1000);
+            recordingRemaining = 60;
+            updateCaptureCopy('Recording assessment — 1:00', 'Blink naturally and keep both eyes visible.');
+            recordingTimer = window.setInterval(() => {
+                recordingRemaining -= 1;
+                updateCaptureCopy(`Recording assessment — 0:${String(Math.max(0, recordingRemaining)).padStart(2, '0')}`, `Tracking ${trackedFrames ? 'eyes' : '…'} · blink naturally.`);
+                if (recordingRemaining <= 0) { window.clearInterval(recordingTimer); mediaRecorder.stop(); }
+            }, 1000);
+        } catch (error) {
+            updateCaptureCopy('Recording unavailable', 'Unable to start video recording. Please try again.');
+        }
+    }
+
+    async function finishRecording() {
+        scanStep = 'saving';
+        updateCaptureCopy('Preparing assessment…', 'Creating close eye previews and saving your video.');
+        leftEyeImage = await captureFrame('left');
+        rightEyeImage = await captureFrame('right');
+        rednessEstimate = estimateVisualRedness();
+        const quality = analysedFrames ? Math.round(trackedFrames / analysedFrames * 100) : 0;
+        if (!leftEyeImage || !rightEyeImage || !recordingChunks.length) {
+            scanStep = 'ready';
+            updateCaptureCopy('Recording was incomplete', 'Please keep the camera open and record again.');
+            return;
+        }
+        try {
+            await saveCompletedScan();
+            stopCamera();
+            scanStep = 'complete';
+            updateCaptureCopy('Assessment saved', `Measured ${blinkCount} blinks. Your report is ready.`);
+            window.setTimeout(() => window.location.reload(), 800);
+        } catch (error) {
+            scanStep = 'ready';
+            updateCaptureCopy('Try saving again', error.message);
+        }
+    }
+
+    async function handleCapture() {
+        if (scanStep === 'saving') return;
+
+        if (scanStep === 'start') {
+            updateCaptureCopy('Opening camera…', 'Please allow camera access.');
+            if (await startCamera()) {
+                scanStep = 'ready';
+                if (detectorReady) {
+                    updateCaptureCopy('Start 1-minute recording', 'Centre both eyes, then click to measure your natural blink pattern.');
+                }
+            } else {
+                updateCaptureCopy('Start eye scan', 'Camera access is needed to continue.');
+            }
+            return;
+        }
+
+        if (scanStep === 'ready') {
+            if (!detectorReady) {
+                updateCaptureCopy('Eye detector could not load', 'Refresh the page while connected to the internet, then allow camera access again.');
+                return;
+            }
+            beginRecording();
+        }
+    }
+
+    captureButton?.addEventListener('click', handleCapture);
+    captureCta?.addEventListener('click', handleCapture);
+
+    document.getElementById('advancedScanFiles')?.addEventListener('change', event => {
+        const status = document.getElementById('advancedUploadStatus');
+        const count = event.target.files?.length || 0;
+        if (status && count) {
+            status.textContent = `${count} high-resolution image${count === 1 ? '' : 's'} selected. Upload processing will be available in the advanced-scan workflow.`;
+            status.style.display = 'block';
+        }
+    });
+
+    /* Interactive Right Pane View Options Selector Tabs */
+    document.querySelectorAll('.st-option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.st-option-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const view = btn.dataset.view;
+
+            const resultsSec = document.getElementById('viewResults');
+            const detailsSec = document.getElementById('viewDetails');
+            const recsSec = document.getElementById('viewRecs');
+
+            if (view === 'all') {
+                if (resultsSec) resultsSec.style.display = 'block';
+                if (detailsSec) detailsSec.style.display = 'none';
+                if (recsSec) recsSec.style.display = 'none';
+            } else if (view === 'results') {
+                if (resultsSec) resultsSec.style.display = 'block';
+                if (detailsSec) detailsSec.style.display = 'none';
+                if (recsSec) recsSec.style.display = 'none';
+            } else if (view === 'details') {
+                if (resultsSec) resultsSec.style.display = 'none';
+                if (detailsSec) detailsSec.style.display = 'none';
+                if (recsSec) recsSec.style.display = 'none';
+            } else if (view === 'recs') {
+                if (resultsSec) resultsSec.style.display = 'none';
+                if (detailsSec) detailsSec.style.display = 'none';
+                if (recsSec) recsSec.style.display = 'none';
+            }
+
+            const state = loadState() || {};
+            state.tab = view;
+            saveState(state);
+        });
+    });
+
+    /* Restore state on load */
+    const saved = loadState();
+    if (saved) {
+        if (saved.view === 'empty') {
+            showPageEmptyState(false);
+        } else {
+            restoreWorkspace(saved.mode || 'all', false);
+        }
+        if (saved.eye) {
+            const eyeBtn = document.querySelector('.st-eye-toggle-btn[data-eye="' + saved.eye + '"]');
+            if (eyeBtn) eyeBtn.click();
+        }
+        if (saved.tab) {
+            const tabBtn = document.querySelector('.st-option-btn[data-view="' + saved.tab + '"]');
+            if (tabBtn) tabBtn.click();
+        }
+    }
+</script>
+{% endblock %}

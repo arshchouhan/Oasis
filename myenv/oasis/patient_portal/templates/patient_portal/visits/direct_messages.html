@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Direct Messages | Oasis{% endblock %}
+
+{% block content %}
+<style>
+    .dm-workspace { height:100%; min-height:0; display:flex; gap:16px; color:#10284a; background:transparent; border-radius:0; overflow:hidden; transition:gap .28s ease; }
+    .dm-list { width:31%; min-width:250px; display:flex; flex-direction:column; padding:22px 14px; background:#fff; border-radius:28px; box-shadow:0 4px 12px rgba(0,0,0,.03); transition:width .28s ease, min-width .28s ease, padding .28s ease, opacity .2s ease, transform .28s ease; }
+    .dm-list h1 { margin:0 12px 18px; font-size:24px; font-weight:500; }
+    .dm-thread { display:flex; gap:12px; padding:13px; border-radius:12px; color:#10284a; text-decoration:none; }
+    .dm-thread:hover, .dm-thread.active { background:#e8f4f3; }
+    .dm-avatar { width:42px; height:42px; flex:0 0 42px; display:grid; place-items:center; border-radius:50%; background:#dcecff; color:#1968bd; font-size:13px; font-weight:700; }
+    .dm-thread strong, .dm-thread small { display:block; }
+    .dm-thread small { margin-top:4px; color:#698098; }
+    .dm-chat { min-width:0; flex:1; display:flex; flex-direction:column; background:#fff; border-radius:28px; box-shadow:0 4px 12px rgba(0,0,0,.03); transition:flex .28s ease, width .28s ease; }
+    .dm-chat-head { display:flex; align-items:center; gap:12px; padding:18px 22px; border-bottom:1px solid #e2ebf1; }
+    .dm-chat-head h2 { margin:0; font-size:17px; } .dm-chat-head small { color:#698098; }
+    .dm-layout-toggle { margin-left:auto; color:#47677c; text-decoration:none; }
+    .dm-body { flex:1; overflow:auto; padding:28px clamp(58px, 12vw, 180px); display:flex; flex-direction:column; gap:10px; scrollbar-width:none; transition:padding .32s ease; }
+    .dm-body::-webkit-scrollbar { display:none; }
+    .dm-start { margin:auto; max-width:420px; text-align:center; color:#607590; } .dm-start h3 { color:#10284a; font-size:25px; margin:12px 0 8px; }
+    .dm-message-wrap { align-self:flex-start; display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+    .dm-message-wrap.outgoing { align-self:flex-end; align-items:flex-end; }
+    .dm-message-time { color:#526d8d; font-size:11px; }
+    .dm-message { width:fit-content; max-width:min(72%, 760px); padding:9px 13px; border-radius:24px; background:#e6eef8; color:#10284a; font-size:14px; line-height:1.4; overflow-wrap:anywhere; word-break:break-word; }
+    .dm-message-wrap.outgoing .dm-message { background:#087f8c; color:#fff; }
+    .dm-message--compact { width:46px; height:46px; min-width:46px; box-sizing:border-box; display:grid; place-items:center; padding:0; border-radius:50%; font-size:15px; }
+    .dm-compose { width:calc(100% - 40px); max-width:860px; box-sizing:border-box; display:flex; gap:10px; margin:0 auto 16px; padding:10px; border:1px solid #e2ebf1; border-radius:28px; background:#f5f8fb; } .dm-compose input { min-width:0; flex:1; border:0; border-radius:22px; padding:12px 14px; background:transparent; color:#10284a; font:inherit; outline:0; } .dm-compose button { border:0; border-radius:50%; width:42px; height:42px; background:#087f8c; color:#fff; display:grid; place-items:center; cursor:pointer; }
+    .dm-single { gap:0; }
+    .dm-single .dm-list { width:0; min-width:0; padding-left:0; padding-right:0; opacity:0; overflow:hidden; pointer-events:none; transform:translateX(-10px); }
+    .dm-single .dm-chat { width:100%; }
+    .dm-single .dm-body { padding-left:clamp(120px, 18vw, 280px); padding-right:clamp(160px, 24vw, 360px); }
+    @media (max-width:800px) { .dm-list { width:36%; min-width:190px; } .dm-workspace { border-radius:18px; } }
+</style>
+<section class="dm-workspace {% if single_layout %}dm-single{% endif %}">
+    <aside class="dm-list"><h1>Direct messages</h1>{% for item in threads %}<a class="dm-thread {% if thread and item.id == thread.id %}active{% endif %}" href="{% url 'direct_messages' item.id %}"><span class="dm-avatar">{{ item.doctor.first_name|first|default:item.doctor.username|first }}{{ item.doctor.last_name|first }}</span><span><strong>Dr. {{ item.doctor.get_full_name|default:item.doctor.username }}</strong><small>{{ item.doctor.email }}</small></span></a>{% empty %}<p style="color:#9db0c1;padding:12px;">Choose a doctor from Connect to doctor to start a conversation.</p>{% endfor %}</aside>
+    <main class="dm-chat">{% if thread %}<header class="dm-chat-head"><span class="dm-avatar">{{ thread.doctor.first_name|first|default:thread.doctor.username|first }}{{ thread.doctor.last_name|first }}</span><span><h2>Dr. {{ thread.doctor.get_full_name|default:thread.doctor.username }}</h2><small>{% if connection_request and connection_request.status == 'accepted' %}Connected · you can now chat{% elif connection_request and connection_request.status == 'declined' %}Connection request declined{% else %}Connection request sent · awaiting approval{% endif %}</small></span><a class="dm-layout-toggle" href="{% url 'direct_messages' thread.id %}?layout={% if single_layout %}split{% else %}single{% endif %}" title="Change layout"><span class="material-symbols-outlined">{% if single_layout %}splitscreen{% else %}open_in_full{% endif %}</span></a></header><div class="dm-body" data-message-body>{% if thread.messages.all %}{% for message in thread.messages.all %}<div class="dm-message-wrap {% if message.sender_id == request.user.id %}outgoing{% endif %}" data-message-id="{{ message.id }}"><small class="dm-message-time">{{ message.created_at|date:'d M, g:i A' }}</small><div class="dm-message {% if message.body|length <= 2 %}dm-message--compact{% endif %}">{{ message.body }}</div></div>{% endfor %}{% else %}<div class="dm-start"><span class="dm-avatar" style="margin:auto;">{{ thread.doctor.first_name|first|default:thread.doctor.username|first }}</span><h3>Dr. {{ thread.doctor.get_full_name|default:thread.doctor.username }}</h3><p>{% if connection_request and connection_request.status == 'accepted' %}You are connected. Start the conversation whenever you are ready.{% else %}Your connection request has been sent. You can write the first message while the doctor reviews it.{% endif %}</p></div>{% endif %}</div><form class="dm-compose" method="post">{% csrf_token %}<input name="body" maxlength="2000" placeholder="Write a message" autocomplete="off"><button type="submit" aria-label="Send message"><span class="material-symbols-outlined">send</span></button></form>{% else %}<div class="dm-start"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2;">forum</span><h3>Direct messages</h3><p>Search for a doctor from the Connect to doctor menu to begin.</p></div>{% endif %}</main>
+</section>
+<script>
+    (() => {
+        const workspace = document.querySelector('.dm-workspace');
+        const toggle = document.querySelector('.dm-layout-toggle');
+        if (!workspace || !toggle) return;
+        toggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            const isSingle = workspace.classList.toggle('dm-single');
+            const icon = toggle.querySelector('.material-symbols-outlined');
+            if (icon) icon.textContent = isSingle ? 'splitscreen' : 'open_in_full';
+            const url = new URL(window.location.href);
+            if (isSingle) url.searchParams.set('layout', 'single'); else url.searchParams.delete('layout');
+            window.history.replaceState({}, '', url);
+        });
+    })();
+    {% if thread %}(() => {
+        const body = document.querySelector('[data-message-body]');
+        if (!body) return;
+        const existingMessages = body.querySelectorAll('[data-message-id]');
+        let lastId = Number(existingMessages.length ? existingMessages[existingMessages.length - 1].dataset.messageId : 0);
+        const endpoint = '{% url "direct_message_updates" thread.id %}';
+        const addMessage = (message) => {
+            const wrap = document.createElement('div');
+            wrap.className = `dm-message-wrap ${message.sender_id === {{ request.user.id }} ? 'outgoing' : ''}`;
+            wrap.dataset.messageId = message.id;
+            const time = document.createElement('small'); time.className = 'dm-message-time'; time.textContent = message.created_at;
+            const bubble = document.createElement('div'); bubble.className = `dm-message ${message.body.length <= 2 ? 'dm-message--compact' : ''}`; bubble.textContent = message.body;
+            wrap.append(time, bubble); body.appendChild(wrap); lastId = message.id;
+        };
+        const poll = async () => {
+            try {
+                const response = await fetch(`${endpoint}?after=${lastId}`, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                if (!response.ok) return;
+                const payload = await response.json();
+                if (!payload.messages.length) return;
+                payload.messages.forEach(addMessage);
+                body.scrollTop = body.scrollHeight;
+            } catch (_) { /* Retry on the next interval if the server is restarting. */ }
+        };
+        body.scrollTop = body.scrollHeight;
+        window.setInterval(poll, 3000);
+    })();{% endif %}
+</script>
+{% endblock %}

@@ -11,9 +11,17 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Local secrets may live beside manage.py, the virtual environment, or the workspace.
+# Environment variables already set by the host always take precedence.
+load_dotenv(BASE_DIR.parent.parent / '.env')
+load_dotenv(BASE_DIR.parent / '.env')
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -37,8 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app1',
-    'app2',
+    'patient_portal.apps.PatientPortalConfig',
+    'doctor_portal',
 ]
 
 MIDDLEWARE = [
@@ -56,13 +64,14 @@ ROOT_URLCONF = 'oasis.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'oasis' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'doctor_portal.context_processors.calendar_status',
             ],
         },
     },
@@ -80,6 +89,24 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Authentication accounts are stored in the existing SQLite database.
+AUTH_USER_MODEL = 'accounts.User'
+AUTHENTICATION_BACKENDS = ['patient_portal.backends.EmailOrUsernameBackend']
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'patient_dashboard'
+LOGOUT_REDIRECT_URL = 'login'
+
+# Set these environment variables before enabling Google sign-in in production.
+GOOGLE_OAUTH_CLIENT_ID = os.getenv('GOOGLE_OAUTH_CLIENT_ID', '')
+GOOGLE_OAUTH_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH_CLIENT_SECRET', '')
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'ClearEye <no-reply@cleareye.local>')
+
+# Keep these values in environment variables; never commit Cloudinary credentials.
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', '')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', '')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', '')
 
 
 # Password validation
@@ -118,12 +145,31 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
 MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
+    'default': (
+        {
+            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+            'OPTIONS': {
+                'host': os.getenv('EMAIL_HOST'),
+                'port': int(os.getenv('EMAIL_PORT', '587')),
+                'username': os.getenv('EMAIL_HOST_USER', ''),
+                'password': os.getenv('EMAIL_HOST_PASSWORD', ''),
+                'use_tls': os.getenv('EMAIL_USE_TLS', 'true').lower() == 'true',
+                'timeout': 10,
+            },
+        }
+        if os.getenv('EMAIL_HOST')
+        else {
+            # Local development only: render messages in the runserver console.
+            'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        }
+    ),
 }

@@ -1,0 +1,988 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Search Results | ClearEye{% endblock %}
+
+{% block content %}
+<style>
+    .ds-workspace {
+        display: flex;
+        gap: 16px;
+        width: 100%;
+        height: calc(100vh - 96px);
+        max-height: calc(100vh - 96px);
+        align-items: stretch;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .ds-left-pane {
+        flex: 1.5;
+        min-width: 0;
+        background: var(--md-sys-color-surface);
+        border-radius: var(--md-sys-shape-corner-card, 12px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .ds-right-pane {
+        flex: 1;
+        min-width: 0;
+        background: var(--md-sys-color-surface);
+        border-radius: var(--md-sys-shape-corner-card, 12px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* Doctor details are intentionally compact: show available profile data
+       at once instead of adding an inner scrolling region. */
+    .ds-right-pane > .ds-pane-body { overflow: hidden; }
+
+    .ds-pane-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px 14px;
+        border-bottom: 1px solid var(--md-sys-color-surface-variant, #f1f3f4);
+        flex-shrink: 0;
+        gap: 12px;
+    }
+
+    .ds-pane-title-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .ds-pane-icon {
+        font-size: 20px;
+        color: var(--md-sys-color-primary, #1a73e8);
+        flex-shrink: 0;
+    }
+
+    .ds-pane-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        color: var(--md-sys-color-on-surface, #202124);
+    }
+
+    .ds-pane-subtitle {
+        font-size: 11px;
+        color: var(--md-sys-color-on-surface-variant, #5f6368);
+        margin: 1px 0 0;
+    }
+
+    .ds-pane-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+    }
+
+    .ds-doc-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+        border: 1.5px solid transparent;
+        margin-bottom: 6px;
+    }
+
+    .ds-doc-row:hover {
+        background: var(--md-sys-color-surface-variant, #f8f9fa);
+    }
+
+    .ds-doc-row.active {
+        background: color-mix(in srgb, var(--md-sys-color-primary, #1a73e8) 10%, transparent);
+        border-color: color-mix(in srgb, var(--md-sys-color-primary, #1a73e8) 30%, transparent);
+    }
+
+    .ds-doc-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e8f0fe, #d2e3fc);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--md-sys-color-primary, #1a73e8);
+        font-size: 22px;
+    }
+
+    .ds-doc-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ds-doc-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--md-sys-color-on-surface, #202124);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ds-doc-sub {
+        font-size: 11px;
+        color: var(--md-sys-color-on-surface-variant, #5f6368);
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ds-detail-hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 24px 14px;
+        border-bottom: 1px solid var(--md-sys-color-surface-variant, #f1f3f4);
+        flex-shrink: 0;
+    }
+
+    .ds-detail-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e8f0fe, #d2e3fc);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        color: var(--md-sys-color-primary, #1a73e8);
+        margin-bottom: 8px;
+        box-shadow: 0 4px 16px rgba(26, 115, 232, 0.15);
+    }
+
+    .ds-detail-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--md-sys-color-on-surface, #202124);
+        text-align: center;
+        margin: 0 0 4px;
+    }
+
+    .ds-detail-specialty {
+        font-size: 13px;
+        color: var(--md-sys-color-on-surface-variant, #5f6368);
+        text-align: center;
+        margin: 0 0 12px;
+    }
+
+    .ds-rating-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #fef9e6;
+        border: 1px solid #f9d65a;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #b06000;
+    }
+
+    .ds-detail-body {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        padding: 14px 24px 18px;
+    }
+
+    .ds-stat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .ds-stat-card {
+        background: var(--md-sys-color-surface-variant, #f8f9fa);
+        border-radius: 10px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .ds-stat-card .material-symbols-outlined {
+        font-size: 20px;
+        color: var(--md-sys-color-primary, #1a73e8);
+        flex-shrink: 0;
+    }
+
+    .ds-stat-label {
+        font-size: 10px;
+        color: var(--md-sys-color-on-surface-variant, #5f6368);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+
+    .ds-stat-value {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--md-sys-color-on-surface, #202124);
+    }
+
+    .ds-divider {
+        height: 1px;
+        background: var(--md-sys-color-surface-variant, #f1f3f4);
+        margin: 16px 0;
+    }
+
+    .ds-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .ds-tool-btn {
+        min-height: 56px;
+        border: 0;
+        border-radius: 12px;
+        background: #edf3f8;
+        color: #38546e;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    .ds-tool-btn::after {
+        content:"";
+        position:absolute;
+        inset:50%;
+        width:0;
+        height:0;
+        border-radius:50%;
+        background:rgba(255,255,255,.28);
+        transform:translate(-50%,-50%);
+        transition:width .3s ease, height .3s ease;
+    }
+    .ds-tool-btn:hover { background:#087f8c; color:#fff; box-shadow:0 4px 12px rgba(8,127,140,.24); transform:translateY(-1px); }
+    .ds-tool-btn:active::after { width:150px; height:150px; transition:0s; }
+    .ds-tool-btn.is-rippling::after { width:180px; height:180px; transition:width .18s ease, height .18s ease; }
+    .ds-tool-btn:focus-visible { outline:3px solid rgba(8,127,140,.3); outline-offset:2px; }
+    .ds-tool-btn .material-symbols-outlined { font-size:24px; }
+    .ds-tool-panel { display:flex; flex:1; min-height:0; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:26px; color:#607590; }
+    .ds-tool-panel h3 { margin:12px 0 7px; color:#102f52; font-size:21px; }
+    .ds-tool-panel p { max-width:390px; margin:0; line-height:1.5; }
+    .ds-meet-events { width:min(100%,430px); display:grid; gap:10px; margin-top:18px; text-align:left; }
+    .ds-meet-event { padding:13px 15px; border-radius:12px; background:#f5f8fb; }
+    .ds-meet-event strong { display:block; color:#102f52; } .ds-meet-event small { display:block; margin:4px 0 8px; color:#607590; }
+    .ds-meet-event a,.ds-tool-back { color:#087f8c; font-weight:700; text-decoration:none; }
+    .ds-tool-back { display:inline-flex; align-items:center; gap:6px; margin-top:20px; border:0; background:transparent; cursor:pointer; font:inherit; }
+    .ds-report-share { display:inline-flex; align-items:center; gap:7px; margin-top:18px; padding:10px 16px; border:0; border-radius:22px; background:#087f8c; color:#fff; font:700 13px inherit; cursor:pointer; }
+    .ds-report-share:hover { background:#066a75; }
+    .ds-report-selected { margin-top:10px !important; font-size:12px; color:#087f8c; }
+    .ds-report-cards { width:min(100%,430px); display:grid; gap:10px; margin-top:18px; text-align:left; }
+    .ds-report-card { padding:14px; border:1px solid #dce7ef; border-radius:14px; background:#f8fafc; box-shadow:0 2px 7px rgba(22,54,83,.04); }
+    .ds-report-card h4 { margin:0; color:#102f52; font-size:14px; } .ds-report-card small { display:block; margin-top:4px; color:#607590; }
+    .ds-report-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:12px 0; }.ds-report-metric { padding:8px 5px; border-radius:9px; background:#edf3f8; text-align:center; }.ds-report-metric strong,.ds-report-metric span { display:block; }.ds-report-metric strong { font-size:13px; color:#087f8c; }.ds-report-metric span { margin-top:2px; font-size:10px; color:#607590; }
+
+    .ds-btn-book {
+        flex: 1;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        background: var(--md-sys-color-primary, #1a73e8);
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    .ds-btn-book:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .ds-btn-secondary {
+        flex: 1;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1.5px solid var(--md-sys-color-outline, #dadce0);
+        background: transparent;
+        color: var(--md-sys-color-on-surface, #202124);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: background 0.15s ease;
+    }
+
+    .ds-btn-secondary:hover {
+        background: var(--md-sys-color-surface-variant, #f8f9fa);
+    }
+
+    .ds-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--md-sys-color-primary, #1a73e8);
+        font-size: 12px;
+        font-weight: 500;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: background 0.15s;
+    }
+
+    .ds-back-btn:hover {
+        background: color-mix(in srgb, var(--md-sys-color-primary, #1a73e8) 10%, transparent);
+    }
+
+    .ds-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: var(--md-sys-color-surface-variant, #f1f3f4);
+        color: var(--md-sys-color-on-surface-variant, #5f6368);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+        transition: background 0.15s ease;
+        text-decoration: none;
+    }
+
+    .ds-close-btn:hover {
+        background: #e8eaed;
+    }
+
+    .ds-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ds-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: opacity 0.15s ease;
+        text-decoration: none;
+    }
+
+    .ds-action-btn-primary {
+        background: var(--md-sys-color-primary, #1a73e8);
+        color: white;
+    }
+
+    .ds-action-btn-outline {
+        background: transparent;
+        color: var(--md-sys-color-on-surface, #202124);
+        border: 1.5px solid var(--md-sys-color-outline, #dadce0);
+    }
+
+    .ds-action-btn:hover {
+        opacity: 0.85;
+    }
+
+    .ds-workspace.left-only .ds-left-pane { flex: 1 1 100%; }
+    .ds-workspace.left-only .ds-right-pane { display: none !important; }
+    .ds-workspace.right-only .ds-right-pane { flex: 1 1 100%; }
+    .ds-workspace.right-only .ds-left-pane { display: none !important; }
+
+    .ds-btn-restore {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: rgba(29, 97, 172, 0.08);
+        color: var(--md-sys-color-primary, #1a73e8);
+        border: 1px solid rgba(29, 97, 172, 0.25);
+        padding: 5px 12px;
+        border-radius: 50px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .ds-btn-restore:hover {
+        background: rgba(29, 97, 172, 0.16);
+        border-color: var(--md-sys-color-primary, #1a73e8);
+    }
+    .ds-btn-restore .material-symbols-outlined { font-size: 16px; }
+    .ds-workspace.left-only #dsRestoreRight { display: inline-flex !important; }
+    .ds-workspace.right-only #dsRestoreLeft { display: inline-flex !important; }
+
+    .ds-pane-close-btn {
+        background: transparent;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #5f6368;
+        transition: background 0.15s, color 0.15s;
+    }
+    .ds-pane-close-btn:hover {
+        background: rgba(0, 0, 0, 0.08);
+        color: #202124;
+    }
+    .ds-pane-close-btn .material-symbols-outlined { font-size: 19px; }
+
+    .ds-detail-view {
+        display: none;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+    .ds-detail-view.ds-detail-active,
+    .ds-detail-view[style*="display: flex"] {
+        display: flex;
+    }
+
+    .ds-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        color: #5f6368;
+        text-align: center;
+        padding: 24px;
+    }
+
+    .ds-empty-container {
+        width: 100%;
+        height: calc(100vh - 96px);
+        box-sizing: border-box;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 24px;
+        text-align: center;
+        position: relative;
+    }
+    .ds-empty-card {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+    .ds-empty-title {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: var(--md-sys-color-on-surface, #202124);
+        margin: 0 0 8px;
+    }
+    .ds-empty-subtitle {
+        font-size: 13px;
+        color: #5f6368;
+        max-width: 480px;
+        margin: 0 0 28px;
+        line-height: 1.5;
+    }
+    .ds-connect-email-form { width: min(100%, 520px); margin-top: 26px; }
+    .ds-connect-email-box { display:flex; align-items:center; gap:10px; padding:8px 10px 8px 16px; background:#fff; border:1px solid #c8d7ea; border-radius:28px; box-shadow:0 6px 18px rgba(27,73,101,.08); }
+    .ds-connect-email-box .material-symbols-outlined { color:#1a73e8; }
+    .ds-connect-email-box input { flex:1; min-width:0; border:0; outline:0; font:inherit; color:#152d47; background:transparent; }
+    .ds-connect-email-box button { width:42px; height:42px; display:grid; place-items:center; border:0; border-radius:50%; cursor:pointer; background:#087f8c; color:#fff; }
+    .ds-open-panes-button { position:absolute; top:28px; right:32px; display:inline-flex; align-items:center; gap:8px; border:1px solid #0b7285; border-radius:22px; padding:10px 16px; background:#fff; color:#087f8c; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+    .ds-empty-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 28px;
+    }
+    .ds-empty-features {
+        display: flex;
+        gap: 20px;
+        max-width: 640px;
+        width: 100%;
+        justify-content: center;
+    }
+    .ds-empty-feat-card {
+        flex: 1;
+        background: #F8FAFD;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        border-radius: 16px;
+        padding: 20px 18px;
+        text-align: left;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .ds-empty-feat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+        border-color: rgba(29, 97, 172, 0.2);
+    }
+    .ds-empty-feat-icon {
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 12px;
+    }
+    .ds-empty-feat-icon.blue { background: #E8F0FE; color: #1a73e8; }
+    .ds-empty-feat-icon.teal { background: #EAF3F2; color: var(--md-sys-color-primary, #006a6a); }
+    .ds-empty-feat-card h3 {
+        font-size: 14px; font-weight: 600; color: #202124; margin: 0 0 4px;
+    }
+    .ds-empty-feat-card p {
+        font-size: 11px; color: #5f6368; margin: 0; line-height: 1.4;
+    }
+    .ds-btn-primary {
+        background: var(--md-sys-color-primary, #1a73e8);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .ds-btn-outline {
+        background: transparent;
+        color: var(--md-sys-color-primary, #1a73e8);
+        border: 1px solid var(--md-sys-color-primary, #1a73e8);
+        padding: 10px 24px;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+</style>
+
+<div class="ds-workspace" id="dsWorkspace">
+
+    <div class="ds-left-pane">
+        <div class="ds-pane-header">
+            <div class="ds-pane-title-group">
+                <span class="material-symbols-outlined ds-pane-icon">group</span>
+                <div>
+                    <h2 class="ds-pane-title">Your Doctor</h2>
+                    <p class="ds-pane-subtitle">
+                        Connected providers · {{ doctors|length }} profile{{ doctors|length|pluralize }}
+                    </p>
+                </div>
+            </div>
+            <div class="ds-header-actions">
+                <a href="{% url 'find_doctor' %}?change=1" class="ds-action-btn ds-action-btn-primary">
+                    <span class="material-symbols-outlined" style="font-size: 15px;">edit</span>
+                    Change doctor
+                </a>
+                <button class="ds-btn-restore" id="dsRestoreRight" title="Reopen Doctor Details">
+                    <span class="material-symbols-outlined">person</span>
+                    Doctor Details
+                </button>
+                <button class="ds-pane-close-btn" data-close="left" title="Close Doctor List">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="ds-pane-body">
+            {% if doctors %}
+                {% for doc in doctors %}
+                <div class="ds-doc-row{% if forloop.first %} active{% endif %}" id="doc-row-{{ forloop.counter }}" data-index="{{ forloop.counter }}">
+                    <div class="ds-doc-avatar">
+                        <span class="material-symbols-outlined">person</span>
+                    </div>
+                    <div class="ds-doc-info">
+                        <div class="ds-doc-name">{{ doc.name }}</div>
+                        <div class="ds-doc-sub">{{ doc.specialty }}</div>
+                        <div class="ds-doc-sub">{{ doc.experience }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="ds-empty">
+                    <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">search_off</span>
+                    <p style="font-size: 13px;">No doctors found{% if query %} for "{{ query }}"{% endif %}.</p>
+                    <a href="{% url 'find_doctor' %}" class="ds-back-btn">
+                        <span class="material-symbols-outlined" style="font-size: 15px;">arrow_back</span>
+                        Try again
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="ds-right-pane">
+        <div class="ds-pane-header">
+            <div class="ds-pane-title-group">
+                <span class="material-symbols-outlined ds-pane-icon">person</span>
+                <div>
+                    <h2 class="ds-pane-title" id="detailPaneTitle">
+                        {% if doctors %}{{ doctors.0.name }}{% else %}Doctor Info{% endif %}
+                    </h2>
+                    <p class="ds-pane-subtitle" id="detailPaneSubtitle">
+                        {% if doctors %}{{ doctors.0.specialty }}{% else %}Select a doctor from the left{% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="ds-header-actions">
+                <button class="ds-btn-restore" id="dsRestoreLeft" title="Reopen Doctor List">
+                    <span class="material-symbols-outlined">group</span>
+                    Doctor List
+                </button>
+                <button class="ds-pane-close-btn" data-close="right" title="Close Doctor Details">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
+        <div class="ds-pane-body" style="flex: 1; min-height: 0; display: flex; flex-direction: column;">
+        {% if doctors %}
+            {% for doc in doctors %}
+            <div class="ds-detail-view{% if forloop.first %} ds-detail-active{% endif %}" id="detail-{{ forloop.counter }}">
+
+                <div class="ds-detail-hero">
+                    <div class="ds-detail-avatar">
+                        <span class="material-symbols-outlined">person</span>
+                    </div>
+                    <h2 class="ds-detail-name">{{ doc.name }}</h2>
+                    <p class="ds-detail-specialty">{{ doc.specialty }}</p>
+                    {% if doc.rating %}<span class="ds-rating-badge">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">star</span>
+                        {{ doc.rating }}
+                    </span>{% endif %}
+                </div>
+
+                <div class="ds-detail-body">
+                    <div class="ds-stat-grid">
+                        {% if doc.experience %}<div class="ds-stat-card">
+                            <span class="material-symbols-outlined">work_history</span>
+                            <div>
+                                <div class="ds-stat-label">Experience</div>
+                                <div class="ds-stat-value">{{ doc.experience }}</div>
+                            </div>
+                        </div>{% endif %}
+                        {% if doc.rating %}<div class="ds-stat-card">
+                            <span class="material-symbols-outlined">star</span>
+                            <div>
+                                <div class="ds-stat-label">Rating</div>
+                                <div class="ds-stat-value">{{ doc.rating }}</div>
+                            </div>
+                        </div>{% endif %}
+                        {% if doc.available %}<div class="ds-stat-card" style="grid-column: 1 / -1;">
+                            <span class="material-symbols-outlined">event_available</span>
+                            <div>
+                                <div class="ds-stat-label">Availability</div>
+                                <div class="ds-stat-value">{{ doc.available }}</div>
+                            </div>
+                        </div>{% endif %}
+                        {% if doc.clinic_name %}
+                        <div class="ds-stat-card" style="grid-column: 1 / -1;">
+                            <span class="material-symbols-outlined">local_hospital</span>
+                            <div>
+                                <div class="ds-stat-label">Clinic</div>
+                                <div class="ds-stat-value">{{ doc.clinic_name }}{% if doc.clinic_address %} · {{ doc.clinic_address }}{% endif %}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if doc.phone %}
+                        <div class="ds-stat-card">
+                            <span class="material-symbols-outlined">call</span>
+                            <div><div class="ds-stat-label">Contact</div><div class="ds-stat-value">{{ doc.phone }}</div></div>
+                        </div>
+                        {% endif %}
+                        <div class="ds-stat-card" style="grid-column: 1 / -1;">
+                            <span class="material-symbols-outlined">mail</span>
+                            <div>
+                                <div class="ds-stat-label">Connected with</div>
+                                <div class="ds-stat-value">{{ doc.email }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ds-actions">
+                        {% if doc.source == 'oasis_doctor_portal' %}<button type="button" class="ds-tool-btn" data-doctor-tool="meet" data-doctor-name="{{ doc.name }}" data-meet-url="{% url 'patient_google_meet' %}?connection={{ doc.connection_id }}&amp;format=json" title="View scheduled Google Meet consultations" aria-label="View scheduled Google Meet consultations"><span class="material-symbols-outlined">videocam</span></button>{% else %}<button type="button" class="ds-tool-btn" data-doctor-tool="meet-unavailable" data-doctor-name="{{ doc.name }}" title="Google Meet becomes available when this doctor connects their Calendar" aria-label="Google Meet unavailable"><span class="material-symbols-outlined">videocam</span></button>{% endif %}
+                        {% if doc.source == 'oasis_doctor_portal' %}<button type="button" class="ds-tool-btn" data-doctor-tool="files" data-doctor-name="{{ doc.name }}" data-reports-url="{% url 'digital_reports' %}?connection={{ doc.connection_id }}" title="Share digital reports" aria-label="Share digital reports"><span class="material-symbols-outlined">folder_open</span></button>{% else %}<button type="button" class="ds-tool-btn" data-doctor-tool="files-unavailable" data-doctor-name="{{ doc.name }}" title="Digital reports are available for Oasis doctor connections" aria-label="Digital reports unavailable"><span class="material-symbols-outlined">folder_open</span></button>{% endif %}
+                        <button type="button" class="ds-tool-btn" data-doctor-tool="history" data-doctor-name="{{ doc.name }}" title="Consultation history" aria-label="Consultation history"><span class="material-symbols-outlined">hourglass_top</span></button>
+                        <button type="button" class="ds-tool-btn" data-doctor-tool="pinned" data-doctor-name="{{ doc.name }}" title="Pinned details" aria-label="Pinned details"><span class="material-symbols-outlined">push_pin</span></button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="ds-empty">
+                <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">person_search</span>
+                <p>No doctors to display.</p>
+                <a href="{% url 'find_doctor' %}" class="ds-back-btn">
+                    <span class="material-symbols-outlined" style="font-size: 15px;">arrow_back</span>
+                    Back to Search
+                </a>
+            </div>
+        {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const STORAGE_KEY = 'doctorSearchViewState';
+    function saveState(state) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+    function loadState() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { return null; }
+    }
+
+    const doctorData = {};
+    document.querySelectorAll('.ds-detail-view').forEach((el, i) => {
+        const nameEl = el.querySelector('.ds-detail-name');
+        const specEl = el.querySelector('.ds-detail-specialty');
+        doctorData[i + 1] = {
+            name: nameEl ? nameEl.textContent.trim() : '',
+            specialty: specEl ? specEl.textContent.trim() : ''
+        };
+    });
+
+    const workspace = document.getElementById('dsWorkspace');
+    function showEmpty(save = true) {
+        // There is no separate connection dashboard. If the last sibling
+        // pane is closed, keep the user in Your Doctor and restore both.
+        restoreWorkspace('all', save);
+    }
+
+    function restoreWorkspace(mode, save = true) {
+        if (workspace) {
+            workspace.style.display = 'flex';
+            if (mode === 'all') {
+                workspace.classList.remove('left-only', 'right-only');
+            } else if (mode === 'left') {
+                workspace.classList.remove('right-only');
+                workspace.classList.add('left-only');
+            } else if (mode === 'right') {
+                workspace.classList.remove('left-only');
+                workspace.classList.add('right-only');
+            }
+        }
+        if (save) {
+            const state = loadState() || {};
+            state.view = 'workspace';
+            state.mode = mode;
+            saveState(state);
+        }
+    }
+
+    function selectDoctor(index, save = true) {
+        document.querySelectorAll('.ds-doc-row').forEach(r => r.classList.remove('active'));
+        document.querySelectorAll('.ds-detail-view').forEach(d => {
+            d.classList.remove('ds-detail-active');
+            d.style.display = 'none';
+        });
+
+        const row = document.getElementById('doc-row-' + index);
+        const detail = document.getElementById('detail-' + index);
+        if (row) row.classList.add('active');
+        if (detail) {
+            detail.classList.add('ds-detail-active');
+            detail.style.display = 'flex';
+        }
+
+        const titleEl = document.getElementById('detailPaneTitle');
+        const subtitleEl = document.getElementById('detailPaneSubtitle');
+        if (titleEl && doctorData[index]) titleEl.textContent = doctorData[index].name;
+        if (subtitleEl && doctorData[index]) subtitleEl.textContent = doctorData[index].specialty;
+
+        if (save) {
+            const state = loadState() || {};
+            state.selectedDoc = index;
+            saveState(state);
+        }
+    }
+
+    document.querySelectorAll('.ds-doc-row').forEach(row => {
+        row.addEventListener('click', () => {
+            const idx = parseInt(row.dataset.index);
+            if (workspace.classList.contains('left-only')) {
+                restoreWorkspace('all', true);
+            } else if (workspace.style.display === 'none') {
+                restoreWorkspace('all', true);
+            }
+            selectDoctor(idx, true);
+        });
+    });
+
+    document.querySelectorAll('.ds-pane-close-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = btn.dataset.close;
+            if (target === 'right') {
+                if (workspace.classList.contains('right-only')) {
+                    showEmpty();
+                } else if (workspace.classList.contains('left-only')) {
+                    showEmpty();
+                } else {
+                    workspace.classList.add('left-only');
+                    restoreWorkspace('left', true);
+                }
+            } else if (target === 'left') {
+                if (workspace.classList.contains('left-only')) {
+                    showEmpty();
+                } else if (workspace.classList.contains('right-only')) {
+                    showEmpty();
+                } else {
+                    workspace.classList.add('right-only');
+                    restoreWorkspace('right', true);
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.ds-btn-restore').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            restoreWorkspace('all', true);
+        });
+    });
+
+    document.getElementById('dsReopenAll')?.addEventListener('click', () => restoreWorkspace('all', true));
+    document.getElementById('dsReopenLeft')?.addEventListener('click', () => restoreWorkspace('left', true));
+    document.getElementById('dsReopenRight')?.addEventListener('click', () => restoreWorkspace('right', true));
+    document.getElementById('dsCardOpenLeft')?.addEventListener('click', () => restoreWorkspace('left', true));
+    document.getElementById('dsCardOpenRight')?.addEventListener('click', () => restoreWorkspace('right', true));
+    document.getElementById('dsOpenDoctorPanes')?.addEventListener('click', () => restoreWorkspace('all', true));
+
+    const FRESH_SEARCH_FLAG = 'cleareye_doctor_fresh_search';
+    let isFreshSearch = false;
+    const requestJustSent = new URLSearchParams(window.location.search).get('request') === 'sent';
+    try {
+        isFreshSearch = sessionStorage.getItem(FRESH_SEARCH_FLAG) === '1';
+        if (isFreshSearch) sessionStorage.removeItem(FRESH_SEARCH_FLAG);
+    } catch (e) {}
+
+    // A sent request must always return the user to the two sibling panes,
+    // even if they were both closed before the request was submitted.
+    const saved = (isFreshSearch || requestJustSent) ? null : loadState();
+    if (requestJustSent) {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    }
+    // Discard the legacy empty-state selection and always enter Your Doctor
+    // through its two sibling panes.
+    if (saved && saved.view === 'empty') {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    }
+    restoreWorkspace(saved && saved.view === 'workspace' && saved.mode ? saved.mode : 'all', false);
+    if (saved && saved.selectedDoc && document.getElementById('doc-row-' + saved.selectedDoc)) {
+        selectDoctor(saved.selectedDoc, false);
+    }
+
+    // Tool actions deliberately replace only the right doctor-details pane.
+    // The surrounding two-pane workspace stays open and the Back control
+    // restores the doctor profile without a page navigation.
+    const detailPane = document.querySelector('.ds-right-pane > .ds-pane-body');
+    let originalDetails = detailPane?.innerHTML;
+    let originalTitle = document.getElementById('detailPaneTitle')?.textContent || 'Doctor Info';
+    let originalSubtitle = document.getElementById('detailPaneSubtitle')?.textContent || '';
+    let activeToolDoctor = originalTitle;
+    let activeReportsUrl = '';
+    const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+    const restoreDoctorDetails = () => {
+        if (!detailPane) return;
+        detailPane.innerHTML = originalDetails;
+        document.getElementById('detailPaneTitle').textContent = originalTitle;
+        document.getElementById('detailPaneSubtitle').textContent = originalSubtitle;
+    };
+    const showToolPanel = (icon, title, description, extra = '') => {
+        if (!detailPane) return;
+        document.getElementById('detailPaneTitle').textContent = title;
+        document.getElementById('detailPaneSubtitle').textContent = activeToolDoctor;
+        detailPane.innerHTML = `<section class="ds-tool-panel"><span class="material-symbols-outlined" style="font-size:48px;color:#087f8c;">${icon}</span><h3>${title}</h3><p>${description}</p>${extra}<button type="button" class="ds-tool-back" data-doctor-tool="back"><span class="material-symbols-outlined">arrow_back</span>Back to doctor details</button></section>`;
+    };
+    const loadDigitalReports = async (reportsUrl) => {
+        activeReportsUrl = reportsUrl;
+        showToolPanel('progress_activity', 'Digital reports', 'Loading your generated reports…');
+        try {
+            const response = await fetch(reportsUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload.error || 'Digital reports are unavailable.');
+            const cards = payload.reports?.length ? `<div class="ds-report-cards">${payload.reports.map((report) => `<article class="ds-report-card"><h4>Eye assessment report</h4><small>Generated ${escapeHtml(report.created_at)}</small><div class="ds-report-metrics"><div class="ds-report-metric"><strong>${escapeHtml(report.blink_rate)}</strong><span>Blinks / min</span></div><div class="ds-report-metric"><strong>${escapeHtml(report.redness_score)}</strong><span>Redness</span></div><div class="ds-report-metric"><strong>${escapeHtml(report.tracking_quality)}%</strong><span>Tracking</span></div></div><button type="button" class="ds-report-share" data-doctor-tool="share-report" data-scan-id="${escapeHtml(report.id)}" ${report.shared ? 'disabled style="background:#6c8790;cursor:default"' : ''}>${report.shared ? 'Shared with doctor' : 'Share digital report'}</button></article>`).join('')}</div>` : '';
+            showToolPanel('folder_open', 'Digital reports', cards ? 'Choose a generated report to share with this doctor.' : 'No generated reports are available yet. Complete an eye assessment from Reports first.', cards);
+        } catch (error) {
+            showToolPanel('folder_open', 'Digital reports', error.message || 'Digital reports could not be loaded right now.');
+        }
+    };
+    detailPane?.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-doctor-tool]');
+        if (!button) return;
+        const tool = button.dataset.doctorTool;
+        if (tool === 'back') { restoreDoctorDetails(); return; }
+        if (tool === 'share-report') {
+            if (!activeReportsUrl || button.disabled) return;
+            button.disabled = true; button.textContent = 'Sharing…';
+            try {
+                const response = await fetch(activeReportsUrl, {method: 'POST', headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''}, body: new URLSearchParams({scan_id: button.dataset.scanId})});
+                const payload = await response.json();
+                if (!response.ok) throw new Error(payload.error || 'Could not share this report.');
+                loadDigitalReports(activeReportsUrl);
+            } catch (error) { button.disabled = false; button.textContent = error.message || 'Try sharing again'; }
+            return;
+        }
+        originalDetails = detailPane.innerHTML;
+        originalTitle = document.getElementById('detailPaneTitle').textContent;
+        originalSubtitle = document.getElementById('detailPaneSubtitle').textContent;
+        activeToolDoctor = button.dataset.doctorName || originalTitle;
+        button.classList.add('is-rippling');
+        await new Promise((resolve) => window.setTimeout(resolve, 180));
+        if (tool === 'files') { loadDigitalReports(button.dataset.reportsUrl); return; }
+        if (tool === 'files-unavailable') { showToolPanel('folder_off', 'Digital reports', 'Digital reports can be shared only with accepted Oasis doctor connections.'); return; }
+        if (tool === 'history') { showToolPanel('hourglass_top', 'Consultation history', 'Your shared consultation history will appear here after appointments are recorded.'); return; }
+        if (tool === 'pinned') { showToolPanel('push_pin', 'Pinned details', 'There are no pinned care instructions or notes yet.'); return; }
+        if (tool === 'meet-unavailable') { showToolPanel('videocam_off', 'Google Meet', 'This doctor has not connected their Google Calendar yet.'); return; }
+        if (tool !== 'meet') return;
+        showToolPanel('progress_activity', 'Google Meet', 'Loading scheduled Meet consultations…');
+        try {
+            const response = await fetch(button.dataset.meetUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+            if (!response.ok) throw new Error('Meet details are unavailable.');
+            const payload = await response.json();
+            const eventCards = payload.events?.length ? `<div class="ds-meet-events">${payload.events.map((item) => `<article class="ds-meet-event"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.start)}</small><a href="${escapeHtml(item.meet_url)}" target="_blank" rel="noopener">Join Google Meet</a></article>`).join('')}</div>` : '';
+            showToolPanel('videocam', 'Google Meet', payload.notice || (eventCards ? 'Upcoming Meet consultations from this doctor’s Google Calendar.' : 'No upcoming Google Meet consultations have been scheduled.'), eventCards);
+        } catch (_) {
+            showToolPanel('videocam_off', 'Google Meet', 'Google Meet details could not be loaded right now. Please try again.');
+        }
+    });
+ </script>
+<form hidden>{% csrf_token %}</form>
+{% endblock %}

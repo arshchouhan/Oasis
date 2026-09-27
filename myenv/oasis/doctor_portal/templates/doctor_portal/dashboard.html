@@ -1,0 +1,14 @@
+{% extends "doctor_portal/base.html" %}
+
+{% block title %}Doctor dashboard | ClearEye{% endblock %}
+
+{% block content %}
+<section style="min-height: calc(100vh - 96px); display: grid; place-items: center; padding: 32px; box-sizing: border-box;">
+    <div style="width: min(100%, 620px); padding: 32px; border: 1px solid #dbe5f1; border-radius: 20px; background: var(--md-sys-color-surface, #fff); box-shadow: 0 8px 28px rgba(27,73,101,.08);">
+        <span class="material-symbols-outlined" style="color: #087f8c; font-size: 32px;">medical_services</span>
+        <h1 style="margin: 14px 0 8px; color: #0b315a; font-size: 26px;">Doctor dashboard</h1>
+        {% if messages %}{% for message in messages %}<div style="margin:14px 0;padding:12px 16px;border-radius:12px;background:#fff3cd;color:#664d03;">{{ message }}</div>{% endfor %}{% endif %}
+        <p style="margin: 0; color: #5f6f82; line-height: 1.5;">Your Doctor Portal dashboard is ready. Use Patient connections or Community from the sidebar to continue.</p>
+    </div>
+</section>
+{% endblock %}

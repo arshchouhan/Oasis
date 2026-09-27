@@ -1,0 +1,95 @@
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'patient_dashboard' %}" class="portal-brand-link" aria-label="Go to patient dashboard">
+            <span class="material-symbols-outlined logo-icon">water_drop</span>
+            <h2 class="logo-text">Oasis</h2>
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
+        <ul class="nav-list">
+            <li
+                class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'symptom_tracker' or request.resolver_match.url_name == 'reports' %}open{% endif %}">
+                <a href="#" class="nav-link nav-link-toggle" role="button" aria-expanded="false">
+                    <span class="material-symbols-outlined nav-caret">arrow_right</span>
+                    <span class="material-symbols-outlined nav-main-icon">dashboard</span>
+                    <span class="nav-text">Shortcuts</span>
+                </a>
+                <ul class="nav-submenu">
+                    <li class="nav-submenu-item">
+                        <a href="{% url 'symptom_tracker' %}"
+                            class="nav-submenu-link {% if request.resolver_match.url_name == 'symptom_tracker' %}active{% endif %}">
+                            <span class="nav-text">Symptom Tracker</span>
+                        </a>
+                    </li>
+                    <li class="nav-submenu-item">
+                        <a href="{% url 'reports' %}"
+                            class="nav-submenu-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+                            <span class="nav-text">Reports</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li
+                class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'find_doctor' or request.resolver_match.url_name == 'my_appointments' %}open{% endif %}">
+                <a href="#" class="nav-link nav-link-toggle" role="button" aria-expanded="false">
+                    <span class="material-symbols-outlined nav-caret">arrow_right</span>
+                    <span class="material-symbols-outlined nav-main-icon">stethoscope</span>
+                    <span class="nav-text">Visits</span>
+                </a>
+                <ul class="nav-submenu">
+                    <li class="nav-submenu-item">
+                        <a href="{% url 'doctor_search' %}"
+                            class="nav-submenu-link {% if request.resolver_match.url_name == 'find_doctor' or request.resolver_match.url_name == 'visits' or request.resolver_match.url_name == 'consult' or request.resolver_match.url_name == 'doctor_search' %}active{% endif %}">
+                            <span class="nav-text">Your Doctor</span>
+                        </a>
+                    </li>
+                    <li class="nav-submenu-item">
+                        <a href="{% url 'my_appointments' %}"
+                            class="nav-submenu-link {% if request.resolver_match.url_name == 'my_appointments' %}active{% endif %}">
+                            <span class="nav-text">My Appointments</span>
+                        </a>
+                    </li>
+                    <li class="nav-submenu-item">
+                        <a href="{% url 'direct_messages' %}"
+                            class="nav-submenu-link {% if request.resolver_match.url_name == 'direct_messages' %}active{% endif %}">
+                            <span class="nav-text">Direct Messages</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'environment' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'environment' %}active{% endif %}">
+                    <span class="material-symbols-outlined nav-arrow">arrow_right</span>
+                    <span class="material-symbols-outlined">self_improvement</span>
+                    <span class="nav-text">Guided Eye Care</span>
+                </a>
+            </li>
+        </ul>
+
+        <hr class="nav-divider">
+
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{% url 'learn' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'learn' %}active{% endif %}">
+                    <span class="material-symbols-outlined nav-arrow">arrow_right</span>
+                    <span class="material-symbols-outlined">menu_book</span>
+                    <span class="nav-text">Learn</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-bottom">
+            <a href="{% url 'profile' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <span class="material-symbols-outlined nav-arrow">arrow_right</span>
+                <span class="material-symbols-outlined">settings</span>
+                <span class="nav-text">Profile &amp; Settings</span>
+            </a>
+        </div>
+    </nav>
+</aside>

@@ -1,0 +1,36 @@
+.personal-workspace{color:#28485c;font-size:13px}
+.personal-workspace *{box-sizing:border-box}
+.pw-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.pw-toolbar select{min-width:0;flex:1;border:0;background:transparent;font:inherit;font-size:16px;font-weight:700;color:#193d54;padding:8px 0}
+.personal-workspace button{font:inherit;cursor:pointer}
+.pw-new-list{border:1px solid #d9e6e9;border-radius:10px;background:#fff;color:#087f8c;padding:8px 10px;white-space:nowrap}
+.pw-add{display:flex;align-items:center;gap:9px;width:100%;padding:12px;margin-bottom:16px;border:0;border-radius:12px;background:#e5f3f3;color:#087f8c;text-align:left;font-weight:700!important}
+.pw-add .material-symbols-outlined{font-size:20px}
+.pw-items{display:grid;gap:10px}
+.pw-row{display:flex;align-items:flex-start;gap:10px;padding:13px 10px;border:1px solid #e0eaef;background:white;border-radius:12px}
+.pw-row>input{accent-color:#087f8c;width:18px;height:18px;flex:0 0 18px;margin-top:2px;cursor:pointer}
+.pw-item-body{flex:1;min-width:0}
+.pw-edit{padding:0;border:0;background:transparent;color:#28485c;text-align:left;line-height:1.5;overflow-wrap:anywhere;font-weight:600!important}
+.pw-done .pw-edit{text-decoration:line-through;color:#7d909b}
+.pw-description{margin:5px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:#6a7f8e;font-size:12px;line-height:1.5}
+.pw-due{display:inline-flex;gap:4px;align-items:center;margin-top:8px;padding:3px 7px;border-radius:12px;border:1px solid #dbe8ec;color:#497488;font-size:11px}
+.pw-due .material-symbols-outlined{font-size:14px}
+.pw-delete{padding:3px;border:0;background:transparent;color:#8b9da5;border-radius:6px}
+.pw-delete:hover{background:#fff0ef;color:#a74444}
+.pw-delete .material-symbols-outlined{font-size:18px}
+.pw-section-label{margin:20px 0 10px;color:#78909c;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+.pw-empty{text-align:center;padding:28px 12px;color:#7b909d;line-height:1.6}
+.pw-editor{padding:18px;background:#fff;border:1px solid #dce9ec;border-radius:18px;box-shadow:0 6px 20px #1f49500a;margin-bottom:16px}
+.pw-editor h4{margin:0 0 16px;font-size:16px;color:#28485c}
+.pw-editor label{display:block;font-size:12px;color:#526f80;margin-bottom:12px}
+.pw-editor input,.pw-editor textarea{display:block;width:100%;font:inherit;margin-top:6px;padding:10px;border:1px solid #ccdfe4;border-radius:8px;background:#f9fbfc;color:#28485c}
+.pw-editor textarea{min-height:100px;resize:vertical}
+.pw-editor-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.pw-editor-actions button{padding:8px 14px;border:0;border-radius:18px;background:#eef4f6;color:#496b7d}
+.pw-editor-actions button[type=submit]{background:#087f8c;color:#fff}
+.personal-workspace button:disabled{opacity:.5;cursor:default}
+.personal-workspace :focus-visible{outline:2px solid #087f8c;outline-offset:3px}
+.pw-error{padding:10px;background:#fff0ef;color:#9b3e3e;border-radius:8px;margin-bottom:12px}
+.pw-loading{height:55px;border-radius:12px;background:#e6eff2;margin-bottom:12px;animation:pw-pulse 1.2s infinite}
+@keyframes pw-pulse{50%{opacity:.45}}
+@media(prefers-reduced-motion:reduce){.pw-loading{animation:none}}

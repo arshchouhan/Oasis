@@ -1,0 +1,27 @@
+{% extends 'patient_portal/auth/auth_base.html' %}
+{% block title %}Create account | ClearEye{% endblock %}
+{% block content %}
+<h1>Create your ClearEye account</h1>
+<p>{% if portal_role == 'doctor' %}Create your doctor workspace account.{% elif portal_role == 'patient' %}Create your patient workspace account.{% else %}Choose whether you are joining as a patient or a doctor.{% endif %}</p>
+<form method="post" novalidate>
+    {% csrf_token %}
+    {% if portal_role %}
+    <input type="hidden" name="account_type" value="{{ portal_role }}">
+    <div class="account-type-grid" aria-label="Account type"><span class="account-type-option">{{ portal_role|title }} account</span></div>
+    {% else %}
+    <div class="account-type-grid" role="group" aria-label="Account type">
+        <label class="account-type-option"><input type="radio" name="account_type" value="patient" {% if selected_account_type != 'doctor' %}checked{% endif %}> Patient account</label>
+        <label class="account-type-option"><input type="radio" name="account_type" value="doctor" {% if selected_account_type == 'doctor' %}checked{% endif %}> Doctor account</label>
+    </div>
+    {% endif %}
+    <div class="auth-field"><label for="first_name">First name</label><input id="first_name" name="first_name" autocomplete="given-name" required></div>
+    <div class="auth-field"><label for="last_name">Surname</label><input id="last_name" name="last_name" autocomplete="family-name" required></div>
+    <div class="auth-field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+    <div class="auth-field"><label for="username">Username <small>(optional)</small></label><input id="username" name="username" autocomplete="username"></div>
+    <div class="auth-field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" required></div>
+    <div class="auth-field"><label for="password_confirmation">Confirm password</label><input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required></div>
+    <button class="btn auth-submit" type="submit">Create account</button>
+</form>
+{% if portal_role != 'doctor' %}<a class="btn google-button" href="{% url 'google_login' %}">Continue with Google</a>{% endif %}
+<p class="auth-switch">Already have an account? {% if portal_role == 'doctor' %}<a href="{% url 'doctor_login' %}">Log in as doctor</a>{% else %}<a href="{% url 'login' %}">Log in</a>{% endif %}</p>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'patient_portal/auth/auth_base.html' %}
+
+{% block title %}Welcome | ClearEye{% endblock %}
+
+{% block content %}
+<style>
+    .choice-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:24px; }
+    .choice-card { padding:20px; border:1px solid #d7e3e5; border-radius:16px; text-align:left; }
+    .choice-card .material-symbols-outlined { font-size:28px; color:#087f8c; }
+    .choice-card h2 { font-size:17px; margin:12px 0 6px; }
+    .choice-card p { font-size:13px; margin:0 0 16px; min-height:40px; }
+    .choice-actions { display:grid; gap:8px; }
+    .choice-actions a { text-align:center; text-decoration:none; padding:10px; border-radius:22px; font-size:13px; font-weight:600; }
+    .choice-login { background:#087f8c; color:#fff; }
+    .choice-register { border:1px solid #087f8c; color:#087f8c; }
+    @media (max-width:520px) { .choice-grid { grid-template-columns:1fr; } }
+</style>
+<h1>Welcome to ClearEye</h1>
+<p>Choose how you want to continue.</p>
+<div class="choice-grid">
+    <section class="choice-card">
+        <span class="material-symbols-outlined">person</span>
+        <h2>Patient</h2>
+        <p>Track your eye health and manage your care.</p>
+        <div class="choice-actions">
+            <a class="choice-login" href="{% url 'login' %}?role=patient">Log in as patient</a>
+            <a class="choice-register" href="{% url 'register' %}?role=patient">Create patient account</a>
+        </div>
+    </section>
+    <section class="choice-card">
+        <span class="material-symbols-outlined">medical_services</span>
+        <h2>Doctor</h2>
+        <p>Access connected patients through Doctor Portal.</p>
+        <div class="choice-actions">
+            <a class="choice-login" href="{% url 'doctor_login' %}">Log in as doctor</a>
+            <a class="choice-register" href="{% url 'doctor_register' %}">Create doctor account</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

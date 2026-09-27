@@ -1,0 +1,120 @@
+{% extends "doctor_portal/base.html" %}
+
+{% block title %}Complete your profile | Doctor Portal{% endblock %}
+
+{% block content %}
+<style>
+    .doctor-profile-workspace { width:100%; height:100%; min-height:0; box-sizing:border-box; display:flex; flex-direction:column; background:#fff; border-radius:28px; box-shadow:0 4px 12px rgba(0,0,0,.03); overflow:hidden; }
+    .doctor-profile-head { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:22px 26px; border-bottom:1px solid #e7eef3; }
+    .doctor-profile-title { display:flex; align-items:center; gap:12px; color:#10284a; }
+    .doctor-profile-title .material-symbols-outlined { color:#087f8c; font-size:28px; }
+    .doctor-profile-title h1 { margin:0; font-size:24px; }
+    .doctor-profile-title p { margin:4px 0 0; font-size:14px; color:#607590; }
+    .doctor-profile-close { border:0; background:transparent; color:#58708a; padding:6px; border-radius:50%; }
+    .doctor-profile-close:hover { background:#edf4f7; color:#10284a; }
+    .doctor-profile-form { width:100%; max-width:1120px; flex:1; min-height:0; margin:0 auto; padding:30px 34px 28px; box-sizing:border-box; display:flex; flex-direction:column; }
+    .profile-stepper { width:min(100%,880px); align-self:center; display:flex; align-items:flex-start; margin:0 0 42px; }
+    .profile-step { flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; position:relative; color:#718399; font-size:14px; font-weight:700; }
+    .profile-step:not(:last-child)::after { content:""; position:absolute; top:19px; left:calc(50% + 19px); right:calc(-50% + 19px); height:2px; background:#dce7ed; z-index:0; }
+    .profile-step-index { z-index:1; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; color:#61748a; background:#e8eff3; }
+    .profile-step.active, .profile-step.done { color:#087f8c; }
+    .profile-step.active .profile-step-index, .profile-step.done .profile-step-index { background:#087f8c; color:#fff; }
+    .profile-step > span:last-child { position:relative; z-index:1; background:#fff; padding:0 5px; white-space:nowrap; }
+    .profile-step.done:not(:last-child)::after { background:#087f8c; }
+    .profile-carousel { width:min(100%,1000px); align-self:center; overflow:hidden; }
+    .profile-track { display:flex; width:300%; transition:transform .3s ease; }
+    .profile-panel { width:33.333%; flex:0 0 33.333%; box-sizing:border-box; padding:0 2px; }
+    .profile-panel h2 { margin:0 0 7px; color:#10284a; font-size:22px; }
+    .profile-panel > p { margin:0 0 28px; color:#607590; font-size:15px; }
+    .doctor-profile-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+    .doctor-profile-field { display:grid; gap:8px; }
+    .doctor-profile-field.full { grid-column:1 / -1; }
+    .doctor-profile-field label { color:#304f70; font-size:14px; font-weight:700; }
+    .doctor-profile-field input, .doctor-profile-field textarea { width:100%; box-sizing:border-box; border:1px solid #cbd9e4; border-radius:10px; padding:15px; color:#10284a; font-size:16px; background:#fff; }
+    .doctor-profile-field textarea { min-height:165px; resize:vertical; }
+    .doctor-profile-field input:focus, .doctor-profile-field textarea:focus { outline:2px solid #b8e0df; border-color:#087f8c; }
+    .doctor-profile-readonly { color:#607590; font-size:16px; padding:15px 0; }
+    .profile-actions { width:min(100%,1000px); align-self:center; display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:auto; padding-top:40px; }
+    .profile-actions-right { display:flex; gap:12px; margin-left:auto; }
+    .profile-actions a, .profile-actions button { border-radius:28px; padding:13px 23px; font:inherit; font-size:15px; font-weight:700; cursor:pointer; text-decoration:none; }
+    .profile-back { color:#087f8c; border:1px solid #087f8c; background:#fff; }
+    .profile-next, .profile-save { color:#fff; border:1px solid #087f8c; background:#087f8c; display:inline-flex; align-items:center; gap:6px; }
+    .profile-save { display:none; }
+    .profile-actions.is-final .profile-next { display:none; }
+    .profile-actions.is-final .profile-save { display:inline-flex; }
+    .profile-actions.is-first .profile-back { visibility:hidden; }
+    @media (max-width:680px) { .doctor-profile-head { padding:18px; } .doctor-profile-form { padding:22px 18px; } .profile-step span:last-child { display:none; } .doctor-profile-grid { grid-template-columns:1fr; } .doctor-profile-field.full { grid-column:auto; } }
+</style>
+
+<section class="doctor-profile-workspace" aria-label="Doctor profile workspace">
+    <header class="doctor-profile-head">
+        <div class="doctor-profile-title">
+            <span class="material-symbols-outlined">person_edit</span>
+            <div><h1>Complete your profile</h1><p>Finish each step to set up your Doctor Portal profile.</p></div>
+        </div>
+        <a class="doctor-profile-close" href="{% url 'doctor_dashboard' %}" aria-label="Close profile"><span class="material-symbols-outlined">close</span></a>
+    </header>
+    <form class="doctor-profile-form" method="post" id="doctorProfileForm">
+        {% csrf_token %}
+        <div class="profile-stepper" aria-label="Profile completion steps">
+            <div class="profile-step active"><span class="profile-step-index">1</span><span>Personal</span></div>
+            <div class="profile-step"><span class="profile-step-index">2</span><span>Professional</span></div>
+            <div class="profile-step"><span class="profile-step-index">3</span><span>About</span></div>
+        </div>
+        <div class="profile-carousel">
+            <div class="profile-track" id="profileTrack">
+                <section class="profile-panel">
+                    <h2>Personal details</h2><p>Use the name patients and colleagues should see.</p>
+                    <div class="doctor-profile-grid">
+                        <div class="doctor-profile-field"><label for="first_name">First name</label><input id="first_name" name="first_name" value="{{ request.user.first_name }}" required></div>
+                        <div class="doctor-profile-field"><label for="last_name">Last name</label><input id="last_name" name="last_name" value="{{ request.user.last_name }}" required></div>
+                        <div class="doctor-profile-field full"><label>Email</label><div class="doctor-profile-readonly">{{ request.user.email }}</div></div>
+                    </div>
+                </section>
+                <section class="profile-panel">
+                    <h2>Professional details</h2><p>Add the details used for your doctor community profile.</p>
+                    <div class="doctor-profile-grid">
+                        <div class="doctor-profile-field"><label for="specialty">Specialty</label><input id="specialty" name="specialty" value="{{ profile_record.specialty }}" placeholder="e.g. Ophthalmology"></div>
+                        <div class="doctor-profile-field"><label for="registration_number">Registration number</label><input id="registration_number" name="registration_number" value="{{ profile_record.registration_number }}"></div>
+                        <div class="doctor-profile-field"><label for="clinic_name">Clinic or hospital</label><input id="clinic_name" name="clinic_name" value="{{ profile_record.clinic_name }}"></div>
+                        <div class="doctor-profile-field"><label for="city">City</label><input id="city" name="city" value="{{ profile_record.city }}"></div>
+                        <div class="doctor-profile-field full"><label for="phone">Professional phone</label><input id="phone" name="phone" value="{{ profile_record.phone }}" type="tel"></div>
+                    </div>
+                </section>
+                <section class="profile-panel">
+                    <h2>About you</h2><p>Add a short introduction for your doctor community profile.</p>
+                    <div class="doctor-profile-grid"><div class="doctor-profile-field full"><label for="biography">Professional introduction</label><textarea id="biography" name="biography" placeholder="Brief professional introduction">{{ profile_record.biography }}</textarea></div></div>
+                </section>
+            </div>
+        </div>
+        <div class="profile-actions is-first" id="profileActions">
+            <button class="profile-back" type="button" id="profileBack">Back</button>
+            <div class="profile-actions-right"><a href="{% url 'doctor_dashboard' %}">Cancel</a><button class="profile-next" type="button" id="profileNext">Next <span class="material-symbols-outlined">arrow_forward</span></button><button class="profile-save" type="submit">Save profile <span class="material-symbols-outlined">check</span></button></div>
+        </div>
+    </form>
+</section>
+<script>
+    (() => {
+        const track = document.getElementById('profileTrack');
+        const steps = [...document.querySelectorAll('.profile-step')];
+        const panels = [...document.querySelectorAll('.profile-panel')];
+        const back = document.getElementById('profileBack');
+        const next = document.getElementById('profileNext');
+        const actions = document.getElementById('profileActions');
+        let index = 0;
+        const show = () => {
+            track.style.transform = `translateX(-${index * 33.333}%)`;
+            steps.forEach((step, position) => step.classList.toggle('active', position === index));
+            steps.forEach((step, position) => step.classList.toggle('done', position < index));
+            actions.classList.toggle('is-first', index === 0);
+            actions.classList.toggle('is-final', index === steps.length - 1);
+        };
+        next.addEventListener('click', () => {
+            const fields = [...panels[index].querySelectorAll('input, textarea')];
+            if (!fields.every(field => field.reportValidity())) return;
+            if (index < steps.length - 1) { index += 1; show(); }
+        });
+        back.addEventListener('click', () => { if (index > 0) { index -= 1; show(); } });
+    })();
+</script>
+{% endblock %}

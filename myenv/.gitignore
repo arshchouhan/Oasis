@@ -1,6 +1,2 @@
-# Ignore venv internals, but NOT the Django project
-Include/
-Lib/
-Scripts/
-share/
-pyvenv.cfg
+.env
+oasis/.env

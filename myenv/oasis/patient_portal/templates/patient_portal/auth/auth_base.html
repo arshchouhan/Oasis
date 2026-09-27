@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ClearEye{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+        .auth-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+        .auth-card { width: min(100%, 440px); background: var(--md-sys-color-surface); border-radius: 28px; padding: 32px; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+        .auth-card h1 { font-size: 26px; margin-bottom: 8px; }
+        .auth-card p { color: #5f6368; line-height: 1.5; margin-bottom: 24px; }
+        .auth-field { display: grid; gap: 7px; margin-bottom: 16px; }
+        .auth-field label { font-weight: 500; }
+        .auth-field input { border: 1px solid #c9d4d4; border-radius: 10px; padding: 12px; font: inherit; }
+        .account-type-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 20px; }
+        .account-type-option { position:relative; display:flex; align-items:center; justify-content:center; gap:7px; border:1px solid #c9d4d4; border-radius:10px; padding:12px 10px; cursor:pointer; font-weight:500; }
+        .account-type-option:has(input:checked) { border-color:#087f8c; background:#e7f5f5; color:#075a63; }
+        .account-type-option input { accent-color:#087f8c; }
+        .auth-submit, .google-button { width: 100%; justify-content: center; padding: 12px 16px; text-decoration: none; }
+        .auth-submit { background: var(--md-sys-color-primary); color: #fff; }
+        .google-button { border: 1px solid #c9d4d4; color: var(--md-sys-color-on-surface); margin-top: 12px; }
+        .auth-message { background: #fff3cd; border-radius: 10px; color: #664d03; margin-bottom: 16px; padding: 10px 12px; }
+        .auth-switch { margin-top: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <main class="auth-page">
+        <section class="auth-card">
+            {% for message in messages %}<div class="auth-message">{{ message }}</div>{% endfor %}
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+</body>
+</html>

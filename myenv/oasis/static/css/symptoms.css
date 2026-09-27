@@ -1,0 +1,512 @@
+/* ===== SYMPTOM TRACKER PAGE STYLES ===== */
+/* These styles are scoped to the symptom tracker page only.
+   They reuse the existing ClearEye design tokens from main.css. */
+
+/* --- Page Header --- */
+.st-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.st-page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 4px;
+}
+
+.st-page-header p {
+    color: #5f6368;
+    font-size: 0.875rem;
+    margin-top: 4px;
+}
+
+.st-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.st-btn-scan {
+    background-color: var(--md-sys-color-accent-blue);
+    color: #fff;
+    border-radius: var(--md-sys-shape-corner-pill);
+    padding: 10px 24px;
+    font-weight: 500;
+}
+
+.st-btn-manual {
+    background-color: transparent;
+    color: var(--md-sys-color-accent-blue);
+    border: 1px solid var(--md-sys-color-accent-blue);
+    border-radius: var(--md-sys-shape-corner-pill);
+    padding: 10px 24px;
+    font-weight: 500;
+}
+
+/* --- Reusable Card --- */
+.st-card {
+    background: #fff;
+    border-radius: var(--md-sys-shape-corner-card);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+}
+
+.st-card-header {
+    padding: 16px 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.st-card-header .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--md-sys-color-primary);
+}
+
+.st-card-body {
+    padding: 20px;
+}
+
+/* --- Two Column Layout --- */
+.st-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+/* --- Eye Selector Tabs --- */
+.st-eye-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.st-eye-tab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    border: 1.5px solid rgba(0,0,0,0.08);
+    border-radius: var(--md-sys-shape-corner-pill);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #5f6368;
+    transition: all 0.2s ease;
+}
+
+.st-eye-tab:hover {
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+}
+
+.st-eye-tab.active {
+    background-color: var(--md-sys-color-primary-container);
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+}
+
+/* --- Camera Placeholder --- */
+.st-camera-area {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(135deg, #e8f0f0 0%, #d6e6e4 100%);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+    border: 2px dashed rgba(0,106,106,0.2);
+}
+
+.st-camera-area .material-symbols-outlined {
+    font-size: 56px;
+    color: var(--md-sys-color-primary);
+    opacity: 0.5;
+}
+
+.st-camera-label {
+    font-size: 13px;
+    color: #5f6368;
+    font-weight: 500;
+}
+
+.st-capture-btn {
+    margin-top: 16px;
+    background-color: var(--md-sys-color-primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--md-sys-shape-corner-pill);
+    padding: 10px 28px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+}
+
+.st-capture-btn:hover {
+    background-color: #005757;
+}
+
+/* --- Scan Results --- */
+.st-result-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    gap: 12px;
+}
+
+.st-result-item:last-child {
+    border-bottom: none;
+}
+
+.st-result-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.st-result-icon .material-symbols-outlined {
+    font-size: 20px;
+    color: #fff;
+}
+
+.st-result-info {
+    flex: 1;
+}
+
+.st-result-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+}
+
+.st-result-bar-track {
+    width: 100%;
+    height: 6px;
+    background-color: rgba(0,0,0,0.06);
+    border-radius: 3px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.st-result-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+.st-result-score {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    text-align: right;
+    min-width: 60px;
+}
+
+.st-result-severity {
+    font-size: 11px;
+    color: #5f6368;
+    text-align: right;
+}
+
+/* Severity badge colours */
+.severity-mild { color: var(--md-sys-color-primary); }
+.severity-moderate { color: #F5B041; }
+.severity-high { color: #E74C3C; }
+
+/* --- Section Heading --- */
+.st-section-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.st-section-title .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--md-sys-color-primary);
+}
+
+/* --- Analysis Grid --- */
+.st-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.st-analysis-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.st-analysis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.st-analysis-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.st-analysis-icon .material-symbols-outlined {
+    font-size: 22px;
+    color: #fff;
+}
+
+.st-analysis-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 4px;
+}
+
+.st-analysis-status {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: var(--md-sys-shape-corner-pill);
+    display: inline-block;
+}
+
+/* --- Today's Captures --- */
+.st-captures-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.st-capture-card {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: transform 0.15s ease;
+}
+
+.st-capture-card:hover {
+    transform: translateY(-2px);
+}
+
+.st-capture-thumb {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(135deg, #e8f0f0, #d6e6e4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.st-capture-thumb .material-symbols-outlined {
+    font-size: 40px;
+    color: var(--md-sys-color-primary);
+    opacity: 0.4;
+}
+
+.st-capture-meta {
+    padding: 12px;
+}
+
+.st-capture-time {
+    font-size: 12px;
+    color: #5f6368;
+    margin-bottom: 2px;
+}
+
+.st-capture-eye {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+}
+
+.st-capture-score {
+    font-size: 11px;
+    color: var(--md-sys-color-primary);
+    margin-top: 4px;
+}
+
+/* --- Scan History --- */
+.st-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+}
+
+.st-history-item {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: background-color 0.15s;
+}
+
+.st-history-item:hover {
+    background-color: #f8fafa;
+}
+
+.st-history-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #e8f0f0, #d6e6e4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.st-history-thumb .material-symbols-outlined {
+    font-size: 24px;
+    color: var(--md-sys-color-primary);
+    opacity: 0.4;
+}
+
+.st-history-info {
+    flex: 1;
+}
+
+.st-history-date {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+}
+
+.st-history-eye {
+    font-size: 12px;
+    color: #5f6368;
+    margin-top: 2px;
+}
+
+.st-history-score {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.st-history-redness {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+}
+
+.st-history-change {
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.st-history-change.up { color: #E74C3C; }
+.st-history-change.down { color: var(--md-sys-color-primary); }
+
+/* --- Recommendations --- */
+.st-reco-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.st-reco-item {
+    background: #fff;
+    border-radius: 20px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.st-reco-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.st-reco-text h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 4px;
+}
+
+.st-reco-text p {
+    font-size: 12px;
+    color: #5f6368;
+    line-height: 1.5;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+    .st-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    .st-analysis-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .st-page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .st-header-actions {
+        justify-content: flex-start;
+    }
+    .st-analysis-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .st-captures-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .st-analysis-grid {
+        grid-template-columns: 1fr;
+    }
+    .st-captures-grid {
+        grid-template-columns: 1fr;
+    }
+}

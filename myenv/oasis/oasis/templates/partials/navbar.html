@@ -1,0 +1,44 @@
+<header class="top-navbar">
+    <div class="search-container">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" class="search-input" placeholder="Search entries, tips, consults...">
+    </div>
+    
+    <div class="navbar-actions">
+        <div class="doctor-connect-wrap">
+            <button class="btn btn-primary-outline doctor-connect-trigger" id="doctorConnectTrigger" type="button" aria-expanded="false" aria-controls="doctorConnectMenu">
+                <span class="material-symbols-outlined">link</span>
+                Connect to doctor
+                <span class="material-symbols-outlined doctor-connect-caret">expand_more</span>
+            </button>
+            <section class="doctor-connect-menu" id="doctorConnectMenu" data-directory-url="{% url 'doctor_directory' %}" data-search-url="{% url 'doctor_search' %}" hidden aria-label="Connect to doctor menu">
+                <label class="doctor-connect-menu-search" for="doctorDirectorySearch"><span class="material-symbols-outlined">search</span><input id="doctorDirectorySearch" type="search" autocomplete="off" placeholder="Search doctor name or email"></label>
+                <div class="doctor-directory-results" id="doctorDirectoryResults" aria-live="polite"></div>
+                <form class="doctor-chat-start" id="doctorChatStart" method="post" action="{% url 'direct_message_start' %}" hidden>
+                    {% csrf_token %}
+                    <input type="hidden" name="doctor_id" id="selectedDoctorId">
+                    <div class="doctor-chat-chip"><span class="doctor-directory-avatar" id="selectedDoctorAvatar"></span><strong id="selectedDoctorName"></strong><button type="button" id="clearSelectedDoctor" aria-label="Choose another doctor"><span class="material-symbols-outlined">close</span></button></div>
+                    <button class="doctor-chat-start-button" type="submit">Start chat</button>
+                </form>
+            </section>
+        </div>
+        
+        <button class="icon-btn notification-btn">
+            <span class="material-symbols-outlined">notifications</span>
+            <span class="badge"></span>
+        </button>
+        
+        <button class="icon-btn">
+            <span class="material-symbols-outlined">apps</span>
+        </button>
+
+        {% if request.user.is_authenticated %}
+            <a class="profile-avatar" href="{% url 'profile' %}" title="Profile">
+                <img src="https://ui-avatars.com/api/?name={{ request.user.get_full_name|default:request.user.username|urlencode }}&background=DCEEEB&color=006A6A" alt="Profile">
+            </a>
+            <a class="btn btn-primary-outline" href="{% url 'logout' %}">Log out</a>
+        {% else %}
+            <a class="btn btn-primary-outline" href="{% url 'login' %}">Log in</a>
+        {% endif %}
+    </div>
+</header>

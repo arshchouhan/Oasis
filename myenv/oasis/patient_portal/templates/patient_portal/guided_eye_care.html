@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Guided Eye Care | Oasis{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/guided-eye-care.css' %}">
+<section class="eye-care" aria-label="Guided Eye Care">
+  <div class="eye-care-layout">
+    <aside class="eye-routines" aria-label="Choose a session">
+      <h2>Your sessions</h2>
+      <button type="button" class="eye-routine selected" data-routine="reset" aria-pressed="true"><span class="material-symbols-outlined">spa</span><span><strong>Everyday reset</strong><small>3 steps · 70 seconds</small></span></button>
+      <button type="button" class="eye-routine" data-routine="distance" aria-pressed="false"><span class="material-symbols-outlined">landscape</span><span><strong>20-second distance break</strong><small>Look away · 20 seconds</small></span></button>
+      <button type="button" class="eye-routine" data-routine="blink" aria-pressed="false"><span class="material-symbols-outlined">visibility</span><span><strong>Mindful blinking</strong><small>Gentle blinking · 30 seconds</small></span></button>
+      <div class="eye-care-tip"><span class="material-symbols-outlined">light_mode</span><h3>Build a screen-break habit</h3><p>Every 20 minutes, look at something about 20 feet (6 metres) away for at least 20 seconds.</p><a href="https://www.aoa.org/healthy-eyes/eye-and-vision-conditions/computer-vision-syndrome" target="_blank" rel="noopener">Read the AOA guidance ↗</a></div>
+    </aside>
+    <section class="eye-session" aria-label="Guided exercise player">
+      <div class="eye-session-top"><span id="eyeSessionName">Everyday reset</span><span id="eyeStepCount">Step 1 of 3</span></div>
+      <progress id="eyeProgress" value="0" max="70" aria-label="Session progress"></progress>
+      <div class="eye-visual"><span class="material-symbols-outlined" id="eyeStepIcon" aria-hidden="true">visibility</span></div>
+      <div class="eye-step-copy" aria-live="polite" aria-atomic="true"><h2 id="eyeStepTitle">Blink gently</h2><p id="eyeStepText">Blink slowly and comfortably, letting your eyelids meet without squeezing. Keep your face relaxed.</p></div>
+      <div class="eye-timer" id="eyeTimer" role="timer" aria-live="off">00:30</div>
+      <p class="eye-session-status" id="eyeStatus" role="status">Find a comfortable seat, then begin.</p>
+      <div class="eye-controls"><button type="button" id="eyeRestart" class="eye-secondary">Restart</button><button type="button" id="eyeStart" class="eye-primary">Start session</button><button type="button" id="eyeNext" class="eye-secondary" disabled>Next step</button></div>
+      <label class="eye-voice"><input type="checkbox" id="eyeVoice"> Read instructions aloud</label>
+      <p class="eye-care-note">Comfort breaks, not vision correction. Stop if anything feels painful or uncomfortable; persistent symptoms should be discussed with your eye-care professional.</p>
+    </section>
+  </div>
+</section>
+<script src="{% static 'js/guided-eye-care.js' %}"></script>
+{% endblock %}

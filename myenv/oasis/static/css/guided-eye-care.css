@@ -1,0 +1,24 @@
+.main-content:has(>.eye-care){background:transparent;border-radius:0;box-shadow:none;padding:0;overflow:hidden;min-height:0;min-width:0}
+.eye-care{width:100%;height:100%;min-height:0;margin:0;padding:0;color:#183b50;display:flex;flex-direction:column}
+.eye-care-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;flex:1;min-height:0;padding-bottom:4px}
+.eye-routines{background:var(--md-sys-color-surface,#fff);border-radius:24px;padding:20px;overflow-y:auto;min-height:0}
+.eye-routines h2{font-size:12px;color:#78919d;text-transform:uppercase;letter-spacing:1px;margin:0 0 14px}
+.eye-routine{width:100%;display:flex;gap:12px;align-items:center;text-align:left;padding:16px 12px;margin-bottom:10px;background:white;border:1px solid #dfeaec;border-radius:14px;cursor:pointer;color:#315568;font:inherit}
+.eye-routine>.material-symbols-outlined{padding:10px;border-radius:12px;background:#f0f6f7;color:#087f8c;font-size:22px}
+.eye-routine strong,.eye-routine small{display:block}.eye-routine strong{font-size:13px;line-height:1.5}.eye-routine small{font-size:11px;color:#78909b;margin-top:4px}
+.eye-routine.selected{border-color:#80bdc2;background:#eef9f7}.eye-routine.selected>.material-symbols-outlined{background:#d9eeea}
+.eye-care-tip{margin-top:26px;padding:20px;border-radius:16px;background:#edf3f8;color:#69818e;font-size:12px;line-height:1.7}
+.eye-care-tip>.material-symbols-outlined{color:#ad8750}.eye-care-tip h3{font-size:13px;color:#315568;margin:8px 0}.eye-care-tip a{display:inline-block;color:#087f8c;margin-top:12px;font-size:11px}
+.eye-session{background:#fff;border:0;border-radius:24px;padding:24px 28px;text-align:center;box-shadow:none;min-width:0;min-height:0;overflow-y:auto}
+.eye-session-top{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#67808e}.eye-session-top>span:first-child{font-weight:700;color:#315568}
+.eye-session progress{display:block;width:100%;height:5px;margin:16px 0 26px;accent-color:#087f8c;border:0;border-radius:6px;overflow:hidden;background:#edf4f5}.eye-session progress::-webkit-progress-bar{background:#edf4f5}.eye-session progress::-webkit-progress-value{background:#087f8c}.eye-session progress::-moz-progress-bar{background:#087f8c}
+.eye-visual{width:112px;height:112px;display:grid;place-items:center;margin:0 auto 22px;border-radius:50%;background:#edf8f5;border:12px solid #f7fbfa;color:#087f8c}.eye-visual .material-symbols-outlined{font-size:42px}
+.eye-step-copy h2{font-size:24px;margin:0 0 12px}.eye-step-copy p{max-width:410px;margin:auto;color:#6b8290;font-size:14px;line-height:1.8;min-height:75px}
+.eye-timer{font-size:48px;font-weight:500;letter-spacing:2px;font-variant-numeric:tabular-nums;margin:20px 0 4px;color:#23515e}
+.eye-session-status{font-size:12px;color:#78909d;min-height:36px;line-height:1.5;margin-bottom:12px}
+.eye-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.eye-controls button{border:0;border-radius:22px;padding:12px 18px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.eye-primary{background:#087f8c;color:#fff}.eye-secondary{background:#eef4f6;color:#496b7d}.eye-controls button:disabled{opacity:.4;cursor:default}
+.eye-voice{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#627e8c;margin-top:22px}.eye-voice input{accent-color:#087f8c}
+.eye-care-note{border-top:1px solid #eef3f5;margin-top:22px;padding-top:16px;color:#82949f;font-size:11px;line-height:1.7;text-align:left}
+.eye-care :focus-visible{outline:3px solid #79bbc2;outline-offset:3px}
+@media(max-width:950px){.main-content:has(>.eye-care){overflow-y:auto}.eye-care{height:auto;min-height:100%}.eye-care-layout{grid-template-columns:1fr;flex:none}.eye-routines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;overflow:visible}.eye-routines h2{grid-column:1/-1}.eye-routine{display:block;margin:0}.eye-routine>.material-symbols-outlined{margin-bottom:8px}.eye-care-tip{grid-column:1/-1;margin-top:6px}.eye-session{overflow:visible}}
+@media(max-width:580px){.eye-care-heading h1{font-size:25px}.eye-routines{grid-template-columns:1fr}.eye-routine{display:flex}.eye-routine>.material-symbols-outlined{margin-bottom:0}.eye-session{padding:20px 16px}.eye-controls{gap:6px}.eye-controls button{padding:11px 13px}}

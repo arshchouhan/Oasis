@@ -1,0 +1,14 @@
+{% extends "doctor_portal/base.html" %}
+{% block title %}Google Meet | Doctor Portal{% endblock %}
+{% block content %}
+<section style="min-height:calc(100vh - 96px);display:grid;place-items:center;padding:28px;box-sizing:border-box;">
+  <div style="width:min(100%,680px);background:#fff;border-radius:24px;padding:32px;box-shadow:0 8px 28px rgba(27,73,101,.08);">
+    <span class="material-symbols-outlined" style="font-size:38px;color:#087f8c;">videocam</span>
+    <h1 style="margin:12px 0 8px;color:#0b315a;">Google Meet consultations</h1>
+    {% if not calendar_connected %}<p style="color:#607590;line-height:1.5;">Connect your Google Calendar to display your scheduled Meet consultations here and for connected patients.</p><a href="{% url 'doctor_google_calendar_connect' %}" class="btn btn-primary" style="display:inline-flex;text-decoration:none;margin-top:8px;">Connect Google Calendar</a>
+    {% elif notice %}<p style="color:#607590;line-height:1.5;">{{ notice }}</p><a href="{% url 'doctor_google_calendar_connect' %}" class="btn btn-primary-outline" style="display:inline-flex;text-decoration:none;margin-top:8px;">Reconnect Google Calendar</a>
+    {% elif events %}<div style="margin-top:20px;display:grid;gap:12px;">{% for event in events %}<article style="padding:16px;border-radius:14px;background:#f5f8fb;"><strong>{{ event.title }}</strong><div style="margin:5px 0;color:#607590;font-size:13px;">{{ event.start }}</div><a href="{{ event.meet_url }}" target="_blank" rel="noopener" style="color:#087f8c;font-weight:700;">Join Google Meet</a></article>{% endfor %}</div>
+    {% else %}<p style="color:#607590;">There are no upcoming Google Meet consultations on your Calendar.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}

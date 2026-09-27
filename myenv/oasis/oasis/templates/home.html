@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ClearEye</title>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        body { display: grid; place-items: center; font-family: Arial, sans-serif; background: #f5f8fa; }
+        .portal-links { display: flex; gap: 16px; }
+        a { padding: 12px 22px; border-radius: 8px; background: #087f8c; color: #fff; font-weight: 700; text-decoration: none; }
+        a:last-child { background: #1e5fa8; }
+    </style>
+</head>
+<body>
+    <nav class="portal-links" aria-label="Portal sign in">
+        <a href="{% url 'login' %}">Patient login</a>
+        <a href="{% url 'doctor_login' %}">Doctor login</a>
+    </nav>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}ClearEye provider connection{% endblock %}
+
+{% block content %}
+<style>
+    .dcr-wrap { min-height:calc(100vh - 96px); display:grid; place-items:center; padding:24px; box-sizing:border-box; }
+    .dcr-card { width:min(100%, 540px); background:#fff; border:1px solid #dbe5f1; border-radius:20px; padding:32px; box-shadow:0 8px 28px rgba(27,73,101,.09); }
+    .dcr-icon { color:#0b7285; font-size:34px; }
+    .dcr-card h1 { color:#0b315a; font-size:24px; margin:14px 0 8px; }
+    .dcr-card p { color:#5f6f82; line-height:1.5; }
+    .dcr-actions { display:flex; gap:12px; margin-top:24px; }
+    .dcr-actions button { border:0; border-radius:22px; padding:11px 18px; font:inherit; font-weight:600; cursor:pointer; }
+    .dcr-accept { background:#0b7285; color:#fff; }
+    .dcr-decline { background:#f1f3f4; color:#34495e; }
+</style>
+<main class="dcr-wrap"><section class="dcr-card">
+    <span class="material-symbols-outlined dcr-icon">link</span>
+    {% if invalid_request %}
+        <h1>Request unavailable</h1><p>This connection link is invalid or is no longer available.</p>
+    {% elif connection_request.status == 'pending' %}
+        <h1>Connect with ClearEye</h1>
+        <p>A ClearEye client requested to connect with <strong>{{ connection_request.recipient_email }}</strong>. Approving allows the client to see the provider profile shown in ClearEye. No medical records are shared.</p>
+        <form method="post" class="dcr-actions">{% csrf_token %}<button class="dcr-accept" name="decision" value="accept">Approve connection</button><button class="dcr-decline" name="decision" value="decline">Decline</button></form>
+    {% elif connection_request.status == 'accepted' %}
+        <h1>Connection approved</h1><p>The ClearEye client can now view the connected provider profile.</p>
+    {% else %}
+        <h1>Connection declined</h1><p>This request has been declined.</p>
+    {% endif %}
+</section></main>
+{% endblock %}

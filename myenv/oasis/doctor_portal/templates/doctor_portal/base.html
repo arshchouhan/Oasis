@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{#
+  Doctor Portal base: inherits the main ClearEye base template unchanged.
+  It keeps the same Material UI structure, colour palette, sidebar, navbar,
+  right rail, fonts, and shared static assets for every doctor-facing page.
+#}
+
+{% block title %}Doctor Portal | ClearEye{% endblock %}
+
+{% block sidebar %}
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'doctor_dashboard' %}" class="portal-brand-link" aria-label="Go to doctor dashboard">
+            <span class="material-symbols-outlined logo-icon">medical_services</span>
+            <h2 class="logo-text">Oasis</h2>
+        </a>
+    </div>
+    <nav class="sidebar-nav">
+        <ul class="nav-list">
+            <li class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'doctor_connections' or request.resolver_match.url_name == 'doctor_direct_messages' %}open{% endif %}">
+                <a href="#" class="nav-link nav-link-toggle" role="button" aria-expanded="{% if request.resolver_match.url_name == 'doctor_connections' or request.resolver_match.url_name == 'doctor_direct_messages' %}true{% else %}false{% endif %}">
+                    <span class="material-symbols-outlined nav-caret">expand_more</span>
+                    <span class="material-symbols-outlined">groups</span>
+                    <span class="nav-text">Patient connections</span>
+                </a>
+                <ul class="nav-submenu">
+                    <li class="nav-submenu-item"><a href="{% url 'doctor_connections' %}" class="nav-submenu-link {% if request.resolver_match.url_name == 'doctor_connections' %}active{% endif %}">Your Patients</a></li>
+                    <li class="nav-submenu-item"><a href="{% url 'doctor_direct_messages' %}" class="nav-submenu-link {% if request.resolver_match.url_name == 'doctor_direct_messages' %}active{% endif %}">Direct Messages</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'doctor_community' %}" class="nav-link {% if request.resolver_match.url_name == 'doctor_community' %}active{% endif %}">
+                    <span class="material-symbols-outlined nav-arrow">arrow_right</span>
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span class="nav-text">Community</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-bottom">
+            <a href="{% url 'logout' %}" class="nav-link">
+                <span class="material-symbols-outlined nav-arrow">arrow_right</span>
+                <span class="material-symbols-outlined">logout</span>
+                <span class="nav-text">Log out</span>
+            </a>
+        </div>
+    </nav>
+</aside>
+{% endblock %}
+
+{% block right_rail %}
+<div class="right-rail">
+    <button class="rail-btn" data-panel="reminders" data-icon="alarm" data-title="Reminders" title="Reminders"><span class="material-symbols-outlined">alarm</span></button>
+    <button class="rail-btn" data-panel="notes" data-icon="send" data-title="Referrals" data-referrals-url="{% url 'doctor_referral_manager' %}" title="Referral manager"><span class="material-symbols-outlined">send</span></button>
+    <button class="rail-btn" data-panel="tasks" data-icon="task_alt" data-title="Tasks" title="Tasks"><span class="material-symbols-outlined">task_alt</span></button>
+    <button class="rail-btn" data-panel="analytics" data-icon="videocam" data-title="Upcoming meetings" data-meetings-url="{% url 'doctor_upcoming_meetings' %}" title="Upcoming meetings"><span class="material-symbols-outlined">videocam</span></button>
+</div>
+{% endblock %}
+
+{% block navbar %}
+<style>
+    .doctor-calendar-menu { position:relative; }
+    .doctor-calendar-toggle { border:1px solid #b7d5e2; background:#fff; color:#087f8c; width:43px; height:40px; border-radius:21px; display:grid; place-items:center; cursor:pointer; }
+    .doctor-calendar-popover { position:absolute; top:48px; right:0; z-index:50; width:190px; padding:8px; border-radius:16px; background:#fff; box-shadow:0 10px 30px rgba(24,63,88,.2); border:1px solid #dbe5f1; }
+    .doctor-calendar-popover[hidden] { display:none; }
+    .doctor-calendar-link { display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:10px; color:#10284a; text-decoration:none; font-size:13px; }.doctor-calendar-link:hover { background:#e8f4f3; }.doctor-calendar-link .material-symbols-outlined { color:#087f8c; font-size:20px; }
+</style>
+<header class="top-navbar">
+    <div class="search-container"><span class="material-symbols-outlined search-icon">search</span><input class="search-input" placeholder="Search connected patients..." readonly></div>
+    <div class="navbar-actions">
+        <div class="doctor-calendar-menu">
+            <button class="doctor-calendar-toggle" type="button" id="doctorCalendarToggle" aria-expanded="false" aria-controls="doctorCalendarPopover" title="Google Calendar and Meet"><span class="material-symbols-outlined">calendar_month</span></button>
+            <div class="doctor-calendar-popover" id="doctorCalendarPopover" hidden>
+                {% if doctor_calendar_connected %}<form method="post" action="{% url 'doctor_google_calendar_disconnect' %}">{% csrf_token %}<button class="doctor-calendar-link" type="submit" style="border:0;background:transparent;width:100%;cursor:pointer;"><span class="material-symbols-outlined">link_off</span>Disconnect Calendar</button></form>{% else %}<a class="doctor-calendar-link" href="{% url 'doctor_google_calendar_connect' %}"><span class="material-symbols-outlined">link</span>Connect Calendar</a>{% endif %}
+            </div>
+        </div>
+        <a class="btn btn-primary-outline" href="{% url 'doctor_profile' %}" style="text-decoration: none;">
+            <span class="material-symbols-outlined">person_edit</span>
+            Complete your profile
+        </a>
+    </div>
+</header>
+<script>
+    (() => { const toggle=document.getElementById('doctorCalendarToggle'), menu=document.getElementById('doctorCalendarPopover'); if(!toggle||!menu)return; toggle.addEventListener('click',()=>{const open=menu.hidden;menu.hidden=!open;toggle.setAttribute('aria-expanded',String(open));});document.addEventListener('click',(event)=>{if(!event.target.closest('.doctor-calendar-menu')){menu.hidden=true;toggle.setAttribute('aria-expanded','false');}});})();
+</script>
+{% endblock %}
