@@ -119,56 +119,29 @@ def save_eye_scan(request):
         redness_score = video_measurements['redness_score'] if video_measurements['redness_score'] is not None else client_redness_score
         redness_index = round(redness_score / 10, 3)
         sampled_frames = video_measurements['sampled_frames']
-        scan = EyeScan.objects.filter(user=request.user).first()
-        if scan is None:
-            scan = EyeScan.objects.create(
-                user=request.user,
-                left_image_url=left_upload['secure_url'],
-                right_image_url=right_upload['secure_url'],
-                left_public_id=left_upload.get('public_id', ''),
-                right_public_id=right_upload.get('public_id', ''),
-                recording_url=recording_upload['secure_url'],
-                recording_public_id=recording_upload.get('public_id', ''),
-                duration_seconds=duration,
-                blink_count=blink_count,
-                blink_rate=blink_rate,
-                incomplete_blink_rate=incomplete_blink_rate,
-                complete_blink_count=complete_blink_count,
-                average_interblink_interval=average_interblink_interval,
-                average_blink_duration=average_blink_duration,
-                average_eye_opening=average_eye_opening,
-                left_ear=left_ear,
-                right_ear=right_ear,
-                redness_index=redness_index,
-                tracking_quality=tracking_quality,
-                redness_score=redness_score,
-                sampled_frames=sampled_frames,
-            )
-        else:
-            scan.left_image_url = left_upload['secure_url']
-            scan.right_image_url = right_upload['secure_url']
-            scan.left_public_id = left_upload.get('public_id', '')
-            scan.right_public_id = right_upload.get('public_id', '')
-            scan.recording_url = recording_upload['secure_url']
-            scan.recording_public_id = recording_upload.get('public_id', '')
-            scan.duration_seconds = duration
-            scan.blink_count = blink_count
-            scan.blink_rate = blink_rate
-            scan.incomplete_blink_rate = incomplete_blink_rate
-            scan.complete_blink_count = complete_blink_count
-            scan.average_interblink_interval = average_interblink_interval
-            scan.average_blink_duration = average_blink_duration
-            scan.average_eye_opening = average_eye_opening
-            scan.left_ear = left_ear
-            scan.right_ear = right_ear
-            scan.redness_index = redness_index
-            scan.tracking_quality = tracking_quality
-            scan.redness_score = redness_score
-            scan.sampled_frames = sampled_frames
-            scan.created_at = timezone.now()
-            scan.save()
-            # Keep one current scan record per user for the dashboard pair.
-            EyeScan.objects.filter(user=request.user).exclude(pk=scan.pk).delete()
+        scan = EyeScan.objects.create(
+            user=request.user,
+            left_image_url=left_upload['secure_url'],
+            right_image_url=right_upload['secure_url'],
+            left_public_id=left_upload.get('public_id', ''),
+            right_public_id=right_upload.get('public_id', ''),
+            recording_url=recording_upload['secure_url'],
+            recording_public_id=recording_upload.get('public_id', ''),
+            duration_seconds=duration,
+            blink_count=blink_count,
+            blink_rate=blink_rate,
+            incomplete_blink_rate=incomplete_blink_rate,
+            complete_blink_count=complete_blink_count,
+            average_interblink_interval=average_interblink_interval,
+            average_blink_duration=average_blink_duration,
+            average_eye_opening=average_eye_opening,
+            left_ear=left_ear,
+            right_ear=right_ear,
+            redness_index=redness_index,
+            tracking_quality=tracking_quality,
+            redness_score=redness_score,
+            sampled_frames=sampled_frames,
+        )
     except Exception:
         return JsonResponse({'error': 'Unable to save the eye images. Please try again.'}, status=502)
 

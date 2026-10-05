@@ -63,4 +63,20 @@ class PersonalWorkspaceTests(TestCase):
         self.assertEqual(self.client.get(self.url).status_code, 401)
         doctor = User.objects.create_user(username='doctor', email='doctor@example.test', account_type='doctor')
         self.client.force_login(doctor)
-        self.assertEqual(self.client.get(self.url).status_code, 403)
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_doctor_tasks_are_private_and_persist(self):
+        patient_list = PatientTaskList.objects.create(owner=self.patient, name='Patient care')
+        patient_task = PatientTask.objects.create(task_list=patient_list, title='Private patient task')
+        doctor = User.objects.create_user(username='taskdoctor', email='taskdoctor@example.test', account_type='doctor')
+        self.client.force_login(doctor)
+        self.assertEqual(self.client.get(self.url).json()['tasks'], [])
+        response = self.post(action='create_list', name='Consultations')
+        list_id = response.json()['lists'][0]['id']
+        response = self.post(action='save_task', list_id=list_id, title='Review consultation')
+        task_id = response.json()['tasks'][0]['id']
+        self.assertEqual(self.post(action='complete_task', id=task_id, completed=True).status_code, 200)
+        self.assertTrue(self.client.get(self.url).json()['tasks'][0]['completed'])
+        self.assertEqual(self.post(action='delete_task', id=patient_task.pk).status_code, 400)
+        self.client.force_login(self.patient)
+        self.assertEqual([task['id'] for task in self.client.get(self.url).json()['tasks']], [patient_task.pk])

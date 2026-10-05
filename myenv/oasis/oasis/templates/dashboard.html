@@ -1,41 +1,16 @@
 {% extends "base.html" %}
-
-{% block title %}Dashboard | ClearEye{% endblock %}
-
+{% load static %}
+{% block title %}Your eye care | Oasis{% endblock %}
 {% block content %}
-<div style="max-width: 900px; margin: 0 auto; padding-top: 40px; text-align: center;">
-    <h1 style="font-size: 2.5rem; font-weight: 300; margin-bottom: 8px;">Welcome, User</h1>
-    <p style="color: #5f6368; font-size: 1rem; margin-bottom: 48px;">Ready? Set. Care! Let's jump straight into tracking your health.</p>
-
-    <div style="display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;">
-        
-        <!-- Card 1 -->
-        <div style="flex: 1; min-width: 240px; text-align: center; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
-            <div style="height: 140px; width: 100%; display: flex; align-items: center; justify-content: center; background: #EAF3F2; border-radius: 16px; margin-bottom: 8px;">
-                <span class="material-symbols-outlined" style="font-size: 64px; color: #006A6A;">vital_signs</span>
-            </div>
-            <p style="font-weight: 500; font-size: 14px; line-height: 1.5;">Log your symptoms for today and view progress.</p>
-            <button class="btn" style="background-color: var(--md-sys-color-accent-blue); color: white; margin-top: auto; border-radius: 50px; padding: 10px 24px; font-weight: 500;">Start tracking</button>
-        </div>
-
-        <!-- Card 2 -->
-        <div style="flex: 1; min-width: 240px; text-align: center; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
-            <div style="height: 140px; width: 100%; display: flex; align-items: center; justify-content: center; background: #FEF7E0; border-radius: 16px; margin-bottom: 8px;">
-                <span class="material-symbols-outlined" style="font-size: 64px; color: #F5B041;">stethoscope</span>
-            </div>
-            <p style="font-weight: 500; font-size: 14px; line-height: 1.5;">Connect with doctors to upgrade your care plan.</p>
-            <button class="btn btn-primary-outline" style="margin-top: auto; border-radius: 50px; padding: 10px 24px;">Browse experts</button>
-        </div>
-
-        <!-- Card 3 -->
-        <div style="flex: 1; min-width: 240px; text-align: center; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
-            <div style="height: 140px; width: 100%; display: flex; align-items: center; justify-content: center; background: #E8F0FE; border-radius: 16px; margin-bottom: 8px;">
-                <span class="material-symbols-outlined" style="font-size: 64px; color: #1D61AC;">menu_book</span>
-            </div>
-            <p style="font-weight: 500; font-size: 14px; line-height: 1.5;">Find articles and tips for ocular comfort.</p>
-            <button class="btn btn-primary-outline" style="margin-top: auto; border-radius: 50px; padding: 10px 24px;">Explore resources</button>
-        </div>
-
-    </div>
-</div>
+<style>
+.patient-home{max-width:1120px;margin:0 auto;padding:48px 28px;text-align:center;color:#102f52}.patient-home h1{font-size:36px;font-weight:500;letter-spacing:-1px;margin:12px 0}.home-intro{color:#607590;line-height:1.7;margin:0 auto 44px;max-width:560px}.home-paths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px}.home-path{display:flex;flex-direction:column;align-items:center;padding:12px;gap:12px;min-width:0}.home-path img{width:100%;height:210px;object-fit:contain}.home-path h2{font-size:20px;margin:8px 0 0}.home-path p{font-size:14px;color:#607590;line-height:1.7;margin:0 0 8px;max-width:280px}.home-path a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;padding:11px 18px;border-radius:24px;color:#087f8c;border:1px solid #a4cbd0;font-size:13px;font-weight:600;margin-top:auto}.home-path:first-child a{background:#087f8c;border-color:#087f8c;color:white}.home-path a:hover{background:#e0f0ef}.home-path:first-child a:hover{background:#066b76}.home-path a .material-symbols-outlined{font-size:18px}.home-secondary{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;border-top:1px solid #dce7ef;padding-top:24px;margin-top:40px}.home-secondary a{font-size:13px;color:#607590;text-decoration:none}.home-secondary a:hover{color:#087f8c}@media(max-width:800px){.home-paths{grid-template-columns:1fr;gap:24px}.patient-home{padding:28px 16px}.patient-home h1{font-size:28px}.home-path img{height:180px}}
+</style>
+<style>
+@media(min-width:801px){.main-content:has(.patient-home){overflow:hidden}.patient-home{height:100%;box-sizing:border-box;padding:clamp(14px,3vh,32px) 24px;display:flex;flex-direction:column;justify-content:center}.patient-home h1{font-size:clamp(26px,3.5vh,36px);margin:0 0 10px}.home-intro{margin:0 auto clamp(12px,2.5vh,26px);font-size:14px}.home-paths{gap:24px;min-height:0}.home-path{padding:6px;gap:9px}.home-path img{height:clamp(110px,23vh,190px)}.home-path h2{font-size:18px;margin:0}.home-path p{font-size:13px;line-height:1.6;margin:0 0 4px}.home-path a{padding:9px 16px}.home-secondary{margin-top:clamp(12px,2.5vh,24px);padding-top:16px}}@media(min-width:801px) and (max-height:600px){.main-content:has(.patient-home){overflow:auto}.patient-home{height:auto;min-height:100%}.home-path img{height:100px}.home-intro{margin-bottom:10px}}
+</style><section class="patient-home"><h1>Welcome, {{ request.user.first_name|default:request.user.username|default:'there' }}</h1><p class="home-intro">A little attention to your eyes, every day. Track changes, stay connected with your doctor, and take time for guided eye care.</p>
+<div class="home-paths">
+<section class="home-path"><img src="{% static 'images/eye-tracking.svg' %}" alt="Eye assessment with a daily observation chart"><h2>Understand your eye health</h2><p>Record an eye assessment, track your symptoms, and review your measurements over time.</p><a href="{% url 'symptom_tracker' %}">Start tracking<span class="material-symbols-outlined">arrow_forward</span></a></section>
+<section class="home-path"><img src="{% static 'images/care-team.svg' %}" alt="Doctors collaborating on a patient's care"><h2>Connect with your care team</h2><p>View your primary and referred doctors, send messages, and join scheduled consultations.</p><a href="{% url 'doctor_search' %}">Your doctors<span class="material-symbols-outlined">arrow_forward</span></a></section>
+<section class="home-path"><img src="{% static 'images/eye-rest.svg' %}" alt="A person taking a relaxing eye break"><h2>Make time for eye care</h2><p>Follow visual guides for palming, blinking, eye movements, and near-and-far focusing.</p><a href="{% url 'environment' %}">Guided eye care<span class="material-symbols-outlined">arrow_forward</span></a></section>
+</div><nav class="home-secondary" aria-label="More eye care tools"><a href="{% url 'reports' %}">View assessment reports</a><a href="{% url 'direct_messages' %}">Direct messages</a><a href="{% url 'patient_community' %}">Community discussions</a></nav></section>
 {% endblock %}

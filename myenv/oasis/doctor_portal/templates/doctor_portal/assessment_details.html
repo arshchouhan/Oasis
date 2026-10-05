@@ -1,0 +1,30 @@
+{% if report.assessment_details %}
+<style>
+.panel-report-list article>.assessment-details,.assessment-details{display:block!important;grid-template-columns:none!important;margin-top:22px;border-top:1px solid #dce7ef;padding-top:20px;color:#102f52}
+.assessment-details h4{margin:0 0 16px;font-size:17px;font-weight:600}.assessment-details h5{font-size:13px;color:#087f8c;margin:20px 0 8px;font-weight:600}.assessment-details dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;margin:0}.assessment-details dl>div{padding:12px 0;border-bottom:1px solid #e2ebf1;min-width:0}.assessment-details dt{font-size:12px;color:#607590;line-height:1.5;overflow-wrap:anywhere}.assessment-details dd{font-size:16px;font-weight:500;margin:6px 0 0;line-height:1.4}.assessment-details p{font-size:12px;color:#607590;line-height:1.7;margin:20px 0 0}.panel-report-list:has(.assessment-details){grid-template-columns:1fr}.panel-report-list article:has(.assessment-details){padding:22px}.patient-profile:has(.panel-report-list){scrollbar-width:none}.patient-profile:has(.panel-report-list)::-webkit-scrollbar{display:none}@media(max-width:500px){.assessment-details dl{gap:0 14px}.panel-report-list article:has(.assessment-details){padding:16px}.assessment-details dd{font-size:15px}}
+</style>
+<div class="assessment-details">
+<h4>Assessment measurements</h4>
+<h5>Blink activity</h5>
+<dl>
+<div><dt>Total blinks</dt><dd>{{ report.assessment_details.blink_count|floatformat:0|default:'Not recorded' }}</dd></div>
+<div><dt>Complete blinks</dt><dd>{{ report.assessment_details.complete_blink_count|floatformat:0|default:'Not recorded' }}</dd></div>
+<div><dt>Incomplete blink rate</dt><dd>{{ report.assessment_details.incomplete_blink_rate|floatformat:1|default:'—' }}%</dd></div>
+<div><dt>Average time between blinks</dt><dd>{{ report.assessment_details.average_interblink_interval|floatformat:2|default:'—' }} seconds</dd></div>
+<div><dt>Average blink duration</dt><dd>{{ report.assessment_details.average_blink_duration|floatformat:0|default:'—' }} ms</dd></div>
+</dl>
+<h5>Eye opening &amp; redness</h5>
+<dl>
+<div><dt>Average eye opening ratio</dt><dd>{{ report.assessment_details.average_eye_opening|floatformat:3|default:'Not recorded' }}</dd></div>
+<div><dt>Left eye opening ratio</dt><dd>{{ report.assessment_details.left_ear|floatformat:3|default:'Not recorded' }}</dd></div>
+<div><dt>Right eye opening ratio</dt><dd>{{ report.assessment_details.right_ear|floatformat:3|default:'Not recorded' }}</dd></div>
+<div><dt>Redness index</dt><dd>{{ report.assessment_details.redness_index|floatformat:2|default:'Not recorded' }}</dd></div>
+</dl>
+<h5>Recording details</h5>
+<dl>
+<div><dt>Recording duration</dt><dd>{{ report.assessment_details.duration_seconds|floatformat:0|default:'—' }} seconds</dd></div>
+<div><dt>Frames sampled</dt><dd>{{ report.assessment_details.sampled_frames|floatformat:0|default:'Not recorded' }}</dd></div>
+</dl>
+<p>Camera-derived measurements reflect this recording. Review alongside the patient's symptoms and examination.</p>
+</div>
+{% endif %}

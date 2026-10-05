@@ -50,10 +50,9 @@
 
 {% block right_rail %}
 <div class="right-rail">
-    <button class="rail-btn" data-panel="reminders" data-icon="alarm" data-title="Reminders" title="Reminders"><span class="material-symbols-outlined">alarm</span></button>
-    <button class="rail-btn" data-panel="notes" data-icon="send" data-title="Referrals" data-referrals-url="{% url 'doctor_referral_manager' %}" title="Referral manager"><span class="material-symbols-outlined">send</span></button>
-    <button class="rail-btn" data-panel="tasks" data-icon="task_alt" data-title="Tasks" title="Tasks"><span class="material-symbols-outlined">task_alt</span></button>
     <button class="rail-btn" data-panel="analytics" data-icon="videocam" data-title="Upcoming meetings" data-meetings-url="{% url 'doctor_upcoming_meetings' %}" title="Upcoming meetings"><span class="material-symbols-outlined">videocam</span></button>
+    <button class="rail-btn" data-panel="notes" data-icon="send" data-title="Referrals" data-referrals-url="{% url 'doctor_referral_manager' %}" title="Referral manager"><span class="material-symbols-outlined">send</span></button>
+    <button class="rail-btn" data-panel="tasks" data-icon="task_alt" data-title="Tasks" data-personal-url="{% url 'patient_personal_workspace' %}" title="Tasks"><span class="material-symbols-outlined">task_alt</span></button>
 </div>
 {% endblock %}
 

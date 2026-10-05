@@ -36,3 +36,17 @@ def guided_eye_care(request):
 def legacy_patient_dashboard(request):
     """Keep historic /dashboard/ links working while using the pt URL."""
     return redirect('patient_dashboard')
+
+
+@login_required
+def patient_profile(request):
+    if request.user.account_type == 'doctor':
+        return redirect('doctor_profile')
+    return render(request, 'patient_portal/profile.html')
+
+
+@login_required
+def patient_profile(request):
+    if request.user.account_type == 'doctor':
+        return redirect('doctor_profile')
+    return render(request, 'patient_portal/profile.html')

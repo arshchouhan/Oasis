@@ -2,6 +2,49 @@ from django.conf import settings
 from django.db import models
 
 
+class CommunityPost(models.Model):
+    class Topic(models.TextChoices):
+        GENERAL = 'general', 'General discussion'
+        EYE_CARE = 'eye_care', 'Eye care'
+        WELLBEING = 'wellbeing', 'Wellbeing'
+        QUESTIONS = 'questions', 'Questions'
+
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='community_posts')
+    title = models.CharField(max_length=160)
+    body = models.TextField(max_length=5000)
+    media = models.FileField(upload_to='community/%Y/%m/', blank=True)
+    media_type = models.CharField(max_length=10, blank=True)
+    topic = models.CharField(max_length=20, choices=Topic.choices, default=Topic.GENERAL)
+    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='liked_community_posts')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at', '-id')
+
+
+class CommunityReply(models.Model):
+    post = models.ForeignKey(CommunityPost, on_delete=models.CASCADE, related_name='replies')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='community_replies')
+    body = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('created_at', 'id')
+
+
+class ConsultationRecord(models.Model):
+    patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='consultation_records')
+    doctor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='recorded_consultations')
+    consulted_at = models.DateTimeField()
+    notes = models.TextField(max_length=5000)
+    prescription = models.TextField(max_length=5000, blank=True)
+    follow_up = models.TextField(max_length=3000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-consulted_at', '-id')
+
+
 class DoctorProfile(models.Model):
     """Professional details shown within the Doctor Portal."""
 
@@ -34,6 +77,7 @@ class SharedDigitalReport(models.Model):
     patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shared_reports')
     doctor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_reports')
     source_scan_id = models.PositiveBigIntegerField()
+    assessment_details = models.JSONField(default=dict, blank=True)
     generated_at = models.DateTimeField()
     blink_rate = models.FloatField(default=0)
     redness_score = models.FloatField(default=0)

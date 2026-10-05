@@ -20,5 +20,5 @@
     <button class="btn auth-submit" type="submit">Log in</button>
 </form>
 {% if portal_role != 'doctor' %}<a class="btn google-button" href="{% url 'google_login' %}">Continue with Google</a>{% endif %}
-<p class="auth-switch">New to ClearEye? {% if portal_role == 'doctor' %}<a href="{% url 'doctor_register' %}">Create a doctor account</a>{% else %}<a href="{% url 'register' %}">Create an account</a>{% endif %}</p>
+<p class="auth-switch">New to Oasis? {% if portal_role == 'doctor' %}<a href="{% url 'doctor_register' %}">Create a doctor account</a>{% else %}<a href="{% url 'register' %}">Create an account</a>{% endif %}</p>
 {% endblock %}

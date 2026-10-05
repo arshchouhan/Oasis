@@ -9,6 +9,9 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Q, Count, Exists, OuterRef
+from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
@@ -19,6 +22,33 @@ from django.urls import reverse
 from patient_portal.models import DirectMessage, DirectMessageThread, User
 from patient_portal.visit_models import DoctorConnection, DoctorConnectionRequest
 from .models import DoctorProfile, GoogleCalendarConnection, ReferralActivity, ReferralThread, SharedDigitalReport
+from .models import CommunityPost, CommunityReply
+from .community_forms import CommunityPostForm, CommunityReplyForm
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def consultation_workspace(request, patient_id):
+    from django.forms import modelform_factory, DateTimeInput, Textarea
+    from .models import ConsultationRecord
+    patient = _care_patient(request.user, patient_id)
+    if not patient:
+        return JsonResponse({'error': 'You do not have access to this patient.'}, status=403)
+    Form = modelform_factory(ConsultationRecord, fields=('consulted_at', 'notes', 'prescription', 'follow_up'), widgets={
+        'consulted_at': DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+        'notes': Textarea(attrs={'rows':4,'placeholder':'Consultation summary and advice discussed with the patient'}),
+        'prescription': Textarea(attrs={'rows':4,'placeholder':'Medication, dose, frequency and duration, if prescribed'}),
+        'follow_up': Textarea(attrs={'rows':3,'placeholder':'Next review date and care instructions'}),
+    })
+    form = Form(request.POST or None, initial={'consulted_at': timezone.localtime().strftime('%Y-%m-%dT%H:%M')})
+    if request.method == 'POST':
+        if not form.is_valid():
+            return JsonResponse({'error': ' '.join(f'{field}: {", ".join(errors)}' for field,errors in form.errors.items())}, status=400)
+        record = form.save(commit=False)
+        record.patient, record.doctor = patient, request.user
+        record.save()
+        return JsonResponse({'id':record.pk,'message':'Consultation saved to the patient’s history.'})
+    return render(request, 'doctor_portal/consultation_workspace_panel.html', {'patient':patient,'form':form})
 
 
 GOOGLE_CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events'
@@ -51,7 +81,7 @@ def _calendar_token(connection):
     return connection.access_token
 
 
-def get_doctor_meet_events(doctor):
+def get_doctor_meet_events(doctor, patient=None, history=False):
     """Read the doctor's upcoming Calendar events that have Google Meet links."""
     connection = GoogleCalendarConnection.objects.filter(user=doctor).first()
     if not connection:
@@ -60,8 +90,8 @@ def get_doctor_meet_events(doctor):
     if not token:
         return [], 'Google Calendar access expired. The doctor needs to reconnect it.'
     query = urlencode({
-        'timeMin': timezone.now().isoformat(), 'singleEvents': 'true',
-        'orderBy': 'startTime', 'maxResults': 30, 'conferenceDataVersion': 1,
+        'timeMin': (timezone.now() - timedelta(days=365) if history else timezone.now()).isoformat(), 'singleEvents': 'true',
+        'orderBy': 'startTime', 'maxResults': 100 if history else 30, 'conferenceDataVersion': 1,
     })
     try:
         request = Request(
@@ -74,10 +104,15 @@ def get_doctor_meet_events(doctor):
         return [], 'Google Meet details could not be loaded right now.'
     events = []
     for event in payload.get('items', []):
+        if event.get('status') == 'cancelled':
+            continue
+        if patient and not any(attendee.get('email', '').lower() == patient.email.lower() for attendee in event.get('attendees', [])):
+            continue
         entries = event.get('conferenceData', {}).get('entryPoints', [])
         meet_url = next((entry.get('uri') for entry in entries if entry.get('entryPointType') == 'video'), event.get('hangoutLink', ''))
         if meet_url:
-            events.append({'title': event.get('summary') or 'Google Meet consultation', 'start': event.get('start', {}).get('dateTime', event.get('start', {}).get('date', '')), 'meet_url': meet_url})
+            attendee = next((item for item in event.get('attendees', []) if patient and item.get('email', '').lower() == patient.email.lower()), {})
+            events.append({'title': event.get('summary') or 'Google Meet consultation', 'start': event.get('start', {}).get('dateTime', event.get('start', {}).get('date', '')), 'end': event.get('end', {}).get('dateTime', event.get('end', {}).get('date', '')), 'timezone': event.get('start', {}).get('timeZone') or 'Asia/Kolkata', 'description': event.get('description', ''), 'status': event.get('status', 'confirmed'), 'invitation_status': attendee.get('responseStatus', ''), 'doctor_name': doctor.get_full_name() or doctor.username, 'doctor_email': doctor.email, 'meet_url': meet_url})
     events.sort(key=lambda event: event['start'])
     return events, ''
 
@@ -102,13 +137,72 @@ def upcoming_meetings(request):
     return JsonResponse({'events': events, 'error': error})
 
 
-@login_required(login_url='doctor_login')
+@login_required
+@require_http_methods(['GET', 'POST'])
 def community(request):
-    """Doctor community is a dashboard child, not the dashboard route itself."""
-    if request.user.account_type != User.AccountType.DOCTOR:
-        messages.error(request, 'Doctor Portal is available to doctor accounts only.')
-        return redirect('patient_dashboard')
-    return render(request, 'doctor_portal/community.html')
+    """One persistent community shared by every authenticated account."""
+    from django.shortcuts import get_object_or_404
+    form = CommunityPostForm()
+    action_error = ''
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'post':
+            form = CommunityPostForm(request.POST, request.FILES)
+            if form.is_valid():
+                post = form.save(commit=False)
+                post.author = request.user
+                post.media_type = getattr(form, 'media_type', '')
+                post.save()
+                return redirect(request.path)
+        elif action in ('reply', 'like', 'delete_post'):
+            post = get_object_or_404(CommunityPost, pk=request.POST.get('post_id') if request.POST.get('post_id', '').isdigit() else 0)
+            if action == 'reply':
+                reply_form = CommunityReplyForm(request.POST)
+                if reply_form.is_valid():
+                    reply = reply_form.save(commit=False)
+                    reply.author, reply.post = request.user, post
+                    reply.save()
+                    return redirect(request.path + '#post-' + str(post.pk))
+                action_error = 'Reply must contain between 1 and 2,000 characters.'
+            elif action == 'like':
+                if post.likes.filter(pk=request.user.pk).exists():
+                    post.likes.remove(request.user)
+                else:
+                    post.likes.add(request.user)
+                return redirect(request.path + '#post-' + str(post.pk))
+            elif post.author_id == request.user.pk:
+                post.delete()
+                return redirect(request.path)
+            else:
+                return JsonResponse({'error': 'You can only delete your own posts.'}, status=403)
+        elif action == 'delete_reply':
+            reply = get_object_or_404(CommunityReply, pk=request.POST.get('reply_id') if request.POST.get('reply_id', '').isdigit() else 0, author=request.user)
+            reply.delete()
+            return redirect(request.path)
+        else:
+            return JsonResponse({'error': 'Unknown community action.'}, status=400)
+    query = request.GET.get('q', '').strip()[:160]
+    topic = request.GET.get('topic', '')
+    posts = CommunityPost.objects.select_related('author').prefetch_related('replies__author').annotate(
+        like_count=Count('likes', distinct=True),
+        liked=Exists(CommunityPost.likes.through.objects.filter(communitypost_id=OuterRef('pk'), user_id=request.user.pk)),
+    ).order_by('-created_at', '-pk')
+    if query:
+        posts = posts.filter(Q(title__icontains=query) | Q(body__icontains=query))
+    if topic in CommunityPost.Topic.values:
+        posts = posts.filter(topic=topic)
+    if request.GET.get('mine') == '1':
+        posts = posts.filter(author=request.user)
+    return render(request, 'doctor_portal/community.html', {
+        'community_base': 'doctor_portal/base.html' if request.user.account_type == User.AccountType.DOCTOR else 'base.html',
+        'post_form': form, 'action_error': action_error,
+        'creating_post': request.GET.get('view') == 'create' or form.is_bound,
+        'page_obj': Paginator(posts, 10).get_page(request.GET.get('page')),
+        'topics': CommunityPost.Topic.choices, 'query': query, 'selected_topic': topic,
+        'mine': request.GET.get('mine', ''),
+        'post_count': CommunityPost.objects.count(),
+        'member_count': User.objects.filter(is_active=True).count(),
+    })
 
 
 @login_required(login_url='doctor_login')
@@ -180,6 +274,7 @@ def patient_digital_reports(request, patient_id):
         'blink_rate': round(report.blink_rate, 1),
         'redness_score': round(report.redness_score, 1),
         'tracking_quality': report.tracking_quality,
+        'details': report.assessment_details,
     } for report in reports]})
 
 
@@ -536,7 +631,8 @@ def meet_workspace(request, patient_id):
     if not patient:
         messages.error(request, 'This patient is not connected to your portal.')
         return redirect('doctor_connections')
-    context = {'patient': patient}
+    events, meeting_notice = get_doctor_meet_events(request.user, patient=patient)
+    context = {'patient': patient, 'meetings': events, 'meeting_notice': meeting_notice}
     if request.GET.get('panel') == '1':
         return render(request, 'doctor_portal/meet_workspace_panel.html', context)
     return render(request, 'doctor_portal/meet_workspace.html', context)

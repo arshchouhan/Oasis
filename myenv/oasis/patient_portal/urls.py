@@ -3,9 +3,13 @@ from django.urls import path
 
 from oasis import views as core_views
 from . import auth_views, symptom_views, visit_views, task_views
+from doctor_portal.views import community
 
 
 urlpatterns = [
+    path('dashboard/visits/consultation-history/', visit_views.consultation_history, name='consultation_history'),
+    path('dashboard/upcoming-meetings/', visit_views.upcoming_meetings, name='patient_upcoming_meetings'),
+    path('dashboard/community/', community, name='patient_community'),
     path('dashboard/personal-workspace/', task_views.workspace, name='patient_personal_workspace'),
     path('', auth_views.patient_home, name='home'),
     path('login/', auth_views.patient_login, name='login'),
@@ -35,5 +39,5 @@ urlpatterns = [
     path('dashboard/environment/', core_views.guided_eye_care, name='environment'),
     path('dashboard/consult/', visit_views.visits_home, name='consult'),
     path('dashboard/learn/', core_views.home, name='learn'),
-    path('dashboard/profile/', core_views.home, name='profile'),
+    path('dashboard/profile/', core_views.patient_profile, name='profile'),
 ]

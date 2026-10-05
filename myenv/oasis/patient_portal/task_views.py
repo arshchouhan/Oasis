@@ -1,4 +1,4 @@
-"""Private patient tasks and notes for the right-hand panel."""
+"""Private account tasks and notes for the shared right-hand panel."""
 import json
 
 from django.http import JsonResponse
@@ -12,8 +12,8 @@ from .models import PatientNote, PatientTask, PatientTaskList, User
 def workspace(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Please sign in again.'}, status=401)
-    if request.user.account_type != User.AccountType.PATIENT:
-        return JsonResponse({'error': 'Patient access required.'}, status=403)
+    if request.user.account_type not in (User.AccountType.PATIENT, User.AccountType.DOCTOR):
+        return JsonResponse({'error': 'Patient or doctor access required.'}, status=403)
     lists = PatientTaskList.objects.filter(owner=request.user)
     tasks = PatientTask.objects.filter(task_list__owner=request.user)
     notes = PatientNote.objects.filter(owner=request.user)

@@ -42,8 +42,8 @@
         </div>
 
         {% block right_rail %}<div class="right-rail">
-            <button class="rail-btn" data-panel="reminders" data-icon="alarm" data-title="Reminders" title="Reminders">
-                <span class="material-symbols-outlined">alarm</span>
+            <button class="rail-btn" data-panel="reminders" data-icon="videocam" data-title="Upcoming meetings" data-meetings-url="{% url 'patient_upcoming_meetings' %}" title="Upcoming meetings">
+                <span class="material-symbols-outlined">videocam</span>
             </button>
             <button class="rail-btn" data-panel="notes" data-icon="edit_note" data-title="Notes" title="Notes" data-personal-url="{% url 'patient_personal_workspace' %}">
                 <span class="material-symbols-outlined">edit_note</span>
@@ -61,6 +61,9 @@
     {% if request.user.is_authenticated %}<div hidden id="personalWorkspaceToken">{% csrf_token %}</div>{% endif %}
     <script src="{% static 'js/patient-workspace.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/portal-loading.css' %}">
+    <script src="{% static 'js/portal-loading.js' %}"></script>
+    <script src="{% static 'js/chat-details.js' %}"></script>
 </body>
 
 </html>

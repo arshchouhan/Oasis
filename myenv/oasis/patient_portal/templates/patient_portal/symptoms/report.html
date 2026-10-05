@@ -70,7 +70,7 @@
     {% if assessment %}
     {% if assessment.tracking_quality >= 15 %}
     <div class="report-card report-summary-sibling">
-        <p style="margin-top:0;">Recorded {{ assessment.created_at|date:"d M Y, g:i A" }} · {{ assessment.duration_seconds }} seconds</p>
+        <p style="margin-top:0;">Recorded {{ assessment.created_at|date:"d M Y, g:i A T" }} · {{ assessment.duration_seconds }} seconds</p>
         <div class="report-metrics">
             <div class="report-metric"><small>Blinks detected</small><strong>{{ assessment.blink_count }}</strong></div>
             <div class="report-metric"><small>Blink rate</small><strong>{{ assessment.blink_rate|floatformat:1 }}</strong> / min</div>

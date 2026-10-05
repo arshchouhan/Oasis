@@ -2,7 +2,9 @@
 
 {% block title %}Doctor Search Results | ClearEye{% endblock %}
 
-{% block content %}
+{% block content %}{% load avatars %}
+{% load static %}
+<style>.ds-care-art{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:100px auto 24px;max-width:480px;width:85%;text-align:center;pointer-events:none}.ds-care-art img{width:100%;height:auto;max-height:300px;object-fit:contain}.ds-care-art p{font-size:12px;color:#71849a;line-height:1.6;margin:10px 0}.ds-care-art-profile{max-width:230px;margin-top:24px}.ds-care-art-profile img{max-height:120px}@media(max-height:750px){.ds-care-art{margin-top:48px}.ds-care-art img{max-height:240px}.ds-care-art-profile{display:none}}</style>
 <style>
     .ds-workspace {
         display: flex;
@@ -591,6 +593,18 @@
         text-decoration: none;
     }
 </style>
+<style>
+.ds-right-pane>.ds-pane-body:has(.ds-full-reports){overflow-y:auto;overflow-x:hidden;scrollbar-width:none;min-height:0}
+.ds-right-pane>.ds-pane-body:has(.ds-full-reports)::-webkit-scrollbar{display:none}
+.ds-full-reports{flex:0 0 auto}
+.ds-doctor-tabs{display:flex;gap:18px;padding:0 20px;border-bottom:1px solid #dce7ef}.ds-doctor-tabs button{padding:14px 0;border:0;border-bottom:2px solid transparent;background:transparent;color:#607590;font:inherit;font-size:13px;cursor:pointer}.ds-doctor-tabs button[aria-pressed=true]{color:#087f8c;border-color:#087f8c;font-weight:600}.ds-doc-row[hidden]{display:none!important}#dsGroupEmpty{color:#607590;padding:20px;font-size:14px}#dsGroupEmpty[hidden]{display:none}
+.ds-saved-consultation{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px!important;line-height:1.8!important;margin-bottom:18px!important}
+.ds-consult-entry{padding:24px 0;border-bottom:1px solid #dce7ef}.ds-consult-date{display:flex;align-items:center;gap:12px;margin-bottom:18px}.ds-consult-date>.material-symbols-outlined{color:#087f8c;font-size:26px}.ds-consult-date h4{margin:0 0 6px;font-size:15px}.ds-consult-tabs{display:flex;gap:18px;overflow-x:auto;border-bottom:1px solid #dce7ef;margin-bottom:18px;scrollbar-width:none}.ds-consult-tabs button{background:transparent;border:0;border-bottom:2px solid transparent;padding:10px 0;font:inherit;font-size:13px;color:#607590;cursor:pointer;white-space:nowrap}.ds-consult-tabs button[aria-selected=true]{color:#087f8c;border-color:#087f8c;font-weight:600}.ds-consult-tabs button:focus-visible{outline:2px solid #087f8c;outline-offset:-2px}.ds-consult-entry [hidden]{display:none!important}.ds-consult-entry h5{margin:0 0 12px;font-size:14px}.ds-consult-entry [role=tabpanel]{padding:8px 0 18px;min-height:110px}
+.ds-consult-section{padding:24px 0;border-bottom:1px solid #dce7ef}.ds-consult-section>h4{display:flex;align-items:center;gap:10px;font-size:16px;margin:0 0 12px}.ds-consult-section>h4 .material-symbols-outlined{color:#087f8c;font-size:23px}.ds-doctor-note{border-left:2px solid #a7cfcd;padding:0 0 0 14px;margin:20px 0}.ds-doctor-note time{color:#607590;font-size:11px}.ds-doctor-note p{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:8px}.ds-consult-link{display:inline-flex;align-items:center;gap:8px;margin-top:16px;color:#087f8c;text-decoration:none;font-size:13px}.ds-consult-empty{margin-top:16px!important;color:#71849a}
+.ds-history-event{display:flex;gap:16px;padding:22px 0;border-bottom:1px solid #e2ebf1}.ds-history-event>.material-symbols-outlined{color:#087f8c;background:#e8f4f3;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-size:20px}.ds-history-event small{color:#607590;font-size:11px}.ds-history-event h4{font-size:15px;margin:9px 0}.ds-history-event p{font-size:13px;line-height:1.7}.ds-history-note{margin-top:22px!important;padding-top:16px;border-top:1px solid #dce7ef}
+.ds-report-scale{height:8px;background:#e5edf4;border-radius:8px;overflow:hidden;margin:12px 0}.ds-report-scale span{height:100%;display:block;background:#087f8c;border-radius:8px}.ds-report-scale.red span{background:#ca8a69}.ds-report-reference{font-size:12px;color:#607590;line-height:1.6;margin:8px 0}
+.ds-full-reports{width:100%;padding:20px 24px;color:#102f52;text-align:left;box-sizing:border-box}.ds-full-reports>header{padding-bottom:20px;border-bottom:1px solid #dce7ef}.ds-full-reports h3{font-size:23px;font-weight:500;margin:18px 0 8px}.ds-full-reports p{font-size:13px;color:#607590;line-height:1.7;margin:0}.ds-full-reports .ds-tool-back{margin:0;padding:0}.ds-full-report{padding:24px 0;border-bottom:1px solid #dce7ef}.ds-report-heading{display:flex;align-items:center;gap:12px}.ds-report-heading>.material-symbols-outlined{font-size:30px;color:#087f8c}.ds-report-heading h4{margin:0 0 6px;font-size:17px}.ds-report-heading small{color:#607590;font-size:12px}.ds-full-report h5{font-size:14px;margin:24px 0 12px;font-weight:600}.ds-report-facts{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;margin:12px 0}.ds-report-facts>div{padding:12px 0;border-bottom:1px solid #e2ebf1;min-width:0}.ds-report-facts dt{font-size:12px;color:#607590;line-height:1.5}.ds-report-facts dd{font-size:14px;margin:6px 0 0;overflow-wrap:anywhere}.ds-full-report .ds-report-metric{background:transparent;border-left:2px solid #a7cfcd;border-radius:0;text-align:left;padding:10px}.ds-full-report .ds-report-metric strong{font-size:22px;font-weight:500}.ds-full-report .ds-report-metric span{font-size:11px}.ds-full-report footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px;flex-wrap:wrap}.ds-full-report .ds-report-share{margin:0}.ds-report-status{font-size:12px;color:#087f8c}.ds-report-context{border-top:1px solid #dce7ef;margin-top:20px}@media(max-width:650px){.ds-full-reports{padding:16px}.ds-report-facts{gap:0 12px}}
+</style>
 
 <div class="ds-workspace" id="dsWorkspace">
 
@@ -606,10 +620,6 @@
                 </div>
             </div>
             <div class="ds-header-actions">
-                <a href="{% url 'find_doctor' %}?change=1" class="ds-action-btn ds-action-btn-primary">
-                    <span class="material-symbols-outlined" style="font-size: 15px;">edit</span>
-                    Change doctor
-                </a>
                 <button class="ds-btn-restore" id="dsRestoreRight" title="Reopen Doctor Details">
                     <span class="material-symbols-outlined">person</span>
                     Doctor Details
@@ -620,20 +630,36 @@
             </div>
         </div>
 
+        <style>.ds-doc-info{flex:1;min-width:0}.ds-doc-row{align-items:flex-start}.ds-doc-sub{line-height:1.6;white-space:normal;overflow-wrap:anywhere}.ds-tile-message{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 12px;border:1px solid #087f8c;border-radius:20px;background:transparent;color:#087f8c;font:inherit;font-size:12px;text-decoration:none;cursor:pointer}.ds-tile-message:hover{background:#087f8c;color:white}.ds-tile-message .material-symbols-outlined{font-size:17px}.ds-doc-info form{margin:0}</style><style>.ds-doc-row{align-items:center;padding:10px 14px;min-height:66px}.ds-doc-info{display:grid;grid-template-columns:minmax(130px,1fr) minmax(130px,1.2fr) auto;gap:16px;align-items:center}.ds-tile-message{margin-top:0;white-space:nowrap}.ds-tile-actions{justify-self:end}.ds-tile-details .ds-doc-sub{margin:0;line-height:1.5;font-size:11px}.ds-tile-identity .ds-doc-sub:empty{display:none}@media(max-width:650px){.ds-doc-info{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}.ds-tile-identity{grid-column:1}.ds-tile-details{grid-column:1;grid-row:2}.ds-tile-actions{grid-column:2;grid-row:1 / span 2}.ds-tile-message{padding:7px 9px;font-size:11px}}</style><style>.ds-doc-row{position:relative;padding:12px 18px;gap:14px;border-radius:14px;transition:background .18s,border-color .18s,box-shadow .18s}.ds-doc-row.active{background:linear-gradient(110deg,#e5f3f2,#f1f7fa);border-color:#afd2d6;box-shadow:0 2px 7px rgba(16,47,82,.035)}.ds-doc-avatar{width:46px;height:46px;background:#dcecfb;color:#087f8c}.ds-doc-name{font-size:14px;letter-spacing:-.15px}.ds-tile-identity{padding-right:10px}.ds-tile-details{padding-left:18px;border-left:1px solid rgba(8,127,140,.15)}.ds-tile-contact{display:flex;align-items:center;gap:7px;color:#607590}.ds-tile-contact .material-symbols-outlined{font-size:16px;color:#43858d}.ds-tile-contact>span:last-child{min-width:0;overflow-wrap:anywhere}.ds-tile-message{padding:9px 14px;border-color:transparent;background:#087f8c;color:#fff;font-weight:600;font-size:12px;box-shadow:0 2px 4px rgba(8,127,140,.12)}.ds-tile-message:hover{background:#066b76;box-shadow:0 3px 8px rgba(8,127,140,.2)}.ds-tile-message:focus-visible{outline:2px solid #087f8c;outline-offset:3px}.ds-doctor-tabs{gap:22px}.ds-doctor-tabs button{font-size:13px;padding:16px 0}@media(max-width:650px){.ds-doc-row{padding:11px 12px;gap:10px}.ds-tile-details{padding-left:0;border-left:0}.ds-tile-message{padding:8px 10px}}</style><style>.ds-detail-view[aria-busy="true"]>:not(.ds-profile-skeleton){visibility:hidden}.ds-detail-view{position:relative}.ds-profile-skeleton{position:absolute;inset:0;padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:18px;pointer-events:none}.ds-profile-skeleton>span,.profile-skeleton-tools span{display:block;background:linear-gradient(90deg,#e4edf2 25%,#f3f7fa 50%,#e4edf2 75%);background-size:200% 100%;animation:profile-shimmer 1.2s linear infinite;border-radius:9px}.profile-skeleton-avatar{width:96px;height:96px;border-radius:50%!important}.profile-skeleton-name{width:55%;height:22px}.profile-skeleton-line{width:85%;height:60px;margin-top:20px}.profile-skeleton-tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:90%;margin-top:8px}.profile-skeleton-tools span{height:65px}@keyframes profile-shimmer{to{background-position:-200% 0}}@media(prefers-reduced-motion:reduce){.ds-profile-skeleton>span,.profile-skeleton-tools span{animation:none}}</style><style>.ds-doc-row{box-sizing:border-box;width:100%;min-width:0}.ds-doc-info{min-width:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:12px}.ds-tile-identity,.ds-tile-details{min-width:0}.ds-tile-details{padding-left:12px}.ds-doc-name{white-space:normal;overflow-wrap:anywhere}.ds-tile-actions{min-width:0;max-width:100%}.ds-tile-message{box-sizing:border-box;max-width:100%;padding:9px 12px}.ds-doc-avatar{flex-shrink:0}.ds-pane-body{container-type:inline-size}@container(max-width:540px){.ds-doc-info{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}.ds-tile-identity{grid-column:1;grid-row:1}.ds-tile-details{grid-column:1;grid-row:2;padding-left:0;border-left:0}.ds-tile-actions{grid-column:2;grid-row:1 / span 2}.ds-tile-contact>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-tile-message{padding:8px 10px;font-size:11px}.ds-doc-row{padding:10px 12px;gap:10px}}@container(max-width:320px){.ds-tile-message{white-space:normal}.ds-tile-message .material-symbols-outlined{display:none}.ds-doc-avatar{width:36px;height:36px}.ds-doc-info{gap:4px 6px}}</style><nav class="ds-doctor-tabs" aria-label="Doctor groups"><button type="button" data-doctor-group="primary" aria-pressed="true">Primary doctors</button><button type="button" data-doctor-group="referred" aria-pressed="false">Referred doctors</button></nav>
         <div class="ds-pane-body">
+            <p id="dsGroupEmpty" hidden>No referred doctors yet.</p>
             {% if doctors %}
                 {% for doc in doctors %}
-                <div class="ds-doc-row{% if forloop.first %} active{% endif %}" id="doc-row-{{ forloop.counter }}" data-index="{{ forloop.counter }}">
-                    <div class="ds-doc-avatar">
+                <div class="ds-doc-row{% if forloop.first %} active{% endif %}" id="doc-row-{{ forloop.counter }}" data-index="{{ forloop.counter }}" data-doctor-category="{{ doc.group }}" {% if doc.group == 'referred' %}hidden{% endif %}>
+                    <div class="ds-doc-avatar">{% avatar_url doc.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>
                         <span class="material-symbols-outlined">person</span>
-                    </div>
+                    </span>{% else %}
+                        <span class="material-symbols-outlined">person</span>
+                    {% endif %}</div>
                     <div class="ds-doc-info">
+                        <div class="ds-tile-identity">
                         <div class="ds-doc-name">{{ doc.name }}</div>
                         <div class="ds-doc-sub">{{ doc.specialty }}</div>
-                        <div class="ds-doc-sub">{{ doc.experience }}</div>
+                        {% if doc.experience %}<div class="ds-doc-sub">{{ doc.experience }}</div>{% endif %}
+                        </div>
+                        <div class="ds-tile-details">
+                        {% if doc.clinic_name %}<div class="ds-doc-sub">{{ doc.clinic_name }}{% if doc.clinic_address %} · {{ doc.clinic_address }}{% endif %}</div>{% endif %}
+                        {% if doc.email %}<div class="ds-doc-sub ds-tile-contact"><span class="material-symbols-outlined" aria-hidden="true">mail</span><span>{{ doc.email }}</span></div>{% endif %}
+                        {% if doc.phone %}<div class="ds-doc-sub ds-tile-contact"><span class="material-symbols-outlined" aria-hidden="true">call</span><span>{{ doc.phone }}</span></div>{% endif %}
+                        {% if doc.group == 'referred' %}<div class="ds-doc-sub">Referred by Dr. {{ doc.referring_name }}</div><div class="ds-doc-sub">{{ doc.referral_type }} · {{ doc.referral_status }}</div>{% endif %}
+                        </div>
+                        <div class="ds-tile-actions">
+                        {% if doc.message_url %}<a class="ds-tile-message" href="{{ doc.message_url }}" onclick="event.stopPropagation()"><span class="material-symbols-outlined">chat</span>Direct message</a>{% elif doc.doctor_id %}<form method="post" action="{% url 'direct_message_start' %}" onclick="event.stopPropagation()">{% csrf_token %}<input type="hidden" name="doctor_id" value="{{ doc.doctor_id }}"><button class="ds-tile-message" type="submit"><span class="material-symbols-outlined">chat</span>Direct message</button></form>{% endif %}
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
+                <div class="ds-care-art"><img src="{% static 'images/care-team.svg' %}" alt="" aria-hidden="true"><p>Your care team, connected.<br>Choose a doctor to view your care details.</p></div>
             {% else %}
                 <div class="ds-empty">
                     <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">search_off</span>
@@ -677,7 +703,9 @@
 
                 <div class="ds-detail-hero">
                     <div class="ds-detail-avatar">
+                        {% avatar_url doc.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer">{% else %}
                         <span class="material-symbols-outlined">person</span>
+                        {% endif %}
                     </div>
                     <h2 class="ds-detail-name">{{ doc.name }}</h2>
                     <p class="ds-detail-specialty">{{ doc.specialty }}</p>
@@ -737,9 +765,10 @@
                     <div class="ds-actions">
                         {% if doc.source == 'oasis_doctor_portal' %}<button type="button" class="ds-tool-btn" data-doctor-tool="meet" data-doctor-name="{{ doc.name }}" data-meet-url="{% url 'patient_google_meet' %}?connection={{ doc.connection_id }}&amp;format=json" title="View scheduled Google Meet consultations" aria-label="View scheduled Google Meet consultations"><span class="material-symbols-outlined">videocam</span></button>{% else %}<button type="button" class="ds-tool-btn" data-doctor-tool="meet-unavailable" data-doctor-name="{{ doc.name }}" title="Google Meet becomes available when this doctor connects their Calendar" aria-label="Google Meet unavailable"><span class="material-symbols-outlined">videocam</span></button>{% endif %}
                         {% if doc.source == 'oasis_doctor_portal' %}<button type="button" class="ds-tool-btn" data-doctor-tool="files" data-doctor-name="{{ doc.name }}" data-reports-url="{% url 'digital_reports' %}?connection={{ doc.connection_id }}" title="Share digital reports" aria-label="Share digital reports"><span class="material-symbols-outlined">folder_open</span></button>{% else %}<button type="button" class="ds-tool-btn" data-doctor-tool="files-unavailable" data-doctor-name="{{ doc.name }}" title="Digital reports are available for Oasis doctor connections" aria-label="Digital reports unavailable"><span class="material-symbols-outlined">folder_open</span></button>{% endif %}
-                        <button type="button" class="ds-tool-btn" data-doctor-tool="history" data-doctor-name="{{ doc.name }}" title="Consultation history" aria-label="Consultation history"><span class="material-symbols-outlined">hourglass_top</span></button>
+                        <button type="button" class="ds-tool-btn" data-doctor-tool="history" data-doctor-name="{{ doc.name }}" data-history-url="{% url 'consultation_history' %}?{% if doc.group == 'referred' %}referral={{ doc.referral_id }}{% else %}connection={{ doc.connection_id }}{% endif %}" title="Consultation history" aria-label="Consultation history"><span class="material-symbols-outlined">history</span></button>
                         <button type="button" class="ds-tool-btn" data-doctor-tool="pinned" data-doctor-name="{{ doc.name }}" title="Pinned details" aria-label="Pinned details"><span class="material-symbols-outlined">push_pin</span></button>
                     </div>
+                    <div class="ds-care-art ds-care-art-profile"><img src="{% static 'images/care-connect.svg' %}" alt="" aria-hidden="true"><p>Stay connected with your care team.</p></div>
                 </div>
             </div>
             {% endfor %}
@@ -805,10 +834,17 @@
         }
     }
 
+    let profileRevealTimer;
     function selectDoctor(index, save = true) {
+        clearTimeout(profileRevealTimer);
+        document.querySelectorAll('.ds-profile-skeleton').forEach(node => node.remove());
+        const category=document.getElementById('doc-row-'+index)?.dataset.doctorCategory||'primary';
+        document.querySelectorAll('[data-doctor-group]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.doctorGroup===category)));
+        document.querySelectorAll('[data-doctor-category]').forEach(row=>row.hidden=row.dataset.doctorCategory!==category);
+        document.getElementById('dsGroupEmpty').hidden=true;
         document.querySelectorAll('.ds-doc-row').forEach(r => r.classList.remove('active'));
         document.querySelectorAll('.ds-detail-view').forEach(d => {
-            d.classList.remove('ds-detail-active');
+            d.removeAttribute('aria-busy'); d.classList.remove('ds-detail-active');
             d.style.display = 'none';
         });
 
@@ -818,6 +854,14 @@
         if (detail) {
             detail.classList.add('ds-detail-active');
             detail.style.display = 'flex';
+            detail.setAttribute('aria-busy', 'true');
+            const skeleton = document.createElement('div');
+            skeleton.className = 'ds-profile-skeleton';
+            skeleton.setAttribute('role', 'status');
+            skeleton.setAttribute('aria-label', 'Opening doctor profile');
+            skeleton.innerHTML = '<span class="profile-skeleton-avatar"></span><span class="profile-skeleton-name"></span><span class="profile-skeleton-line"></span><div class="profile-skeleton-tools"><span></span><span></span><span></span><span></span></div>';
+            detail.append(skeleton);
+            profileRevealTimer = setTimeout(() => { skeleton.remove(); detail.removeAttribute('aria-busy'); }, 320);
         }
 
         const titleEl = document.getElementById('detailPaneTitle');
@@ -832,6 +876,7 @@
         }
     }
 
+    selectDoctor(document.querySelector('.ds-doc-row.active')?.dataset.index || 1, false);
     document.querySelectorAll('.ds-doc-row').forEach(row => {
         row.addEventListener('click', () => {
             const idx = parseInt(row.dataset.index);
@@ -843,6 +888,14 @@
             selectDoctor(idx, true);
         });
     });
+    document.querySelectorAll('[data-doctor-group]').forEach(button=>button.addEventListener('click',()=>{
+        const group=button.dataset.doctorGroup;
+        document.querySelectorAll('[data-doctor-group]').forEach(tab=>tab.setAttribute('aria-pressed',String(tab===button)));
+        const rows=Array.from(document.querySelectorAll('[data-doctor-category]'));
+        rows.forEach(row=>row.hidden=row.dataset.doctorCategory!==group);
+        const first=rows.find(row=>!row.hidden);
+        if(first)selectDoctor(first.dataset.index);else{document.getElementById('dsGroupEmpty').hidden=false;document.querySelectorAll('.ds-detail-view').forEach(detail=>{detail.style.display='none';detail.classList.remove('ds-detail-active');});}
+    }));
 
     document.querySelectorAll('.ds-pane-close-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -938,13 +991,29 @@
             const response = await fetch(reportsUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
             const payload = await response.json();
             if (!response.ok) throw new Error(payload.error || 'Digital reports are unavailable.');
-            const cards = payload.reports?.length ? `<div class="ds-report-cards">${payload.reports.map((report) => `<article class="ds-report-card"><h4>Eye assessment report</h4><small>Generated ${escapeHtml(report.created_at)}</small><div class="ds-report-metrics"><div class="ds-report-metric"><strong>${escapeHtml(report.blink_rate)}</strong><span>Blinks / min</span></div><div class="ds-report-metric"><strong>${escapeHtml(report.redness_score)}</strong><span>Redness</span></div><div class="ds-report-metric"><strong>${escapeHtml(report.tracking_quality)}%</strong><span>Tracking</span></div></div><button type="button" class="ds-report-share" data-doctor-tool="share-report" data-scan-id="${escapeHtml(report.id)}" ${report.shared ? 'disabled style="background:#6c8790;cursor:default"' : ''}>${report.shared ? 'Shared with doctor' : 'Share digital report'}</button></article>`).join('')}</div>` : '';
-            showToolPanel('folder_open', 'Digital reports', cards ? 'Choose a generated report to share with this doctor.' : 'No generated reports are available yet. Complete an eye assessment from Reports first.', cards);
+            if (!payload.reports?.length) { showToolPanel('folder_open', 'Digital reports', 'No generated reports are available yet. Complete an eye assessment from Reports first.'); return; }
+            const metric = (label, value, unit = '') => `<div><dt>${label}</dt><dd>${value === undefined || value === null ? 'Not recorded' : escapeHtml(value) + (unit ? ' ' + unit : '')}</dd></div>`;
+            const additionalResults = report => {
+                const d = report.details || {};
+                const percent = (value, max) => Math.max(0, Math.min(100, (Number(value) || 0) / max * 100));
+                return `<h5>Blink-rate benchmark</h5><p class="ds-report-reference">${escapeHtml(report.blink_rate)} blinks/min · Reports-page reference: 10–25 blinks/min.</p><div class="ds-report-scale"><span style="width:${percent(report.blink_rate,30)}%"></span></div><h5>Recording quality</h5><div class="ds-report-scale"><span style="width:${percent(report.tracking_quality,100)}%"></span></div><dl class="ds-report-facts">${metric('Tracking quality',report.tracking_quality,'%')}${metric('Result usability',report.tracking_quality>=70?'Good':report.tracking_quality>=15?'Re-record advised':'No usable assessment')}${metric('Backend sampled frames',d.sampled_frames)}</dl><h5>Visible ocular surface</h5><p class="ds-report-reference">Visual redness: ${escapeHtml(report.redness_score)} / 10. Colour-based screening estimate; lighting can affect the result.</p><div class="ds-report-scale red"><span style="width:${percent(report.redness_score,10)}%"></span></div><h5>Clinical & sensor results</h5><dl class="ds-report-facts">${metric('Tear-film breakup (NIBUT)','Webcam unsupported')}${metric('Tear meniscus height (TMH)','Not measured')}${metric('Ocular surface temperature','Not measured')}${metric('Periorbital temperature change','Not measured')}${metric('Hydration signal','Sensor not connected')}${metric('Diagnostic conclusion','Clinical examination required')}</dl><h5>Assessment processing</h5><p class="ds-report-reference">Recording → frame sampling → eye landmarks → blink measurements → tracking quality and redness estimate.</p><p class="ds-report-reference">${d.sampled_frames?'Backend frames were sampled across this recording.':'This assessment predates backend sampling. Record a new assessment for server-frame results.'}</p>`;
+            };
+            detailPane.innerHTML = `<section class="ds-full-reports"><header><button type="button" class="ds-tool-back" data-doctor-tool="back"><span class="material-symbols-outlined">arrow_back</span>Doctor details</button><h3>Digital assessment reports</h3><p>Review your assessment and share the complete measurements with your doctor.</p></header>${payload.reports.map(report => {
+                const d = report.details || {};
+                return `<article class="ds-full-report"><div class="ds-report-heading"><span class="material-symbols-outlined">description</span><div><h4>Eye assessment report</h4><small>Generated ${escapeHtml(report.created_at)} · Report #${escapeHtml(report.id)}</small></div></div><dl class="ds-report-facts">${metric('Patient', payload.patient_name)}${metric('Patient ID', payload.patient_id)}${metric('Recipient', payload.doctor_name)}${metric('Recording duration', d.duration_seconds, 'seconds')}</dl><h5>Assessment overview</h5><div class="ds-report-metrics"><div class="ds-report-metric"><strong>${escapeHtml(report.blink_rate)}</strong><span>Blinks / min</span></div><div class="ds-report-metric"><strong>${escapeHtml(report.redness_score)}</strong><span>Redness score</span></div><div class="ds-report-metric"><strong>${escapeHtml(report.tracking_quality)}%</strong><span>Tracking quality</span></div></div><h5>Blink measurements</h5><dl class="ds-report-facts">${metric('Total blinks', d.blink_count)}${metric('Complete blinks', d.complete_blink_count)}${metric('Incomplete blink rate', d.incomplete_blink_rate, '%')}${metric('Average interval between blinks', d.average_interblink_interval, 'seconds')}${metric('Average blink duration', d.average_blink_duration, 'ms')}</dl><h5>Eye opening & tracking</h5><dl class="ds-report-facts">${metric('Average eye opening', d.average_eye_opening)}${metric('Left eye aspect ratio', d.left_ear)}${metric('Right eye aspect ratio', d.right_ear)}${metric('Redness index', d.redness_index)}${metric('Sampled frames', d.sampled_frames)}</dl>${additionalResults(report)}<div class="ds-report-context"><h5>About this assessment</h5><p>Camera-derived measurements reflect this recording only. Lighting, camera position and tracking can affect the results. Your doctor can review them alongside your symptoms and examination.</p></div><footer><span class="ds-report-status">${report.shared ? 'Shared with this doctor' : 'Not shared yet'}</span><button type="button" class="ds-report-share" data-doctor-tool="share-report" data-scan-id="${escapeHtml(report.id)}">${report.shared ? 'Update shared report' : 'Share complete report'}</button></footer></article>`;
+            }).join('')}</section>`;
         } catch (error) {
             showToolPanel('folder_open', 'Digital reports', error.message || 'Digital reports could not be loaded right now.');
         }
     };
     detailPane?.addEventListener('click', async (event) => {
+        const tab = event.target.closest('[data-consult-tab]');
+        if (tab) {
+            const entry = tab.closest('.ds-consult-entry');
+            entry.querySelectorAll('[data-consult-tab]').forEach(button => { button.setAttribute('aria-selected', String(button === tab)); button.tabIndex = button === tab ? 0 : -1; });
+            entry.querySelectorAll('[data-consult-panel]').forEach(panel => { panel.hidden = panel.dataset.consultPanel !== tab.dataset.consultTab; });
+            return;
+        }
         const button = event.target.closest('[data-doctor-tool]');
         if (!button) return;
         const tool = button.dataset.doctorTool;
@@ -968,20 +1037,59 @@
         await new Promise((resolve) => window.setTimeout(resolve, 180));
         if (tool === 'files') { loadDigitalReports(button.dataset.reportsUrl); return; }
         if (tool === 'files-unavailable') { showToolPanel('folder_off', 'Digital reports', 'Digital reports can be shared only with accepted Oasis doctor connections.'); return; }
-        if (tool === 'history') { showToolPanel('hourglass_top', 'Consultation history', 'Your shared consultation history will appear here after appointments are recorded.'); return; }
+        if (tool === 'history') {
+            showToolPanel('progress_activity', 'Consultation history', 'Loading your care activity…');
+            try {
+                const response = await fetch(button.dataset.historyUrl);
+                if (!response.ok) throw new Error('History could not be loaded.');
+                const history = await response.json();
+                const formatDate = value => new Date(value).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+                const dayKey = value => { const date = new Date(value); return Number.isNaN(date.getTime()) ? value.slice(0,10) : date.toLocaleDateString('en-CA'); };
+                const noteDays = new Map();
+                history.doctor_messages.forEach(note => { const key=dayKey(note.date); if(!noteDays.has(key))noteDays.set(key,[]); noteDays.get(key).push(note); });
+                const entries = (history.meetings || []).map(meeting => ({date:meeting.start,title:meeting.title,meeting:true,notes:noteDays.get(dayKey(meeting.start))||[]}));
+                (history.consultations||[]).forEach(record=>{entries.push({date:record.date,title:'Recorded consultation',meeting:true,record,notes:noteDays.get(dayKey(record.date))||[]});});
+                const meetingDays=new Set(entries.map(entry=>dayKey(entry.date)));
+                noteDays.forEach((notes,key)=>{if(!meetingDays.has(key))entries.push({date:notes[0].date,title:'Doctor conversation',meeting:false,notes});});
+                entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
+                const renderEntry=(entry,index)=>`<section class="ds-consult-entry"><header class="ds-consult-date"><span class="material-symbols-outlined">${entry.meeting?'event':'chat'}</span><div><h4>${escapeHtml(formatDate(entry.date))}</h4><p>${escapeHtml(entry.title)}</p></div></header><nav class="ds-consult-tabs" role="tablist" aria-label="Details for ${escapeHtml(formatDate(entry.date))}">${['Prescriptions','Doctor notes','Follow-up'].map((label,i)=>`<button type="button" role="tab" id="consult-tab-${index}-${i}" data-consult-tab="${i}" aria-selected="${i===0}" aria-controls="consult-panel-${index}-${i}" tabindex="${i===0?0:-1}">${label}</button>`).join('')}</nav><section role="tabpanel" id="consult-panel-${index}-0" aria-labelledby="consult-tab-${index}-0" data-consult-panel="0"><h5>Prescriptions & medication</h5><p class="ds-saved-consultation">${escapeHtml(entry.record?.prescription || 'No prescription is recorded for this date.')}</p></section><section role="tabpanel" id="consult-panel-${index}-1" aria-labelledby="consult-tab-${index}-1" data-consult-panel="1" hidden><h5>What your doctor said</h5>${entry.record?.notes ? `<p class="ds-saved-consultation">${escapeHtml(entry.record.notes)}</p>` : ''}<p>Doctor messages on this date:</p>${entry.notes.length?entry.notes.map(note=>`<article class="ds-doctor-note"><time>${escapeHtml(formatDate(note.date))}</time><p>${escapeHtml(note.body)}</p></article>`).join(''):'<p>No doctor messages recorded for this date.</p>'}</section><section role="tabpanel" id="consult-panel-${index}-2" aria-labelledby="consult-tab-${index}-2" data-consult-panel="2" hidden><h5>Follow-up & next steps</h5><p class="ds-saved-consultation">${escapeHtml(entry.record?.follow_up || 'No formal follow-up instructions are recorded for this date.')}</p><a class="ds-consult-link" href="${escapeHtml(history.message_url)}">Ask your doctor<span class="material-symbols-outlined">arrow_forward</span></a></section></section>`;
+                detailPane.innerHTML=`<section class="ds-full-reports ds-history"><header><button class="ds-tool-back" type="button" data-doctor-tool="back"><span class="material-symbols-outlined">arrow_back</span>Doctor details</button><h3>Consultation history</h3><p>${escapeHtml(history.doctor_name)} · ${escapeHtml(history.specialty)}</p></header>${entries.length?entries.map(renderEntry).join(''):'<section class="ds-consult-entry"><h4>No dated consultations yet</h4><p>Scheduled meetings and doctor conversations will appear here by date.</p><a class="ds-consult-link" href="'+escapeHtml(history.message_url)+'">Open conversation</a></section>'}${history.notice?`<p class="ds-history-note">${escapeHtml(history.notice)}</p>`:''}</section>`;
+            } catch(error) { showToolPanel('history','Consultation history',error.message); }
+            return;
+        }
         if (tool === 'pinned') { showToolPanel('push_pin', 'Pinned details', 'There are no pinned care instructions or notes yet.'); return; }
         if (tool === 'meet-unavailable') { showToolPanel('videocam_off', 'Google Meet', 'This doctor has not connected their Google Calendar yet.'); return; }
         if (tool !== 'meet') return;
         showToolPanel('progress_activity', 'Google Meet', 'Loading scheduled Meet consultations…');
         try {
-            const response = await fetch(button.dataset.meetUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+            const response = await fetch(button.dataset.meetUrl, {cache: 'no-store', headers: {'X-Requested-With': 'XMLHttpRequest'}});
             if (!response.ok) throw new Error('Meet details are unavailable.');
             const payload = await response.json();
-            const eventCards = payload.events?.length ? `<div class="ds-meet-events">${payload.events.map((item) => `<article class="ds-meet-event"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.start)}</small><a href="${escapeHtml(item.meet_url)}" target="_blank" rel="noopener">Join Google Meet</a></article>`).join('')}</div>` : '';
-            showToolPanel('videocam', 'Google Meet', payload.notice || (eventCards ? 'Upcoming Meet consultations from this doctor’s Google Calendar.' : 'No upcoming Google Meet consultations have been scheduled.'), eventCards);
+            const eventCards = (payload.events || []).map(item => {
+                const start = new Date(item.start), end = new Date(item.end);
+                const validStart = !Number.isNaN(start.getTime()), validEnd = !Number.isNaN(end.getTime());
+                const zone = item.timezone || 'Asia/Kolkata';
+                const dateOptions = {dateStyle:'full', timeZone:zone}, timeOptions = {timeStyle:'short', timeZone:zone};
+                const duration = validStart && validEnd ? Math.round((end-start)/60000) : null;
+                const invitation = {accepted:'Accepted',declined:'Declined',tentative:'Tentative',needsAction:'Awaiting your response'}[item.invitation_status] || 'Not provided';
+                let join = ''; try { const url = new URL(item.meet_url); if(url.protocol==='https:' && url.hostname==='meet.google.com') join = `<a class="ds-meeting-join" href="${escapeHtml(url.href)}" target="_blank" rel="noopener"><span class="material-symbols-outlined">videocam</span>Join Google Meet</a>`; } catch {}
+                return `<article class="ds-meeting-detail"><header><span class="material-symbols-outlined">event</span><div><h4>${escapeHtml(item.title)}</h4><p>${validStart?escapeHtml(start.toLocaleDateString([],dateOptions)):escapeHtml(item.start)}</p></div><span class="ds-meeting-status">${escapeHtml(item.status)}</span></header><dl><div><dt>Doctor</dt><dd>Dr. ${escapeHtml(item.doctor_name || payload.doctor_name)}</dd></div><div><dt>Doctor email</dt><dd>${escapeHtml(item.doctor_email || 'Not provided')}</dd></div><div><dt>Time</dt><dd>${validStart?escapeHtml(start.toLocaleTimeString([],timeOptions)):'Not provided'}${validEnd?' – '+escapeHtml(end.toLocaleTimeString([],timeOptions)):''}</dd></div><div><dt>Duration</dt><dd>${duration>0?duration+' minutes':'Not provided'}</dd></div><div><dt>Timezone</dt><dd>${escapeHtml(zone)}</dd></div><div><dt>Your invitation</dt><dd>${escapeHtml(invitation)}</dd></div></dl><section><h5>Meeting notes</h5><p class="ds-meeting-notes">${escapeHtml(item.description || 'No meeting notes were added by your doctor.')}</p></section><footer>${join}<span>Opens Google Meet in a new tab</span></footer></article>`;
+            }).join('');
+            detailPane.innerHTML = `<section class="ds-full-reports ds-meet-comprehensive"><header><button class="ds-tool-back" type="button" data-doctor-tool="back"><span class="material-symbols-outlined">arrow_back</span>Doctor details</button><h3>Your scheduled consultations</h3><p>Meeting details and invitations from your doctor’s Google Calendar.</p></header>${payload.notice?`<p>${escapeHtml(payload.notice)}</p>`:''}${eventCards || '<p>No upcoming consultations have been scheduled with this doctor.</p>'}</section>`;
+            const refresh = document.createElement('button');
+            refresh.type = 'button'; refresh.className = 'ds-tool-back'; refresh.dataset.doctorTool = 'meet'; refresh.dataset.meetUrl = button.dataset.meetUrl; refresh.textContent = 'Refresh meetings';
+            detailPane.append(refresh);
         } catch (_) {
             showToolPanel('videocam_off', 'Google Meet', 'Google Meet details could not be loaded right now. Please try again.');
         }
+    });
+    detailPane?.addEventListener('keydown', event => {
+        const tab=event.target.closest('[data-consult-tab]');
+        if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+        event.preventDefault();
+        const tabs=Array.from(tab.parentElement.querySelectorAll('[data-consult-tab]')),index=tabs.indexOf(tab);
+        const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+        tabs[next].click();tabs[next].focus();
     });
  </script>
 <form hidden>{% csrf_token %}</form>

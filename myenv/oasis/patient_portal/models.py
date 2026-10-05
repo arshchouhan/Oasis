@@ -19,6 +19,7 @@ class User(AbstractUser):
     )
     patient_id = models.CharField(max_length=16, unique=True, null=True, blank=True, editable=False)
     doctor_id = models.CharField(max_length=16, unique=True, null=True, blank=True, editable=False)
+    profile_image_url = models.URLField(max_length=1000, blank=True)
     google_sub = models.CharField(
         max_length=255,
         unique=True,

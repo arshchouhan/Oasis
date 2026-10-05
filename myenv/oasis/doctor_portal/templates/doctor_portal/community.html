@@ -1,13 +1,257 @@
-{% extends "doctor_portal/base.html" %}
+{% extends community_base %}
 
-{% block title %}Community | Doctor Portal{% endblock %}
+{% block title %}Community | Doctor Portal<style>
+.community .reply{display:flex;gap:12px;padding:18px 0}.community .reply-avatar{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:#dcebed;color:#087f8c;font-size:12px;font-weight:600}.community .reply-content{flex:1;min-width:0}.community .reply-header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.community .reply-header strong{font-size:13px}.community .reply-header time{margin-left:auto;font-size:11px}.community .reply-author-label{font-size:10px;color:#607590}.community .reply-content p{font-size:14px;line-height:1.65;margin:8px 0;color:#37516b}.community .reply-actions{display:flex;align-items:center;gap:14px}.community .reply-actions form{margin:0}.community .reply-actions button{background:transparent;padding:3px 0;font-size:11px;color:#607590;border-radius:4px}.community .reply-actions button:hover{color:#087f8c}.community .reply-actions .material-symbols-outlined{font-size:16px}.community .reply-actions .delete{color:#91625e}.community .post-replies>form{margin-top:18px}@media(max-width:600px){.community .reply-header time{margin-left:0;width:100%}}
+</style>
+<script>
+document.querySelectorAll('.reply-to-person').forEach(button => button.addEventListener('click', () => {
+ const composer = document.getElementById(button.dataset.composer);
+ if (!composer) return;
+ const prefix = '@' + button.dataset.replyName + ' ';
+ if (!composer.value.startsWith(prefix)) composer.value = prefix + composer.value;
+ composer.focus(); composer.setSelectionRange(composer.value.length, composer.value.length);
+ composer.scrollIntoView({behavior:'smooth',block:'center'});
+}));
+</script>{% endblock %}
 
-{% block content %}
-<section style="min-height: calc(100vh - 96px); display: grid; place-items: center; padding: 32px; box-sizing: border-box;">
-    <div style="width: min(100%, 620px); padding: 32px; border: 1px solid #dbe5f1; border-radius: 20px; background: var(--md-sys-color-surface, #fff); box-shadow: 0 8px 28px rgba(27,73,101,.08);">
-        <span class="material-symbols-outlined" style="color: #087f8c; font-size: 32px;">groups</span>
-        <h1 style="margin: 14px 0 8px; color: #0b315a; font-size: 26px;">Community</h1>
-        <p style="margin: 0; color: #5f6f82; line-height: 1.5;">The doctor community workspace will appear here.</p>
+{% block content %}{% load avatars %}
+<style>
+.community{height:100%;overflow:auto;color:#10284a;padding:4px;box-sizing:border-box}.community *{box-sizing:border-box}.community h1{font-size:28px;font-weight:500;margin:0 0 8px}.community h2{font-size:20px;margin:0 0 14px}.community p{line-height:1.6}.community .muted{color:#607590;font-size:13px}.community-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:12px 4px 24px}.community-heading p{margin:0}.community-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px}.community-card{background:#fff;border-radius:28px;padding:24px;margin-bottom:18px;box-shadow:0 4px 12px rgba(0,0,0,.035)}.community input,.community textarea,.community select{width:100%;font:inherit;color:inherit;border:1px solid #dbe5f1;border-radius:14px;background:#f5f8fb;padding:12px}.community textarea{resize:vertical;min-height:80px}.community label{display:block;font-size:13px;margin:12px 0 6px}.community button,.community .action-link{font:inherit;border:0;border-radius:22px;padding:10px 18px;background:#e8f4f3;color:#087f8c;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}.community .primary{background:#087f8c!important;color:#fff!important}.community :focus-visible{outline:2px solid #087f8c;outline-offset:3px}.community .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.community .filters{display:grid;grid-template-columns:minmax(0,1fr) 170px auto;gap:10px}.community .tag{border-radius:12px;padding:4px 10px;background:#e8f4f3;color:#087f8c;font-size:12px;margin-left:auto}.community .post-title{margin:18px 0 8px;overflow-wrap:anywhere}.community .body{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0 18px}.community .delete{background:transparent;color:#9e433d;font-size:12px;padding:6px}.community .reply{padding:14px 0;border-bottom:1px solid #e2ebf1}.community .reply p{white-space:pre-wrap;overflow-wrap:anywhere}.community details{margin-top:16px}.community summary{cursor:pointer;color:#087f8c}.community .errorlist,.community .error{color:#a53030}.community .empty{text-align:center;padding:40px 24px}.community aside p{font-size:13px;color:#607590}@media(max-width:1100px){.community-layout{grid-template-columns:1fr}.community aside{display:none}}@media(max-width:600px){.community-heading{align-items:flex-start;flex-direction:column}.community-card{padding:18px;border-radius:22px}.community .filters{grid-template-columns:1fr}}
+</style>
+<style>
+.community-layout{grid-template-columns:minmax(0,1fr)}
+.community,.main-content:has(>.community){scrollbar-width:none;-ms-overflow-style:none}
+.community::-webkit-scrollbar,.main-content:has(>.community)::-webkit-scrollbar{display:none}
+.community .community-card{background:transparent;border-radius:0;box-shadow:none;padding:20px 4px;margin:0}
+.community article.community-card{border-top:1px solid #dbe5f1;padding:24px 4px}
+.community #compose{max-width:none;width:100%}
+.community #compose textarea{min-height:180px}
+.community .upload-zone{border:1px dashed #a7cbd0;border-radius:16px;padding:24px;text-align:center;background:#edf6f5;margin-top:8px}
+.community .upload-zone.dragging{border-color:#087f8c;background:#dcefeb}
+.community .upload-zone .material-symbols-outlined{font-size:30px;color:#087f8c}
+.community .upload-zone p{margin:8px 0}.community .upload-zone input{max-width:420px;background:transparent;border:0;padding:8px}
+.community input[type=file]::file-selector-button{border:0;border-radius:20px;padding:10px 16px;margin-right:12px;background:#087f8c;color:#fff;cursor:pointer;font:inherit}
+.community .media-preview{display:flex;align-items:center;gap:18px;margin-top:16px;flex-wrap:wrap}.community .media-preview[hidden]{display:none}
+.community .media-preview img,.community .media-preview video{max-width:240px;max-height:150px;border-radius:12px;object-fit:contain}
+.community .post-media{display:block;max-width:100%;max-height:500px;border-radius:16px;margin:16px 0 22px;object-fit:contain}
+.community .upload-status{color:#607590;font-size:13px;margin-top:10px}.community #upload-error{color:#a53030}
+.community .empty{border-top:1px solid #dbe5f1;padding:40px 4px}
+.community input:focus,.community textarea:focus,.community select:focus{outline:none;border-color:#087f8c;box-shadow:0 0 0 1px #087f8c}
+.community input[type=checkbox]:focus-visible{outline:2px solid #087f8c;outline-offset:2px;box-shadow:none}
+.community .topic-picker{position:relative;min-width:0}
+.community .filters label:has(input[type=checkbox]){display:inline-flex;align-items:center;gap:9px;width:fit-content;padding:8px 12px;border-radius:20px;color:#607590;cursor:pointer;font-size:13px;transition:background .15s,color .15s}
+.community .filters label:has(input[type=checkbox]):hover{background:#edf6f5;color:#087f8c}
+.community .filters label:has(input[type=checkbox]:checked){background:#e0f0ef;color:#087f8c}
+.community .filters input[type=checkbox]{appearance:none;-webkit-appearance:none;position:relative;width:30px!important;height:18px;flex:0 0 30px;padding:0;margin:0;border:0;border-radius:12px;background:#c6d3dc;cursor:pointer;transition:background .15s}
+.community .filters input[type=checkbox]::before{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .15s}
+.community .filters input[type=checkbox]:checked{background:#087f8c}
+.community .filters input[type=checkbox]:checked::before{transform:translateX(12px)}
+.community .filters input[type=checkbox]:focus{box-shadow:none}
+.community .filters input[type=checkbox]:focus-visible{outline:2px solid #087f8c;outline-offset:3px}
+.community .topic-picker>button{width:100%;justify-content:space-between;text-align:left;background:#f5f8fb;color:#10284a;border:1px solid #dbe5f1;border-radius:14px;padding:12px;font:inherit}
+.community .topic-picker>button:focus-visible,.community .topic-picker>button[aria-expanded=true]{outline:none;border-color:#087f8c;box-shadow:0 0 0 1px #087f8c}
+.community .topic-options{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:30;list-style:none;margin:0;padding:6px;background:#fff;border:1px solid #dbe5f1;border-radius:16px;box-shadow:0 8px 24px rgba(27,73,101,.12);max-height:260px;overflow:auto}
+.community .topic-options[hidden]{display:none}
+.community .topic-options li{padding:10px 12px;border-radius:10px;font-size:14px;cursor:pointer;outline:none}
+.community .topic-options li:hover,.community .topic-options li:focus{background:#edf6f5;color:#087f8c}
+.community .topic-options li[aria-selected=true]{background:#e0f0ef;color:#087f8c;font-weight:600}
+.community article.community-card{position:relative;padding:26px 4px 26px 64px;min-width:0}
+.community .post-avatar{position:absolute;left:4px;top:26px;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:#dceff0;color:#087f8c;font-size:17px;font-weight:600}
+.community .post-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.community .post-author{font-size:15px;font-weight:600;overflow-wrap:anywhere}.community .post-meta{display:flex;align-items:center;gap:8px;margin-top:5px;color:#71849a;font-size:12px;flex-wrap:wrap}
+.community .post-role{color:#087f8c;font-weight:500}.community .post-header .tag{max-width:100%;white-space:normal;padding:6px 12px}
+.community h2.post-title{font-size:23px;font-weight:600;line-height:1.35;letter-spacing:-.3px;margin:20px 0 10px}.community article .body{font-size:15px;line-height:1.75;color:#354e67;max-width:900px;margin:0 0 20px}
+.community .post-toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.community .post-toolbar form{margin:0}.community .post-toolbar button,.community .reply-toggle{background:transparent;border:0;padding:7px 9px;color:#607590;font-size:13px;cursor:pointer;border-radius:10px;display:inline-flex;align-items:center;gap:7px}
+.community .post-toolbar button:hover,.community .reply-toggle:hover{background:#e8f4f3;color:#087f8c}.community .post-toolbar button[aria-pressed=true]{color:#087f8c;background:#e8f4f3}.community .post-toolbar button[aria-pressed=true] .material-symbols-outlined{font-variation-settings:'FILL' 1}.community .post-toolbar .material-symbols-outlined{font-size:20px}.community .post-toolbar .delete{color:#8a6a6a}.community .post-delete{margin-left:auto!important}
+.community .post-replies{margin-top:0}.community .post-replies>summary{list-style:none;display:none}.community .post-replies>summary::-webkit-details-marker{display:none}.community .post-replies[open]{margin-top:18px;padding-top:4px;border-top:1px solid #e2ebf1}.community .post-replies textarea{max-width:900px}.community .post-replies .reply{max-width:900px}
+@media(max-width:600px){.community article.community-card{padding-left:4px}.community .post-avatar{position:static;width:36px;height:36px;flex-shrink:0;font-size:14px}.community .post-header .tag{margin-left:0}.community .post-toolbar{gap:8px}.community h2.post-title{font-size:21px}}
+</style>
+<section class="community">
+<header class="community-heading"><div><h1>Community</h1><p class="muted">A space for doctors and patients to learn, share, and connect.</p></div>{% if creating_post %}<a href="{{ request.path }}" class="action-link">Back to discussions</a>{% else %}<a href="?view=create" class="action-link primary">Create post</a>{% endif %}</header>
+<nav class="row" aria-label="Community views" style="margin:0 4px 20px"><a href="{{ request.path }}" class="action-link {% if not creating_post %}primary{% endif %}" {% if not creating_post %}aria-current="page"{% endif %}>Discussions</a><a href="?view=create" class="action-link {% if creating_post %}primary{% endif %}" {% if creating_post %}aria-current="page"{% endif %}>Create post</a></nav>
+<div class="community-layout"><div>
+{% if creating_post %}
+<section class="community-card" id="compose"><h2>Share with the community</h2><form method="post" enctype="multipart/form-data" id="post-compose">{% csrf_token %}<input type="hidden" name="action" value="post">{{ post_form.non_field_errors }}{% for field in post_form %}{% if field.name != 'media' %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endif %}{% endfor %}
+<label for="id_media">Photo or video <span class="muted">(optional)</span></label>
+<div class="upload-zone" id="upload-zone"><span class="material-symbols-outlined" aria-hidden="true">cloud_upload</span><p>Drag a photo or video here, or choose a file</p><p class="muted">JPG, PNG, WebP, MP4 or WebM · One attachment, up to 20 MB</p>{{ post_form.media }}</div>{{ post_form.media.errors }}
+<p id="upload-error" role="alert"></p><div class="media-preview" id="media-preview" hidden><div id="preview-content"></div><div><strong id="media-name"></strong><p class="muted" id="media-size"></p><button type="button" id="remove-media">Remove attachment</button></div></div>
+<div class="row" style="justify-content:space-between;margin-top:20px"><span class="muted">Posting as {{ request.user.get_full_name|default:request.user.username }}</span><button class="primary" type="submit" id="publish-post">Publish discussion</button></div><p class="upload-status" id="upload-status" role="status"></p></form></section>
+{% else %}
+<section class="community-card"><h2>Discussions</h2><form method="get" class="filters"><input aria-label="Search discussions" name="q" value="{{ query }}" placeholder="Search discussions…"><select name="topic" aria-label="Filter by topic"><option value="">All topics</option>{% for value,label in topics %}<option value="{{ value }}" {% if selected_topic == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button type="submit">Search</button><label style="margin:0;grid-column:1/-1"><input type="checkbox" name="mine" value="1" {% if mine == '1' %}checked{% endif %} style="width:auto"> My discussions only</label></form></section>
+{% if action_error %}<p class="error" role="alert">{{ action_error }}</p>{% endif %}
+{% for post in page_obj %}
+<article class="community-card" id="post-{{ post.pk }}">
+    <header class="post-header">
+        <span class="post-avatar" aria-hidden="true">{% avatar_url post.author as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>{{ post.author.get_full_name|default:post.author.username|first|upper }}</span>{% else %}{{ post.author.get_full_name|default:post.author.username|first|upper }}{% endif %}</span>
+        <div><strong class="post-author">{{ post.author.get_full_name|default:post.author.username }}</strong><div class="post-meta"><span class="post-role">{{ post.author.get_account_type_display }}</span><span aria-hidden="true">·</span><time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"d M Y, H:i" }}</time></div></div>
+        <span class="tag">{{ post.get_topic_display }}</span>
+    </header>
+    <h2 class="post-title">{{ post.title }}</h2><p class="body">{{ post.body }}</p>
+    <button type="button" class="post-read-more" hidden aria-expanded="false">Read more</button>
+    {% if post.media %}{% if post.media_type == 'image' %}<img class="post-media" src="{{ post.media.url }}" alt="Photo attached to {{ post.title }}" loading="lazy">{% else %}<video class="post-media" src="{{ post.media.url }}" controls preload="metadata" aria-label="Video attached to {{ post.title }}"></video>{% endif %}{% endif %}
+    <div class="post-toolbar">
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="like"><input type="hidden" name="post_id" value="{{ post.pk }}"><button type="submit" aria-pressed="{{ post.liked|yesno:'true,false' }}"><span class="material-symbols-outlined" aria-hidden="true">favorite</span>{% if post.liked %}Liked{% else %}Like{% endif %}<span>{{ post.like_count }}</span></button></form>
+        <button class="reply-toggle" type="button" data-replies="replies-{{ post.pk }}" aria-controls="replies-{{ post.pk }}" aria-expanded="{{ post.replies.all|yesno:'true,false' }}"><span class="material-symbols-outlined" aria-hidden="true">chat_bubble</span>{{ post.replies.all|length }} replies</button>
+        <button type="button" class="post-share" data-post-id="{{ post.pk }}"><span class="material-symbols-outlined" aria-hidden="true">link</span>Copy link</button>
+        <span class="post-reading-time muted"></span>
+        {% if post.author_id == request.user.pk %}<form method="post" class="post-delete">{% csrf_token %}<input type="hidden" name="action" value="delete_post"><input type="hidden" name="post_id" value="{{ post.pk }}"><button class="delete" type="submit" aria-label="Delete my discussion"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Delete</button></form>{% endif %}
     </div>
-</section>
-{% endblock %}
+    <details class="post-replies" id="replies-{{ post.pk }}" {% if post.replies.all %}open{% endif %}>
+        <summary>Replies</summary>
+        {% for reply in post.replies.all %}<div class="reply" id="reply-entry-{{ reply.pk }}"><span class="reply-avatar" aria-hidden="true">{% avatar_url reply.author as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>{{ reply.author.get_full_name|default:reply.author.username|first|upper }}</span>{% else %}{{ reply.author.get_full_name|default:reply.author.username|first|upper }}{% endif %}</span><div class="reply-content"><header class="reply-header"><strong>{{ reply.author.get_full_name|default:reply.author.username }}</strong><span class="post-role">{{ reply.author.get_account_type_display }}</span>{% if reply.author_id == post.author_id %}<span class="reply-author-label">Post author</span>{% endif %}<time class="muted" datetime="{{ reply.created_at|date:'c' }}">{{ reply.created_at|date:"d M, g:i A" }}</time></header><p>{{ reply.body }}</p><div class="reply-actions"><button type="button" class="reply-to-person" data-reply-name="{{ reply.author.get_full_name|default:reply.author.username }}" data-composer="reply-{{ post.pk }}"><span class="material-symbols-outlined" aria-hidden="true">reply</span>Reply</button>{% if reply.author_id == request.user.pk %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_reply"><input type="hidden" name="reply_id" value="{{ reply.pk }}"><button class="delete" type="submit" aria-label="Delete your reply">Delete</button></form>{% endif %}</div></div></div>{% endfor %}
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="reply"><input type="hidden" name="post_id" value="{{ post.pk }}"><label for="reply-{{ post.pk }}">Your reply</label><textarea id="reply-{{ post.pk }}" name="body" rows="2" maxlength="2000" required placeholder="Add to the conversation…"></textarea><button type="submit" style="margin-top:10px">Post reply</button></form>
+    </details>
+</article>
+{% empty %}<div class="community-card empty"><span class="material-symbols-outlined" style="font-size:42px;color:#087f8c">forum</span><h2>{% if query or selected_topic or mine %}No matching discussions{% else %}Start the first conversation{% endif %}</h2><p class="muted">{% if query or selected_topic or mine %}Try another topic or search, or share a discussion of your own.{% else %}Ask a question or share an experience with the Oasis community.{% endif %}</p></div>{% endfor %}
+{% if page_obj.has_other_pages %}<nav class="row" aria-label="Discussion pages">{% if page_obj.has_previous %}<a class="action-link" href="?page={{ page_obj.previous_page_number }}&q={{ query|urlencode }}&topic={{ selected_topic|urlencode }}&mine={{ mine|urlencode }}">Previous</a>{% endif %}<span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a class="action-link" href="?page={{ page_obj.next_page_number }}&q={{ query|urlencode }}&topic={{ selected_topic|urlencode }}&mine={{ mine|urlencode }}">Next</a>{% endif %}</nav>{% endif %}
+{% endif %}
+</div></div></section>
+<style>
+.community article.community-card{padding-top:24px;padding-bottom:24px;scroll-margin-top:20px}.community article.community-card{transition:background-color .18s ease}.community article.community-card:target{background:transparent}.community article.community-card.post-selected{background:#e7f3f2;box-shadow:inset 3px 0 0 #087f8c}.community article.community-card.post-selected:hover{background:#e7f3f2}@media(hover:hover){.community article.community-card:hover{background:rgba(8,127,140,.035)}}@media(prefers-reduced-motion:reduce){.community article.community-card{transition:none}}.community .post-title{font-size:22px;letter-spacing:-.4px;line-height:1.35;margin-top:18px}.community .body{font-size:15px;line-height:1.75;max-width:85ch;color:#37516b}.community .post-role{font-size:11px;font-weight:600;padding:2px 7px;background:#e4f1f0;border-radius:5px}.community .post-toolbar{gap:8px;align-items:center}.community .post-toolbar button{padding:8px 12px;border-radius:8px;font-size:12px;transition:background .15s,color .15s}.community .post-toolbar button:hover{background:#e3f0ef;color:#087f8c}.community .post-toolbar button[aria-pressed=true]{color:#087f8c;background:#e3f0ef}.community .post-toolbar button[aria-pressed=true] .material-symbols-outlined{font-variation-settings:'FILL' 1}.community .post-reading-time{margin-left:auto;font-size:11px}.community .post-read-more{padding:0;background:transparent;color:#087f8c;font-size:12px;font-weight:600;margin-bottom:12px}.community .post-read-more[hidden]{display:none}.community .body.post-collapsed{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.community .post-share-status{font-size:12px;color:#087f8c;margin-top:8px}@media(max-width:600px){.community .post-reading-time{display:none}.community .post-title{font-size:19px}}
+</style>
+<script>
+document.querySelectorAll('.community article[id^="post-"]').forEach(post => {
+    post.tabIndex = 0;
+    const selectPost = () => {
+        document.querySelectorAll('.community article.post-selected').forEach(item => item.classList.remove('post-selected'));
+        post.classList.add('post-selected');
+    };
+    post.addEventListener('click', event => {
+        if (!event.target.closest('button,a,input,textarea,select,summary,form,video')) selectPost();
+    });
+    post.addEventListener('keydown', event => {
+        if (event.target === post && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); selectPost(); }
+    });
+    const body = post.querySelector('.body'), more = post.querySelector('.post-read-more');
+    const words = body.textContent.trim().split(/\s+/).filter(Boolean).length;
+    post.querySelector('.post-reading-time').textContent = Math.max(1, Math.ceil(words / 200)) + ' min read';
+    if (words > 90 || body.textContent.split('\n').length > 5) {
+        body.classList.add('post-collapsed'); more.hidden = false;
+        more.onclick = () => { const expanded = more.getAttribute('aria-expanded') !== 'true'; more.setAttribute('aria-expanded', String(expanded)); body.classList.toggle('post-collapsed', !expanded); more.textContent = expanded ? 'Show less' : 'Read more'; };
+    }
+    post.querySelector('.post-share').onclick = async () => {
+        const url = new URL(location.href); url.hash = post.id;
+        let status = post.querySelector('.post-share-status');
+        if (!status) { status = document.createElement('div'); status.className = 'post-share-status'; status.setAttribute('role','status'); post.querySelector('.post-toolbar').after(status); }
+        try { await navigator.clipboard.writeText(url.href); status.textContent = 'Post link copied.'; }
+        catch { status.textContent = ''; const input = document.createElement('input'); input.value = url.href; input.readOnly = true; input.setAttribute('aria-label','Post link'); status.append(input); input.select(); }
+    };
+});
+</script>
+<script>
+(() => {
+    const input = document.getElementById('id_media');
+    if (!input) return;
+    const zone = document.getElementById('upload-zone'), preview = document.getElementById('media-preview'), content = document.getElementById('preview-content'), error = document.getElementById('upload-error');
+    let previewUrl;
+    function showFile() {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        content.replaceChildren(); preview.hidden = true; error.textContent = '';
+        const file = input.files[0]; if (!file) return;
+        if (file.size > 20 * 1024 * 1024 || !/\.(jpe?g|png|webp|mp4|webm)$/i.test(file.name)) {
+            error.textContent = 'Choose a JPG, PNG, WebP, MP4 or WebM file up to 20 MB.'; input.value = ''; return;
+        }
+        previewUrl = URL.createObjectURL(file);
+        const media = document.createElement(/\.(mp4|webm)$/i.test(file.name) ? 'video' : 'img');
+        media.src = previewUrl; if (media.tagName === 'VIDEO') media.controls = true; else media.alt = 'Selected photo preview';
+        content.append(media); document.getElementById('media-name').textContent = file.name;
+        document.getElementById('media-size').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB · Ready to upload'; preview.hidden = false;
+    }
+    input.addEventListener('change', showFile);
+    document.getElementById('remove-media').addEventListener('click', () => { input.value = ''; showFile(); });
+    ['dragenter','dragover'].forEach(type => zone.addEventListener(type, event => { event.preventDefault(); zone.classList.add('dragging'); }));
+    ['dragleave','drop'].forEach(type => zone.addEventListener(type, event => { event.preventDefault(); zone.classList.remove('dragging'); }));
+    zone.addEventListener('drop', event => {
+        if (event.dataTransfer.files.length !== 1) { error.textContent = 'Please choose one attachment.'; return; }
+        input.files = event.dataTransfer.files; showFile();
+    });
+    document.getElementById('post-compose').addEventListener('submit', () => {
+        const button = document.getElementById('publish-post'); button.disabled = true; button.textContent = input.files.length ? 'Uploading…' : 'Publishing…';
+        document.getElementById('upload-status').textContent = 'Publishing your discussion. Please keep this page open.';
+    });
+})();
+document.querySelectorAll('.community select').forEach((select, index) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'topic-picker';
+    select.before(wrapper);
+    wrapper.append(select);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.setAttribute('aria-haspopup', 'listbox');
+    button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-label', select.getAttribute('aria-label') || 'Topic');
+    const label = document.createElement('span');
+    const icon = document.createElement('span');
+    icon.className = 'material-symbols-outlined';
+    icon.textContent = 'expand_more';
+    icon.setAttribute('aria-hidden', 'true');
+    button.append(label, icon);
+    const list = document.createElement('ul');
+    list.className = 'topic-options';
+    list.id = 'topic-options-' + index;
+    list.setAttribute('role', 'listbox');
+    list.setAttribute('aria-label', button.getAttribute('aria-label'));
+    list.hidden = true;
+    button.setAttribute('aria-controls', list.id);
+    const items = Array.from(select.options).map(option => {
+        const item = document.createElement('li');
+        item.textContent = option.textContent;
+        item.setAttribute('role', 'option');
+        item.tabIndex = -1;
+        list.append(item);
+        item.addEventListener('click', () => {
+            select.value = option.value;
+            select.dispatchEvent(new Event('change', {bubbles:true}));
+            close();
+            button.focus();
+        });
+        return item;
+    });
+    function sync() {
+        label.textContent = select.options[select.selectedIndex].textContent;
+        items.forEach((item, i) => item.setAttribute('aria-selected', String(i === select.selectedIndex)));
+    }
+    function close() { list.hidden = true; button.setAttribute('aria-expanded', 'false'); }
+    function open() { list.hidden = false; button.setAttribute('aria-expanded', 'true'); items[select.selectedIndex].focus(); }
+    button.addEventListener('click', () => list.hidden ? open() : close());
+    button.addEventListener('keydown', event => {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); open(); }
+    });
+    list.addEventListener('keydown', event => {
+        const current = items.indexOf(document.activeElement);
+        if (event.key === 'Escape') { event.preventDefault(); close(); button.focus(); }
+        else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); items[current]?.click(); }
+        else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+            event.preventDefault();
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+            items[next].focus();
+        }
+    });
+    document.addEventListener('click', event => { if (!wrapper.contains(event.target)) close(); });
+    wrapper.addEventListener('focusout', event => { if (!wrapper.contains(event.relatedTarget)) close(); });
+    select.addEventListener('change', sync);
+    const fieldLabel = document.querySelector('label[for="' + select.id + '"]');
+    if (fieldLabel) { button.id = select.id + '-picker'; fieldLabel.htmlFor = button.id; }
+    select.hidden = true;
+    wrapper.append(button, list);
+    sync();
+});
+document.querySelectorAll('.community [data-replies]').forEach(button => {
+    const replies = document.getElementById(button.dataset.replies);
+    button.addEventListener('click', () => { replies.open = !replies.open; });
+    replies.addEventListener('toggle', () => { button.setAttribute('aria-expanded', String(replies.open)); });
+});
+</script>
+<style>
+.community .reply{display:flex;gap:12px;padding:18px 0}.community .reply-avatar{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;background:#dcebed;color:#087f8c;font-size:12px;font-weight:600}.community .reply-content{flex:1;min-width:0}.community .reply-header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.community .reply-header strong{font-size:13px}.community .reply-header time{margin-left:auto;font-size:11px}.community .reply-author-label{font-size:10px;color:#607590}.community .reply-content p{font-size:14px;line-height:1.65;margin:8px 0;color:#37516b}.community .reply-actions{display:flex;align-items:center;gap:14px}.community .reply-actions form{margin:0}.community .reply-actions button{background:transparent;padding:3px 0;font-size:11px;color:#607590;border-radius:4px}.community .reply-actions button:hover{color:#087f8c}.community .reply-actions .material-symbols-outlined{font-size:16px}.community .reply-actions .delete{color:#91625e}.community .post-replies>form{margin-top:18px}@media(max-width:600px){.community .reply-header time{margin-left:0;width:100%}}
+</style>
+<script>
+document.querySelectorAll('.reply-to-person').forEach(button => button.addEventListener('click', () => {
+ const composer = document.getElementById(button.dataset.composer);
+ if (!composer) return;
+ const prefix = '@' + button.dataset.replyName + ' ';
+ if (!composer.value.startsWith(prefix)) composer.value = prefix + composer.value;
+ composer.focus(); composer.setSelectionRange(composer.value.length, composer.value.length);
+ composer.scrollIntoView({behavior:'smooth',block:'center'});
+}));
+</script>{% endblock %}

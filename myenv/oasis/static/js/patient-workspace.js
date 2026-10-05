@@ -103,10 +103,29 @@
         if (!data.lists.some(list => list.id === selected)) selected = data.lists[0]?.id;
         selectedLists.set(url, selected);
         const toolbar = element('div', 'pw-toolbar');
-        const select = element('select'); select.setAttribute('aria-label', 'Task list');
-        if (!data.lists.length) { const option = element('option', '', 'My Tasks'); select.append(option); select.disabled = true; }
-        data.lists.forEach(list => { const option = element('option', '', list.name); option.value = list.id; option.selected = list.id === selected; select.append(option); });
-        select.onchange = () => {selected = Number(select.value); selectedLists.set(url, selected); render();};
+        const select = element('div', 'pw-list-picker');
+        const current = data.lists.find(list => list.id === selected);
+        const menu = element('div', 'pw-list-menu'); menu.hidden = true;
+        const toggle = button('', 'pw-list-toggle', () => { menu.hidden = !menu.hidden; toggle.setAttribute('aria-expanded', String(!menu.hidden)); });
+        toggle.append(element('span', '', current?.name || 'My Tasks'), icon('expand_more'));
+        toggle.setAttribute('aria-label', 'Choose task list'); toggle.setAttribute('aria-expanded', 'false'); toggle.disabled = !data.lists.length;
+        data.lists.forEach(list => {
+          const option = button('', 'pw-list-option', () => { selected = list.id; selectedLists.set(url, selected); render(); });
+          option.append(element('span', '', list.name));
+          if (list.id === selected) { option.classList.add('selected'); option.append(icon('check')); }
+          menu.append(option);
+        });
+        select.append(toggle, menu);
+        select.addEventListener('keydown', event => {
+          const options = [...menu.querySelectorAll('button')];
+          if (event.key === 'Escape') { menu.hidden = true; toggle.setAttribute('aria-expanded','false'); toggle.focus(); }
+          if (['ArrowDown','ArrowUp'].includes(event.key) && options.length) {
+            event.preventDefault(); menu.hidden = false; toggle.setAttribute('aria-expanded','true');
+            const index = options.indexOf(document.activeElement);
+            options[(index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length].focus();
+          }
+        });
+        select.addEventListener('focusout', () => setTimeout(() => { if (!select.contains(document.activeElement)) {menu.hidden = true; toggle.setAttribute('aria-expanded','false');} }, 0));
         toolbar.append(select, button('New list', 'pw-new-list', () => editor('list'))); root.append(toolbar);
       }
       const add = button('', 'pw-add', () => editor(mode === 'notes' ? 'note' : 'task'));

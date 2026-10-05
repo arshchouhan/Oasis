@@ -1,77 +1,75 @@
 (() => {
-  const steps = {
-    blink: {title:'Blink gently', text:'Blink slowly and comfortably, letting your eyelids meet without squeezing. Keep your face relaxed.', icon:'visibility', seconds:30},
-    distance: {title:'Look into the distance', text:'Look away from this screen at something about 20 feet (6 metres) away. Let your gaze rest there for 20 seconds. You do not need to watch the timer.', icon:'landscape', seconds:20},
-    rest: {title:'Rest and relax', text:'Gently close your eyes if comfortable and relax your shoulders. Breathe normally. Avoid pressing or rubbing your eyes.', icon:'spa', seconds:20}
-  };
-  const routines = {reset:{name:'Everyday reset',steps:['blink','distance','rest']}, distance:{name:'Distance break',steps:['distance']}, blink:{name:'Mindful blinking',steps:['blink']}};
-  const get = id => document.getElementById(id);
-  const start = get('eyeStart'), next = get('eyeNext'), voice = get('eyeVoice');
-  let routine = routines.reset, index = 0, remaining = 30, deadline = 0, interval = null, running = false, finished = false;
-  const current = () => steps[routine.steps[index]];
-  const total = () => routine.steps.reduce((sum, key) => sum + steps[key].seconds, 0);
-  function speak(text) {
-    if (!voice.checked || !('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
-    const message = new SpeechSynthesisUtterance(text); message.rate = .9;
-    speechSynthesis.speak(message);
-  }
-  if (!('speechSynthesis' in window)) {voice.disabled = true; voice.parentElement.title = 'Voice guidance is unavailable in this browser.';}
-  voice.onchange = () => {if (!voice.checked) window.speechSynthesis?.cancel();};
-  function stop() {clearInterval(interval); interval = null; running = false;}
-  function clock() {
-    const seconds = Math.ceil(remaining);
-    get('eyeTimer').textContent = String(Math.floor(seconds/60)).padStart(2,'0') + ':' + String(seconds%60).padStart(2,'0');
-    get('eyeProgress').max = total();
-    get('eyeProgress').value = finished ? total() : routine.steps.slice(0,index).reduce((sum,key)=>sum+steps[key].seconds,0) + current().seconds - remaining;
-  }
-  function show() {
-    get('eyeSessionName').textContent = routine.name;
-    get('eyeStepCount').textContent = 'Step ' + (index+1) + ' of ' + routine.steps.length;
-    get('eyeStepTitle').textContent = current().title;
-    get('eyeStepText').textContent = current().text;
-    get('eyeStepIcon').textContent = current().icon;
-    start.textContent = index ? 'Start step' : 'Start session'; start.disabled = false;
-    next.disabled = true; next.textContent = 'Next step';
-    get('eyeStatus').textContent = 'Get comfortable, then start when you are ready.';
-    clock();
-  }
-  function reset() {stop(); window.speechSynthesis?.cancel(); index=0; finished=false; remaining=current().seconds; show();}
-  function tick() {
-    remaining = Math.max(0, (deadline - performance.now())/1000); clock();
-    if (remaining > 0) return;
-    stop(); start.disabled = true;
-    if (index === routine.steps.length-1) {
-      finished=true; clock();
-      get('eyeStepTitle').textContent='Session complete';
-      get('eyeStepText').textContent='Your guided break is finished. Take another moment if you need it before returning to your day.';
-      get('eyeStepIcon').textContent='task_alt';
-      get('eyeStatus').textContent='Well done taking a break.';
-      start.disabled=false; start.textContent='Start again'; next.disabled=true;
-      speak('Your session is complete.');
-    } else {
-      next.disabled=false;
-      get('eyeStatus').textContent='Step complete. Choose Next step when you are ready.';
-      speak('Step complete. Choose Next step when you are ready.');
-    }
-  }
-  start.onclick = () => {
-    if (finished) reset();
-    if (running) {
-      remaining = Math.max(0,(deadline-performance.now())/1000);
-      stop(); window.speechSynthesis?.cancel(); clock(); start.textContent='Resume'; get('eyeStatus').textContent='Paused. Resume whenever you are ready.'; return;
-    }
-    running=true; deadline=performance.now()+remaining*1000;
-    start.textContent='Pause'; get('eyeStatus').textContent='Follow the instructions at a comfortable pace.';
-    speak(current().title + '. ' + current().text);
-    interval=setInterval(tick,200); tick();
-  };
-  next.onclick = () => {if (index < routine.steps.length-1) {index++; remaining=current().seconds; show();}};
-  get('eyeRestart').onclick=reset;
-  document.querySelectorAll('[data-routine]').forEach(button => button.onclick=()=>{
-    routine=routines[button.dataset.routine]; reset();
-    document.querySelectorAll('[data-routine]').forEach(item=>{const selected=item===button; item.classList.toggle('selected',selected); item.setAttribute('aria-pressed',String(selected));});
-  });
-  window.addEventListener('pagehide',()=>{stop(); window.speechSynthesis?.cancel();});
-  show();
+const get=id=>document.getElementById(id);
+const palmHand='<path d="M36 150V92L26 69q-5-10 2-13 7-3 14 9l6 10V29q0-12 7-12t7 12v40-52q0-12 7-12t7 12v52-43q0-11 7-11t7 11v43-31q0-10 7-10t7 10v57q0 23-20 38v19Z" fill="#f5d2ab" stroke="#bc8b60" stroke-width="2.5" stroke-linejoin="round"/>';
+const palmingArt='<svg viewBox="0 0 360 230" aria-hidden="true"><g class="ec-palm-rub"><g class="ec-rub-hand-one" transform="translate(54 30) rotate(58 70 85)">'+palmHand+'</g><g class="ec-rub-hand-two" transform="translate(134 30) rotate(58 70 85)">'+palmHand+'</g><path d="M95 35q20-20 40 0m75 150q20 20 40 0" fill="none" stroke="#87bdb7" stroke-width="3" stroke-linecap="round"/></g><g class="ec-palm-cover"><path d="M116 199V93q0-76 64-76t64 76v106" fill="#655047"/><path d="M102 230q12-48 78-48t78 48" fill="#b4d9cf"/><ellipse cx="180" cy="104" rx="52" ry="70" fill="#f5d2ab"/><path d="M152 93q10 8 20 0m18 0q10 8 20 0m-39 43q9 6 18 0" fill="none" stroke="#655047" stroke-width="3" stroke-linecap="round"/><g class="ec-cover-hand-left" transform="translate(99 45) scale(.75 1)">'+palmHand+'</g><g class="ec-cover-hand-right" transform="translate(261 45) scale(-.75 1)">'+palmHand+'</g></g></svg>';
+const blinkingEyes = '<svg viewBox="0 0 420 150" aria-hidden="true"><defs><g id="ecBlinkEye"><path d="M10 48Q65 5 120 48" fill="none" stroke="#607590" stroke-width="3" stroke-linecap="round"/><g class="ec-blink-opening"><path d="M8 76Q65 20 122 76Q65 123 8 76Z" fill="#fff" stroke="#244d5b" stroke-width="3"/><circle cx="65" cy="74" r="24" fill="#70aaa7"/><circle cx="65" cy="74" r="14" fill="#173d4a"/><circle cx="73" cy="65" r="5" fill="#fff"/><path d="m19 63-8-9m24-1-5-11m23 5-2-12m21 12 2-12m20 18 5-11m12 21 8-9M25 94l-5 7m25 3-2 8m22-6v9m20-11 2 8m18-18 5 7" fill="none" stroke="#244d5b" stroke-width="2.5" stroke-linecap="round"/></g><path class="ec-blink-closed" d="M8 76Q65 108 122 76m-96 9-5 9m26 2-2 10m20-8v11m19-13 2 10m20-21 5 9" fill="none" stroke="#244d5b" stroke-width="3" stroke-linecap="round"/></g></defs><use href="#ecBlinkEye" x="30" y="0"/><use href="#ecBlinkEye" x="260" y="0"/></svg>';
+const movement = document.createElement('section');
+movement.className = 'ec-movement'; movement.hidden = true;
+movement.innerHTML = '<div class="ec-eye-stage" aria-hidden="true"><div class="ec-demo-eye"><span class="ec-pupil"></span></div><div class="ec-demo-eye"><span class="ec-pupil"></span></div></div><h3 id="ecMoveCue" role="status">Look straight ahead</h3><p class="ec-muted">Follow the pupils gently. Keep your head still and blink between movements.</p><div class="ec-move-actions"><button class="ec-button" id="ecMoveStart" type="button">Start guidance</button><button class="ec-text-button" id="ecMoveNext" type="button">Next direction</button><button class="ec-text-button" id="ecMoveReset" type="button">Restart</button></div>';
+document.querySelector('.ec-player').after(movement);
+const directions = [{text:'Look straight ahead',x:0,y:0},{text:'Look gently to the left',x:-24,y:0},{text:'Return to the centre and blink',x:0,y:0},{text:'Look gently to the right',x:24,y:0},{text:'Return to the centre and blink',x:0,y:0},{text:'Look gently up',x:0,y:-24},{text:'Return to the centre and blink',x:0,y:0},{text:'Look gently down',x:0,y:24},{text:'Finished — relax your gaze and blink',x:0,y:0}];
+let moveIndex = 0, moveTimer = null;
+function pauseMovement(){clearInterval(moveTimer);moveTimer=null;get('ecMoveStart').textContent='Start guidance';}
+function drawMovement(){const direction=directions[moveIndex];get('ecMoveCue').textContent=direction.text;movement.style.setProperty('--look-x',direction.x+'%');movement.style.setProperty('--look-y',direction.y+'%');if(moveIndex===directions.length-1){pauseMovement();get('ecMoveStart').textContent='Start again';}}
+function resetMovement(){pauseMovement();moveIndex=0;drawMovement();}
+function nextMovement(){if(moveIndex<directions.length-1){moveIndex++;drawMovement();}}
+get('ecMoveStart').onclick=()=>{if(moveTimer){pauseMovement();get('ecMoveStart').textContent='Resume guidance';return;}if(moveIndex===directions.length-1)resetMovement();get('ecMoveStart').textContent='Pause guidance';moveTimer=setInterval(nextMovement,3500);};
+get('ecMoveNext').onclick=()=>{pauseMovement();nextMovement();};get('ecMoveReset').onclick=resetMovement;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseMovement();});
+const zigzag = document.createElement('section');
+zigzag.className='ec-zigzag';zigzag.hidden=true;
+zigzag.innerHTML='<div class="ec-zigzag-heading"><span>Follow the ball</span><span id="ecZigStatus" role="status">Ready</span></div><div class="ec-zigzag-stage" aria-label="Ball follows a zig-zag path through all four corners"><span class="ec-corner top-left"></span><span class="ec-corner top-right"></span><span class="ec-corner bottom-left"></span><span class="ec-corner bottom-right"></span><span class="ec-zigzag-ball" id="ecZigBall"></span></div><p class="ec-muted">Follow the ball with your eyes, keeping your head still. Blink naturally between passes.</p><div class="ec-move-actions"><button type="button" class="ec-button" id="ecZigStart">Start tracking</button><button type="button" class="ec-text-button" id="ecZigReset">Restart</button></div>';
+movement.after(zigzag);
+const zigAnimation=get('ecZigBall').animate([{left:'8%',top:'8%'},{left:'92%',top:'92%'},{left:'8%',top:'92%'},{left:'92%',top:'8%'},{left:'8%',top:'8%'}],{duration:16000,iterations:2,easing:'linear',fill:'forwards'});
+zigAnimation.pause();
+function pauseZigzag(){zigAnimation.pause();if(zigAnimation.currentTime>0){get('ecZigStart').textContent='Resume tracking';get('ecZigStatus').textContent='Paused';}}
+function resetZigzag(){zigAnimation.pause();zigAnimation.currentTime=0;get('ecZigStart').textContent='Start tracking';get('ecZigStatus').textContent='Ready';}
+get('ecZigStart').onclick=()=>{if(zigAnimation.playState==='running'){pauseZigzag();return;}if(zigAnimation.currentTime>=32000)resetZigzag();zigAnimation.play();get('ecZigStart').textContent='Pause';get('ecZigStatus').textContent='Follow the ball gently';};
+get('ecZigReset').onclick=resetZigzag;
+zigAnimation.onfinish=()=>{get('ecZigStatus').textContent='Complete — rest your eyes';get('ecZigStart').textContent='Start again';};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseZigzag();});
+const exercises=[
+{name:'Palming',icon:'hand',wash:'#e1f1ed',duration:35,description:'Warm your palms, then give your closed eyes a quiet rest.',steps:['Sit comfortably and rub your clean palms together gently for 5 seconds.','Close your eyes and cup your palms loosely around them for 30 seconds.','Breathe naturally. Do not press on, rub, or squeeze your eyes.'],benefit:'A quiet pause from visual activity and a chance to relax.'},
+{name:'Blinking & breathing',icon:'eye',wash:'#e6ecfb',duration:30,description:'Slow down, soften your gaze, and blink gently.',steps:['Sit upright with your face and shoulders relaxed.','Blink slowly, allowing your eyelids to meet without squeezing.','Continue gentle blinking while breathing naturally.'],benefit:'A reminder to blink regularly during screen time.'},
+{name:'Eye moves',icon:'moves',wash:'#fbeadf',duration:30,description:'Explore small, comfortable eye movements.',steps:['Keep your head still and your gaze relaxed.','Look gently left and right, then up and down.','Return to the centre between movements. Avoid stretching to the extremes.'],benefit:'A short change from holding your gaze in one place.'},
+{name:'Zig-zag',icon:'zigzag',wash:'#fff1dc',duration:32,description:'Follow a ball along a gentle four-corner path.',steps:['Sit comfortably and keep your head still.','Start tracking and follow the ball as it crosses diagonally and visits all four corners.','Blink naturally. Pause at any time, and relax your gaze after the two passes.'],benefit:'A simple visual activity to add variety to your break.'},
+{name:'Flower effect',icon:'flower',wash:'#f8e5ec',duration:30,description:'Explore a repeating flower pattern with a soft gaze.',steps:['Sit comfortably and look gently at the flower pattern.','Rest your gaze on a white flower centre, then move to another at your own pace.','Blink naturally and breathe comfortably. Pause or look away if the pattern feels uncomfortable.'],benefit:'A quiet visual activity to vary your screen-break routine.'},
+{name:'Near & far focusing',icon:'far',wash:'#e3eff8',duration:35,description:'Gently switch your gaze from your thumb to a distant object.',steps:['Hold your thumb about 10 inches (25 cm) from your eyes at a comfortable height.','Look at your thumb for 15 seconds. Keep your head still and blink naturally.','Shift your gaze to a real object about 20 feet (6 metres) away for 20 seconds. Keep both targets comfortable to see.'],benefit:'A guided pause that alternates close-up attention with a distance break.'}
+];
+const drawings={
+hand:'<path d="M39 86C27 72 18 58 24 54q5-3 13 10V28q0-10 8-10t8 10v25-32q0-10 8-10t8 10v32-23q0-9 8-9t8 9v31-13q0-9 8-9t8 9v34q0 27-28 29H57q-10 0-18-15Z" fill="#b4d9cf" stroke="#087f8c" stroke-width="3"/>',
+eye:'<path d="M10 60Q60 8 110 60Q60 112 10 60Z" fill="#c8daef" stroke="#39739c" stroke-width="3"/><circle cx="60" cy="60" r="23" fill="#087f8c"/><circle cx="60" cy="60" r="11" fill="#10284a"/><circle cx="68" cy="52" r="5" fill="white"/>',
+moves:'<circle cx="60" cy="60" r="24" fill="#efd2be" stroke="#ad7556" stroke-width="3"/><circle cx="60" cy="60" r="10" fill="#087f8c"/><path d="M60 10v15m-6-9 6-6 6 6M60 110V95m-6 9 6 6 6-6M10 60h15m-9-6-6 6 6 6M110 60H95m9-6 6 6-6 6" fill="none" stroke="#ad7556" stroke-width="3" stroke-linecap="round"/>',
+zigzag:'<path d="m20 25 80 0-75 24 70 0-70 24 75 0-80 23" fill="none" stroke="#ce934b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>',
+flower:'<g fill="#e5a6bc" stroke="#b96e8b" stroke-width="2"><ellipse cx="60" cy="36" rx="15" ry="23"/><ellipse cx="60" cy="84" rx="15" ry="23"/><ellipse cx="36" cy="60" rx="23" ry="15"/><ellipse cx="84" cy="60" rx="23" ry="15"/></g><circle cx="60" cy="60" r="17" fill="#e9bd65"/><circle cx="60" cy="60" r="7" fill="#c98c38"/>',
+far:'<path d="M20 91V40h24v51M76 91V40h24v51" fill="#b7d3e5" stroke="#39739c" stroke-width="3"/><circle cx="32" cy="83" r="23" fill="#087f8c"/><circle cx="88" cy="83" r="23" fill="#087f8c"/><circle cx="32" cy="83" r="14" fill="#b9e5df"/><circle cx="88" cy="83" r="14" fill="#b9e5df"/><path d="M48 50h24" stroke="#39739c" stroke-width="9"/><path d="M22 40V22h20v18M78 40V22h20v18" fill="#39739c"/>'
+};
+const art=e=>'<svg viewBox="0 0 120 120" aria-hidden="true">'+drawings[e.icon]+'</svg>';
+let selected=0,remaining=60,timer=null,deadline=0;
+function stop(){clearInterval(timer);timer=null;pauseMovement();pauseZigzag();get('ecIllustration').classList.remove('blink-running','palm-running');get('ecStart').textContent='Start exercise';}
+function clock(){const displayed=selected===5?(remaining>20?remaining-20:remaining):selected===0?(remaining>30?remaining-30:remaining):remaining;get('ecClock').textContent=String(Math.floor(displayed/60)).padStart(2,'0')+':'+String(displayed%60).padStart(2,'0');get('ecProgress').max=exercises[selected].duration;get('ecProgress').value=exercises[selected].duration-remaining;if(selected===0){const cover=remaining<=30;get('ecIllustration').classList.toggle('palm-cover-stage',cover);const cue=cover?'Cup your palms gently around your closed eyes. Do not press.':'Rub your clean palms together gently.';if(timer&&get('ecStatus').textContent!==cue)get('ecStatus').textContent=cue;}if(selected===5){const near=remaining>20;get('ecIllustration').classList.toggle('ec-focus-far',!near);const cue=near?'Look at your thumb, about 10 inches (25 cm) away.':'Look at an object about 20 feet (6 metres) away.';if(timer&&get('ecStatus').textContent!==cue)get('ecStatus').textContent=cue;}}
+function reset(){stop();remaining=exercises[selected].duration;clock();get('ecIllustration').classList.toggle('ec-blinking',selected===1);get('ecIllustration').classList.toggle('ec-near-far',selected===5);get('ecIllustration').classList.toggle('ec-flower-pattern',selected===4);get('ecIllustration').classList.toggle('ec-palming',selected===0);if(selected===0){get('ecIllustration').innerHTML=palmingArt;get('ecStatus').textContent='Press Start to begin rubbing your palms.';}else if(selected===4){
+const petals=Array.from({length:8},(_,i)=>'<path d="M40 40C25 24 29 4 40 4S55 24 40 40Z" transform="rotate('+i*45+' 40 40)" fill="#080b0c" stroke="#fff" stroke-width=".6"/>').join('');
+get('ecIllustration').innerHTML='<svg viewBox="0 0 400 400" role="img" aria-label="Repeating black flowers with white centres"><defs><pattern id="ecFlowerTile" width="80" height="80" patternUnits="userSpaceOnUse">'+petals+'<circle cx="40" cy="40" r="3" fill="#fff"/></pattern></defs><rect width="400" height="400" fill="#fff"/><rect width="400" height="400" fill="url(#ecFlowerTile)"/></svg>';
+get('ecStatus').textContent='Let your gaze rest softly on a flower centre, then begin.';
+}else if(selected===5){
+get('ecIllustration').innerHTML='<svg viewBox="0 0 360 180" aria-hidden="true"><path d="M24 165 45 120 66 111 80 83 91 77 84 66 92 62 85 49Q85 17 55 17 22 17 24 59L34 86 34 111 13 160" fill="#dce9ef" stroke="#36586b" stroke-width="3" stroke-linejoin="round"/><path d="m62 56 13-2m-36 60 31 8m-35-40 4 19" fill="none" stroke="#36586b" stroke-width="3"/><path class="ec-near-line" d="M88 56H211m-8-5 8 5-8 5" fill="none" stroke="#087f8c" stroke-width="3"/><g class="ec-thumb"><path d="m210 155 14-34 14-18 7-42q3-12 9-8 6 4 2 22l-2 21 24-6q13-2 13 8v37q0 14-18 18l-12 20" fill="#b4d9cf" stroke="#087f8c" stroke-width="3" stroke-linejoin="round"/><path d="m254 108 30-4m-31 17 31-4m-27 17 25-4" stroke="#087f8c" stroke-width="2"/></g><g class="ec-far-target"><path d="m300 110 19-25 17 25m-41 0h47" stroke="#087f8c" stroke-width="3" fill="none"/><circle cx="322" cy="61" r="8" fill="#87bdb7"/></g></svg>';
+get('ecStatus').textContent='Hold your thumb about 10 inches (25 cm) away, then start.';
+}else if(selected===1){
+const illustration=get('ecIllustration');
+illustration.innerHTML=blinkingEyes;
+const svg=illustration.querySelector('svg'),eye=svg.querySelector('#ecBlinkEye');
+svg.querySelectorAll('use').forEach(use=>{const copy=eye.cloneNode(true);copy.removeAttribute('id');copy.setAttribute('transform','translate('+use.getAttribute('x')+',0)');use.replaceWith(copy);});
+svg.querySelector('defs').remove();
+illustration.classList.add('blink-running');
+get('ecStatus').textContent='Follow the gentle blink. Breathe naturally without holding your breath.';
+}else{get('ecStatus').textContent='Find a comfortable seat, then begin.';}}
+function renderCards(target,indices){target.replaceChildren();indices.forEach(i=>{const e=exercises[i],button=document.createElement('button');button.type='button';button.className='ec-exercise';button.innerHTML='<div class="ec-art" style="--wash:'+e.wash+'">'+art(e)+'</div><h3>'+e.name+'</h3><p>'+e.description+'</p><small>'+e.duration+' seconds · View exercise ↗</small>';button.onclick=()=>show(i);target.append(button);});}
+function show(i){selected=i;stop();get('ecLibrary').hidden=true;get('ecDetail').hidden=false;const e=exercises[i];get('ecTitle').textContent=e.name;get('ecDescription').textContent=e.description;get('ecDuration').textContent='EXERCISE '+(i+1)+' OF 6 · '+(i===2?'GUIDED MOVEMENTS':e.duration+' SECONDS');get('ecBenefit').textContent=e.benefit;get('ecIllustration').innerHTML=art(e);get('ecIllustration').style.background=e.wash;get('ecInstructions').replaceChildren(...e.steps.map(text=>{const li=document.createElement('li');li.textContent=text;return li;}));document.querySelector('.ec-player').hidden=i===2||i===3;movement.hidden=i!==2;zigzag.hidden=i!==3;resetZigzag();resetMovement();reset();document.querySelector('.eye-care').scrollTop=0;}
+get('ecBack').onclick=()=>{stop();get('ecDetail').hidden=true;get('ecLibrary').hidden=false;};get('ecPrevious').onclick=()=>show((selected+5)%6);get('ecNext').onclick=()=>show((selected+1)%6);get('ecReset').onclick=reset;
+get('ecStart').onclick=()=>{if(timer){remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));stop();clock();get('ecStart').textContent='Resume';get('ecStatus').textContent='Paused. Resume when ready.';return;}if(!remaining)reset();deadline=Date.now()+remaining*1000;get('ecStart').textContent='Pause';get('ecStatus').textContent='Follow the instructions gently. You can look away from the timer.';timer=setInterval(()=>{remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));clock();if(!remaining){stop();get('ecStart').textContent='Start again';get('ecStatus').textContent='Exercise complete. Take a moment before continuing.';}},250);};
+get('ecStart').addEventListener('click',()=>{if(selected===1&&timer){get('ecIllustration').classList.add('blink-running');get('ecStatus').textContent='Blink gently with the eyes. Keep breathing naturally and relax your shoulders.';}});
+get('ecStart').addEventListener('click',()=>{if(selected===0&&timer){get('ecIllustration').classList.add('palm-running');clock();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&selected===1&&timer){remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));stop();clock();get('ecStart').textContent='Resume';get('ecStatus').textContent='Paused. Resume when ready.';}});
+window.addEventListener('pagehide',stop);renderCards(get('ecGrid'),exercises.map((_,i)=>i));
 })();

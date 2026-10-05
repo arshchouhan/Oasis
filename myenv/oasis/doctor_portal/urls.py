@@ -4,6 +4,7 @@ from patient_portal import auth_views
 from . import views
 
 urlpatterns = [
+    path('dashboard/patients/<int:patient_id>/consultation/', views.consultation_workspace, name='doctor_consultation_workspace'),
     path('', views.home, name='doctor_home'),
     path('login/', auth_views.doctor_login, name='doctor_login'),
     path('register/', auth_views.doctor_register, name='doctor_register'),

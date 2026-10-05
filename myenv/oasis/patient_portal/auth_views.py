@@ -231,6 +231,11 @@ def google_callback(request):
         user.set_unusable_password()
     elif not user.google_sub:
         user.google_sub = google_sub
+    from urllib.parse import urlparse
+    picture = profile.get('picture', '')
+    parsed_picture = urlparse(picture)
+    if parsed_picture.scheme == 'https' and (parsed_picture.hostname or '').endswith('.googleusercontent.com'):
+        user.profile_image_url = picture
     user.save()
     login(request, user, backend='patient_portal.backends.EmailOrUsernameBackend')
     return redirect(_dashboard_for(user))

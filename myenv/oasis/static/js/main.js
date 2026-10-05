@@ -245,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.openPatientWorkspace(sidePanelBody, button.dataset.personalUrl, panelName);
         }
         const meetingsUrl = button.dataset.meetingsUrl;
+        activePanel = panelName;
         if (meetingsUrl) loadUpcomingMeetings(meetingsUrl);
         const referralsUrl = button.dataset.referralsUrl;
         if (referralsUrl) loadReferralManager(referralsUrl);
@@ -255,30 +256,84 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    document.querySelectorAll('.patient-meeting-list time').forEach(node => {
+        const date = new Date(node.dateTime);
+        if (!Number.isNaN(date.getTime())) node.textContent = date.toLocaleString([], {dateStyle:'medium', timeStyle:'short'});
+    });
+    document.addEventListener('click', event => {
+        const tab = event.target.closest('[data-meet-tab]');
+        if (!tab) return;
+        const workspace = tab.closest('.panel-workspace');
+        workspace.querySelectorAll('[data-meet-tab]').forEach(item => item.setAttribute('aria-selected', String(item === tab)));
+        workspace.querySelectorAll('[data-meet-panel]').forEach(panel => panel.hidden = panel.dataset.meetPanel !== tab.dataset.meetTab);
+    });
+    document.addEventListener('keydown', event => {
+        const tab = event.target.closest('[data-meet-tab]');
+        if (!tab || !['ArrowLeft','ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        const other = [...tab.parentElement.querySelectorAll('[data-meet-tab]')].find(item => item !== tab);
+        other.click(); other.focus();
+    });
+    window.addEventListener('oasis:meeting-created', event => {
+        const meeting = event.detail;
+        const list = document.querySelector('.patient-profile.active .patient-meeting-list') || document.querySelector('.meet-page .patient-meeting-list');
+        if (list && meeting) {
+            list.querySelector('.patient-meetings-empty')?.remove();
+            const article = document.createElement('article');
+            article.style.cssText = 'padding:14px 0;border-bottom:1px solid #e2ebf1';
+            const title = document.createElement('strong'); title.textContent = meeting.title;
+            const date = document.createElement('p');
+            const start = new Date(meeting.start);
+            date.textContent = Number.isNaN(start.getTime()) ? meeting.start : start.toLocaleString([], {dateStyle:'medium', timeStyle:'short'});
+            date.style.cssText = 'margin:6px 0;color:#607590';
+            article.append(title, date);
+            try {
+                const url = new URL(meeting.meet_url);
+                if (url.protocol === 'https:' && url.hostname === 'meet.google.com') {
+                    const join = document.createElement('a'); join.href = url.href; join.target = '_blank'; join.rel = 'noopener'; join.textContent = 'Join Google Meet'; join.style.color = '#087f8c'; article.append(join);
+                }
+            } catch {}
+            list.prepend(article);
+        }
+        const button = document.querySelector('.rail-btn[data-meetings-url][data-panel="' + activePanel + '"]');
+        if (button) loadUpcomingMeetings(button.dataset.meetingsUrl);
+    });
+    function refreshVisibleMeetings() {
+        if (document.hidden) return;
+        const button = document.querySelector('.rail-btn[data-meetings-url][data-panel="' + activePanel + '"]');
+        if (button) loadUpcomingMeetings(button.dataset.meetingsUrl);
+    }
+    window.addEventListener('focus', refreshVisibleMeetings);
+    setInterval(refreshVisibleMeetings, 60000);
     function loadUpcomingMeetings(url) {
+        const requestedPanel = activePanel;
         const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
         sidePanelBody.innerHTML = '<p class="panel-placeholder">Loading upcoming meetings…</p>';
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        fetch(url, { cache: 'no-store', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(response => response.ok ? response.json() : Promise.reject())
             .then(payload => {
-                if (activePanel !== 'analytics') return;
+                if (activePanel !== requestedPanel) return;
                 if (payload.error) {
                     sidePanelBody.innerHTML = `<p class="panel-placeholder">${escapeHtml(payload.error)}</p>`;
                     return;
                 }
                 const events = payload.events || [];
                 if (!events.length) {
-                    sidePanelBody.innerHTML = '<p class="panel-placeholder">No upcoming Google Meet consultations.</p>';
+                    sidePanelBody.innerHTML = `<p class="panel-placeholder">${escapeHtml(payload.notice || 'No upcoming Google Meet consultations.')}</p>`;
                     return;
                 }
                 sidePanelBody.innerHTML = events.map(event => {
                     const date = new Date(event.start);
                     const start = Number.isNaN(date.getTime()) ? escapeHtml(event.start) : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-                    return `<div class="panel-item"><span class="material-symbols-outlined">videocam</span><div class="panel-item-text"><strong>${escapeHtml(event.title)}</strong><div style="display:flex;align-items:center;gap:9px;margin-top:7px;white-space:nowrap;"><span>${escapeHtml(start)}</span><a href="${escapeHtml(event.meet_url)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:18px;background:#087f8c;color:#fff;text-decoration:none;font-weight:700;font-size:12px;"><span class="material-symbols-outlined" style="font-size:16px;">videocam</span>Google Meet</a></div></div></div>`;
+                    let meetUrl;
+                    try { meetUrl = new URL(event.meet_url); } catch { return ''; }
+                    if (meetUrl.protocol !== 'https:' || meetUrl.hostname !== 'meet.google.com') return '';
+                    const meetIcon = '<svg width="28" height="24" viewBox="0 0 28 24" role="img" aria-label="Google Meet"><path d="M3 3h13v18H3z" fill="#4285f4"/><path d="M3 3h8v6H3z" fill="#ea4335"/><path d="M3 15h8v6H3z" fill="#34a853"/><path d="M11 3h8v18h-8z" fill="#fbbc04"/><path d="m17 9 9-6v18l-9-6z" fill="#34a853"/><path d="M11 9h8v6h-8z" fill="#188038"/></svg>';
+                    return `<div class="panel-item">${meetIcon}<div class="panel-item-text" style="min-width:0;flex:1;"><strong>${escapeHtml(event.title)}</strong><div style="margin-top:6px;font-size:13px;">${escapeHtml(start)}</div><a href="${escapeHtml(meetUrl.href)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 16px;border-radius:20px;background:#087f8c;color:#fff;text-decoration:none;font-weight:600;font-size:13px;"><span class="material-symbols-outlined" style="font-size:18px;">videocam</span>Join</a></div></div>`;
                 }).join('');
             })
             .catch(() => {
-                if (activePanel === 'analytics') sidePanelBody.innerHTML = '<p class="panel-placeholder">Upcoming meetings could not be loaded. Please try again.</p>';
+                if (activePanel === requestedPanel) sidePanelBody.innerHTML = '<p class="panel-placeholder">Upcoming meetings could not be loaded. Please try again.</p>';
             });
     }
 
@@ -376,15 +431,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Keep an intentionally expanded left navigation section open after reload.
-    try {
-        const savedIndex = Number(localStorage.getItem(OPEN_SUBMENU_KEY));
-        if (Number.isInteger(savedIndex) && menuToggles[savedIndex]) {
-            const savedItem = menuToggles[savedIndex].closest('.nav-item-has-submenu');
-            if (savedItem) {
-                savedItem.classList.add('open');
-                menuToggles[savedIndex].setAttribute('aria-expanded', 'true');
-            }
-        }
-    } catch (e) {}
+    // Expand only the section containing the current page.
+    menuToggles.forEach(toggle => {
+        const item = toggle.closest('.nav-item-has-submenu');
+        if (!item) return;
+        const active = Boolean(item.querySelector('.nav-submenu-link.active'));
+        item.classList.toggle('open', active);
+        toggle.setAttribute('aria-expanded', String(active));
+    });
+    try { localStorage.removeItem(OPEN_SUBMENU_KEY); } catch (e) {}
 });

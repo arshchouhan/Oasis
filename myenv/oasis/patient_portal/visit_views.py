@@ -189,9 +189,10 @@ def digital_reports(request):
         scan = EyeScan.objects.filter(id=scan_id, user=request.user).first()
         if not scan:
             return JsonResponse({'error': 'That generated report is unavailable.'}, status=404)
-        SharedDigitalReport.objects.get_or_create(
+        SharedDigitalReport.objects.update_or_create(
             patient=request.user, doctor=doctor, source_scan_id=scan.id,
-            defaults={'generated_at': scan.created_at, 'blink_rate': scan.blink_rate, 'redness_score': scan.redness_score, 'tracking_quality': scan.tracking_quality},
+            defaults={'generated_at': scan.created_at, 'blink_rate': scan.blink_rate, 'redness_score': scan.redness_score, 'tracking_quality': scan.tracking_quality,
+                      'assessment_details': {field: getattr(scan, field) for field in ('duration_seconds', 'blink_count', 'complete_blink_count', 'incomplete_blink_rate', 'average_interblink_interval', 'average_blink_duration', 'average_eye_opening', 'left_ear', 'right_ear', 'redness_index', 'sampled_frames')}},
         )
     shared_ids = set(SharedDigitalReport.objects.filter(patient=request.user, doctor=doctor).values_list('source_scan_id', flat=True))
     reports = [{
@@ -201,8 +202,40 @@ def digital_reports(request):
         'redness_score': round(scan.redness_score, 1),
         'tracking_quality': scan.tracking_quality,
         'shared': scan.id in shared_ids,
+        'details': {field: getattr(scan, field) for field in ('duration_seconds', 'blink_count', 'complete_blink_count', 'incomplete_blink_rate', 'average_interblink_interval', 'average_blink_duration', 'average_eye_opening', 'left_ear', 'right_ear', 'redness_index', 'sampled_frames')},
     } for scan in EyeScan.objects.filter(user=request.user).order_by('-created_at')]
-    return JsonResponse({'reports': reports})
+    return JsonResponse({'reports': reports, 'patient_name': request.user.get_full_name() or request.user.username, 'patient_id': request.user.patient_id, 'doctor_name': doctor.get_full_name() or doctor.username})
+
+
+@login_required
+@require_GET
+def consultation_history(request):
+    from django.shortcuts import get_object_or_404
+    if request.GET.get('referral', '').isdigit():
+        from doctor_portal.models import ReferralThread
+        from types import SimpleNamespace
+        referral = get_object_or_404(ReferralThread.objects.exclude(status='closed'), pk=request.GET['referral'], patient=request.user)
+        profile = getattr(referral.referred_doctor, 'doctor_profile', None)
+        connection = SimpleNamespace(doctor_email=referral.referred_doctor.email, doctor_name=referral.referred_doctor.get_full_name() or referral.referred_doctor.username, specialty=profile.specialty if profile else '')
+    else:
+        connection = get_object_or_404(DoctorConnection, pk=request.GET.get('connection') if request.GET.get('connection', '').isdigit() else 0, user=request.user)
+    doctor = User.objects.filter(email__iexact=connection.doctor_email, account_type=User.AccountType.DOCTOR).first()
+    thread = DirectMessageThread.objects.filter(patient=request.user, doctor=doctor).first() if doctor else None
+    notes = [{'date': message.created_at.isoformat(), 'body': message.body} for message in DirectMessage.objects.filter(thread=thread, sender=doctor).order_by('-created_at')] if thread else []
+    meetings, notice = [], ''
+    from doctor_portal.models import ConsultationRecord
+    consultations = [{'id':record.pk,'date':record.consulted_at.isoformat(),'notes':record.notes,'prescription':record.prescription,'follow_up':record.follow_up} for record in ConsultationRecord.objects.filter(patient=request.user,doctor=doctor)] if doctor else []
+    if doctor:
+        from doctor_portal.views import get_doctor_meet_events
+        meetings, notice = get_doctor_meet_events(doctor, patient=request.user, history=True)
+    return JsonResponse({
+        'doctor_name': connection.doctor_name, 'specialty': connection.specialty,
+        'doctor_messages': notes,
+        'message_url': reverse('direct_messages', args=[thread.pk]) if thread else reverse('direct_messages'),
+        'prescriptions': [], 'follow_up': [],
+        'meetings': meetings, 'notice': notice,
+        'consultations': consultations,
+    })
 
 
 def _connection_filter(request):
@@ -441,10 +474,8 @@ def doctor_connection_response(request, token):
 
 
 def my_appointments(request):
-    """Render My Appointments page with separate twin-pane workspace and dashboard layout."""
-    context = get_visits_context()
-    context['active_subpage'] = 'my_appointments'
-    return render(request, 'patient_portal/visits/my_appointments.html', context)
+    """Keep old bookmarks working after retiring the appointments page."""
+    return redirect('doctor_search')
 
 
 def doctor_search(request):
@@ -497,6 +528,24 @@ def doctor_search(request):
             'doctor_email': email,
         })()
 
+    from doctor_portal.models import ReferralThread
+    for doc in doctors:
+        doc['group'] = 'primary'
+    if request.user.is_authenticated:
+        seen = set()
+        for referral in ReferralThread.objects.filter(patient=request.user).exclude(status='closed').select_related('referred_doctor__doctor_profile', 'referring_doctor'):
+            if referral.referred_doctor_id in seen:
+                continue
+            seen.add(referral.referred_doctor_id)
+            user = referral.referred_doctor
+            profile = getattr(user, 'doctor_profile', None)
+            doctors.append({'name':f'Dr. {user.get_full_name() or user.username}', 'specialty':profile.specialty if profile else '', 'clinic_name':profile.clinic_name if profile else '', 'clinic_address':profile.city if profile else '', 'phone':profile.phone if profile else '', 'email':user.email, 'source':'referral', 'group':'referred', 'referral_id':referral.pk, 'referring_name':referral.referring_doctor.get_full_name() or referral.referring_doctor.username, 'referral_type':referral.referral_type, 'referral_status':referral.get_status_display(), 'icon':'person'})
+    for doc in doctors:
+        doctor_user = User.objects.filter(email__iexact=doc.get('email', ''), account_type=User.AccountType.DOCTOR).first() if doc.get('email') else None
+        if doctor_user:
+            doc['doctor_id'] = doctor_user.pk
+            thread = DirectMessageThread.objects.filter(patient=request.user, doctor=doctor_user).first() if request.user.is_authenticated else None
+            doc['message_url'] = reverse('direct_messages', args=[thread.pk]) if thread else ''
     context = {
         'doctors': doctors,
         'query': '',
@@ -504,6 +553,32 @@ def doctor_search(request):
         'connected_doctor': connected_doctor,
     }
     return render(request, 'patient_portal/visits/doctor_search.html', context)
+
+
+@login_required
+def upcoming_meetings(request):
+    """List only consultations inviting the signed-in patient."""
+    if request.user.account_type != User.AccountType.PATIENT:
+        return JsonResponse({'error': 'Patient account required.'}, status=403)
+    from doctor_portal.views import get_doctor_meet_events
+    from doctor_portal.models import ReferralThread
+    emails = set(DoctorConnection.objects.filter(user=request.user, source='oasis_doctor_portal').values_list('doctor_email', flat=True))
+    emails.update(ReferralThread.objects.filter(patient=request.user).exclude(status='closed').values_list('referred_doctor__email', flat=True))
+    events, notices, seen = [], [], set()
+    for email in emails:
+        doctor = User.objects.filter(email__iexact=email, account_type=User.AccountType.DOCTOR).first()
+        if not doctor:
+            continue
+        meetings, notice = get_doctor_meet_events(doctor, patient=request.user)
+        if notice:
+            notices.append(notice)
+        for meeting in meetings:
+            key = (meeting['meet_url'], meeting['start'])
+            if key not in seen:
+                seen.add(key)
+                events.append(meeting)
+    events.sort(key=lambda meeting: meeting['start'])
+    return JsonResponse({'events': events, 'notice': ' '.join(dict.fromkeys(notices))})
 
 
 @login_required
@@ -523,7 +598,7 @@ def patient_google_meet(request):
         messages.error(request, 'This doctor is no longer available.')
         return redirect('doctor_search')
     from doctor_portal.views import get_doctor_meet_events
-    events, notice = get_doctor_meet_events(doctor)
+    events, notice = get_doctor_meet_events(doctor, patient=request.user)
     if request.GET.get('format') == 'json':
         return JsonResponse({
             'doctor_name': doctor.get_full_name() or doctor.username,

@@ -32,7 +32,7 @@
             </li>
 
             <li
-                class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'find_doctor' or request.resolver_match.url_name == 'my_appointments' %}open{% endif %}">
+                class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'find_doctor' or request.resolver_match.url_name == 'doctor_search' or request.resolver_match.url_name == 'direct_messages' %}open{% endif %}">
                 <a href="#" class="nav-link nav-link-toggle" role="button" aria-expanded="false">
                     <span class="material-symbols-outlined nav-caret">arrow_right</span>
                     <span class="material-symbols-outlined nav-main-icon">stethoscope</span>
@@ -43,12 +43,6 @@
                         <a href="{% url 'doctor_search' %}"
                             class="nav-submenu-link {% if request.resolver_match.url_name == 'find_doctor' or request.resolver_match.url_name == 'visits' or request.resolver_match.url_name == 'consult' or request.resolver_match.url_name == 'doctor_search' %}active{% endif %}">
                             <span class="nav-text">Your Doctor</span>
-                        </a>
-                    </li>
-                    <li class="nav-submenu-item">
-                        <a href="{% url 'my_appointments' %}"
-                            class="nav-submenu-link {% if request.resolver_match.url_name == 'my_appointments' %}active{% endif %}">
-                            <span class="nav-text">My Appointments</span>
                         </a>
                     </li>
                     <li class="nav-submenu-item">
@@ -74,11 +68,10 @@
 
         <ul class="nav-list">
             <li class="nav-item">
-                <a href="{% url 'learn' %}"
-                    class="nav-link {% if request.resolver_match.url_name == 'learn' %}active{% endif %}">
+                <a href="{% url 'patient_community' %}" class="nav-link {% if request.resolver_match.url_name == 'patient_community' %}active{% endif %}">
                     <span class="material-symbols-outlined nav-arrow">arrow_right</span>
-                    <span class="material-symbols-outlined">menu_book</span>
-                    <span class="nav-text">Learn</span>
+                    <span class="material-symbols-outlined">groups</span>
+                    <span class="nav-text">Community</span>
                 </a>
             </li>
         </ul>
