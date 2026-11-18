@@ -1,6 +1,11 @@
 {% extends "doctor_portal/base.html" %}
 {% block title %}Your Patients | Doctor Portal{% endblock %}
-{% block content %}{% load avatars %}{% load static %}<style>.doctor-patients-art{display:flex;flex-direction:column;align-items:center;max-width:420px;width:85%;margin:64px auto 20px;text-align:center;pointer-events:none}.doctor-patients-art img{width:100%;height:auto;max-height:250px;object-fit:contain}.doctor-patients-art p{color:#71849a;font-size:12px;line-height:1.7;margin:10px 12px}.patients-list-body{flex:1;min-height:0}@media(max-height:700px){.doctor-patients-art{margin-top:24px;max-width:300px}.doctor-patients-art img{max-height:160px}}</style>
+{% block content %}{% load avatars %}{% load static %}<style>
+.patient-pane-identity { display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; }
+.patients-head .patient-pane-status { display:inline-flex; align-items:center; gap:5px; color:#00656f; font-weight:600; }
+.patients-head .patient-pane-status[hidden], #patientPaneId[hidden] { display:none; }
+.patient-pane-status::before { content:''; width:7px; height:7px; border-radius:50%; background:#159b83; }
+.doctor-patients-art{display:flex;flex-direction:column;align-items:center;max-width:420px;width:85%;margin:64px auto 20px;text-align:center;pointer-events:none}.doctor-patients-art img{width:100%;height:auto;max-height:250px;object-fit:contain}.doctor-patients-art p{color:#71849a;font-size:12px;line-height:1.7;margin:10px 12px}.patients-list-body{flex:1;min-height:0}@media(max-height:700px){.doctor-patients-art{margin-top:24px;max-width:300px}.doctor-patients-art img{max-height:160px}}</style>
 <style>
 .patients-workspace{height:100%;min-height:0;display:flex;gap:16px;overflow:hidden;color:#10284a}.patients-pane{min-width:0;background:#fff;border-radius:28px;box-shadow:0 4px 12px rgba(0,0,0,.035);overflow:hidden;display:flex;flex-direction:column}.patients-list{width:42%;min-width:290px}.patients-detail{flex:1}.patients-head{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid #e2ebf1}.patients-head h1,.patients-head h2{margin:0;font-size:18px}.patients-head small{display:block;margin-top:2px;color:#698098;font-size:12px}.patients-close{margin-left:auto;border:0;background:transparent;color:#526d8d;cursor:pointer;width:34px;height:34px;border-radius:50%;display:grid;place-items:center}.patients-close:hover{background:#edf3f6}.patients-list-body{padding:12px;overflow:auto;scrollbar-width:none}.patients-list-body::-webkit-scrollbar{display:none}.patient-row{display:flex;align-items:center;gap:12px;padding:13px;border-radius:13px;color:#10284a;cursor:pointer}.patient-row:hover,.patient-row.active{background:#e8f4f3}.patient-avatar{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:grid;place-items:center;background:#dcecff;color:#1968bd;font-size:13px;font-weight:700}.patient-row strong,.patient-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.patient-row small{margin-top:3px;color:#698098;font-size:12px}.patients-detail-body{flex:1;display:flex;min-height:0;overflow:hidden}.patient-profile{display:none;flex:1;align-items:center;justify-content:center;padding:28px;text-align:center}.patient-profile.active{display:flex}.patient-profile-inner{width:min(100%,430px)}.patient-hero-avatar{width:92px;height:92px;margin:auto;display:grid;place-items:center;border-radius:50%;background:#dcecff;color:#087f8c;box-shadow:0 7px 22px rgba(25,103,210,.12)}.patient-profile h3{margin:18px 0 5px;font-size:24px}.patient-profile p{margin:0;color:#607590}.patient-info{display:grid;gap:10px;margin:24px 0;text-align:left}.patient-info-row{display:flex;gap:12px;padding:13px 14px;border-radius:12px;background:#f5f8fb}.patient-info-row .material-symbols-outlined{color:#087f8c}.patient-info-label{font-size:11px;color:#63758a;text-transform:uppercase;letter-spacing:.3px}.patient-info-value{margin-top:3px;font-weight:600;color:#102f52;font-size:13px}.patient-tools{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:0 0 18px}.patient-tool{min-height:56px;border:0;border-radius:12px;background:#edf3f8;color:#38546e;display:grid;place-items:center;cursor:pointer;transition:background .18s,color .18s,transform .18s,box-shadow .18s}.patient-tool:hover{background:#087f8c;color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(8,127,140,.24)}.patient-tool .material-symbols-outlined{font-size:24px}.patient-message{display:inline-flex;align-items:center;gap:8px;padding:11px 17px;border-radius:22px;background:#087f8c;color:#fff;text-decoration:none;font-weight:700;font-size:13px}.patients-empty{margin:auto;max-width:360px;text-align:center;color:#607590;padding:28px}.patients-empty h2{color:#10284a;margin:12px 0 8px}@media(max-width:800px){.patients-list{width:40%;min-width:210px}.patients-workspace{gap:10px}}
 .meet-form{width:min(100%,440px);text-align:left}.meet-form h3{margin:0 0 8px;color:#102f52;font-size:23px}.meet-form p{margin:0 0 18px;color:#607590}.meet-form label{display:block;margin:12px 0 5px;color:#35506e;font-size:12px;font-weight:700}.meet-form input,.meet-form textarea{box-sizing:border-box;width:100%;padding:11px 12px;border:1px solid #cad8e5;border-radius:10px;font:inherit}.meet-form textarea{min-height:78px;resize:vertical}.meet-form-actions{display:flex;gap:10px;margin-top:18px}.meet-form button{padding:10px 15px;border:0;border-radius:22px;cursor:pointer;font-weight:700}.meet-submit{background:#087f8c;color:#fff}.meet-back{background:#edf3f8;color:#38546e}.meet-result{margin-top:15px;padding:12px;border-radius:10px;background:#e8f4f3;color:#175a63}
@@ -20,9 +25,20 @@
 .patient-profile:has(.patient-referrals){padding:20px!important}.patient-profile-inner:has(.patient-referrals){width:100%!important;max-width:none!important}.patient-referrals{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;padding:0!important;overflow:hidden!important}.referral-patient-summary,.referral-thread-area{display:none!important}.referral-workspace{width:100%;min-width:0}.referral-form,.patient-referrals.show-threads .referral-form{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px}.referral-field[style]{grid-column:auto!important}.referral-priority{grid-template-columns:repeat(3,minmax(0,1fr))}.referral-submit-row{display:block;grid-column:auto!important;border-top:0!important;padding-top:0!important}.referral-submit{width:auto!important;height:auto!important;padding:10px 16px!important;border-radius:20px!important}.referral-submit .material-symbols-outlined{display:none}.referral-submit:after{content:'Start referral'}.patient-message{display:none!important}.patient-tools{margin-bottom:0!important}.patient-profile:has(.panel-workspace){align-items:stretch;justify-content:flex-start;padding:26px;overflow-y:auto}.patient-profile-inner:has(.panel-workspace){width:100%;max-width:none}.panel-workspace{width:100%;max-width:none;text-align:left}.panel-workspace h3{margin:0;color:#102f52;font-size:25px}.panel-workspace>p{margin:7px 0 20px;color:#607590}.panel-back{display:inline-flex;align-items:center;gap:6px;border:0;background:#edf3f8;color:#285477;padding:9px 13px;border-radius:20px;cursor:pointer;font-weight:800;margin-bottom:22px}.panel-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.panel-form label{display:grid;gap:6px;color:#38546e;font-weight:800;font-size:12px}.panel-form input,.panel-form select,.panel-form textarea{box-sizing:border-box;width:100%;border:1px solid #cbdbe7;border-radius:10px;padding:11px;font:inherit}.panel-form textarea{min-height:116px;resize:vertical}.panel-form fieldset{border:0;padding:0;margin:0;display:flex;gap:9px}.panel-form fieldset label{display:flex;align-items:center;gap:4px;border:1px solid #d5e2eb;border-radius:10px;padding:10px;flex:1;justify-content:center}.panel-form[data-workspace-form="referral"] label:nth-of-type(5),.panel-form[data-workspace-form="meet"] label:first-child{grid-column:1/-1}.panel-form button{justify-self:end;border:0;border-radius:20px;padding:11px 17px;background:#087f8c;color:#fff;font-weight:800;cursor:pointer}.panel-result{margin-top:14px;padding:11px;border-radius:10px;background:#e5f5f2;color:#17616b}.panel-result.error{background:#fff0ef;color:#a22b28}.panel-report-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.panel-report-list article{padding:14px;border:1px solid #dce7ef;border-radius:13px;background:#f6fafc}.panel-report-list small{display:block;margin:4px 0 10px;color:#607590}.panel-report-list article>div{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.panel-report-list span{font-size:10px;color:#607590}.panel-report-list b{display:block;color:#087f8c;font-size:14px}.panel-loading{padding:30px;color:#607590}@media(max-width:760px){.patient-profile:has(.panel-workspace){padding:18px}.panel-form{grid-template-columns:1fr}.panel-form[data-workspace-form="referral"] label:nth-of-type(5),.panel-form[data-workspace-form="meet"] label:first-child{grid-column:auto}.panel-form button{justify-self:start}}
 </style>
 <style>.patient-list-tabs{display:flex;justify-content:center;gap:4px;margin:12px 12px 0;padding:4px;border-radius:22px;background:#edf3f6}.patient-list-tab{flex:1;max-width:150px;border:0;border-radius:18px;padding:9px 14px;background:transparent;color:#607590;font:inherit;font-weight:800;cursor:pointer}.patient-list-tab.active{background:#087f8c;color:#fff;box-shadow:0 3px 9px rgba(8,127,140,.2)}.patient-list-group[hidden]{display:none}.referred-badge{margin-left:auto;padding:3px 8px;border-radius:12px;background:#d9f1ee;color:#087f8c;font-size:10px;font-weight:800}.panel-form[data-workspace-form="referral"]>label:last-of-type,.panel-form[data-workspace-form="meet"]>label:last-of-type{grid-column:1/-1}.panel-form[data-workspace-form="meet"]>button{grid-column:1/-1;align-self:start;justify-self:end}.patient-info .patient-info-row:nth-child(3){display:none}.meet-form-actions{align-items:center}.meet-form .meet-submit{width:auto!important;height:auto!important;min-height:0!important;padding:10px 16px!important;border-radius:20px!important;display:inline-flex!important;align-items:center;justify-content:center}@media(max-width:760px){.panel-form[data-workspace-form="referral"]>label:last-of-type{grid-column:auto}}</style>
+<style>
+/* Match the patient portal's connected-care layout. */
+.patients-workspace .patients-pane{border:1px solid #dce9e8;box-shadow:0 8px 28px rgba(20,62,76,.04)}
+.patients-workspace .patient-list-tabs{gap:22px}.patients-workspace .patient-list-tab{padding:16px 0}
+.patients-workspace .patient-row{min-height:74px;padding:12px 18px;gap:14px;border-radius:14px;transition:background .18s,border-color .18s,box-shadow .18s}
+.patients-workspace .patient-row.active{background:linear-gradient(110deg,#e5f3f2,#f1f7fa)!important;border-color:#afd2d6!important;box-shadow:0 2px 7px rgba(16,47,82,.035)}
+.patients-workspace .patient-row strong{font-size:14px;letter-spacing:-.15px}.patients-workspace .patient-row small{overflow-wrap:anywhere}.patients-workspace .patient-avatar{width:46px;height:46px;flex-shrink:0}
+.patients-workspace .doctor-patients-art{max-width:480px;width:85%;margin:60px auto 24px;text-align:center}.patients-workspace .doctor-patients-art img{width:100%;max-height:240px;object-fit:contain}.patients-workspace .doctor-patients-art p{color:#71849a;font-size:12px;line-height:1.6}
+.patients-workspace .patient-info-row{border:1px solid #e1ebef}
+@media(max-width:650px){.patients-workspace .patient-row{padding:11px 12px;gap:10px}.patients-workspace .doctor-patients-art{margin-top:36px}}
+</style>
 <section class="patients-workspace">
-<style>.patients-list{background:var(--md-sys-color-surface,#f7f9fc)}.patient-list-tabs{justify-content:flex-start;gap:18px;margin:0;padding:0 20px;border-radius:0;background:transparent;border-bottom:1px solid #dce7ef}.patient-list-tab{flex:0 0 auto;max-width:none;padding:14px 0;border-radius:0;border-bottom:2px solid transparent;font-size:13px;font-weight:400}.patient-list-tab.active{background:transparent;color:#087f8c;border-bottom-color:#087f8c;box-shadow:none;font-weight:600}.patient-row{padding:12px;border:1.5px solid transparent!important;border-radius:10px;margin-bottom:6px;font:inherit;min-height:86px}.patient-row:hover{background:#edf3f6!important}.patient-row.active{background:rgba(8,127,140,.1)!important;border-color:rgba(8,127,140,.3)!important}.patient-row strong{font-size:13px;font-weight:600}.patient-avatar{background:linear-gradient(135deg,#e8f0fe,#d2e3fc);color:#087f8c}</style><aside class="patients-pane patients-list"><header class="patients-head"><span class="material-symbols-outlined" style="color:#087f8c">groups</span><span><h1>Your Patients</h1><small>Primary and referred care</small></span><button class="patients-close" type="button" data-close="list"><span class="material-symbols-outlined">close</span></button></header><div class="patient-list-tabs" role="tablist" aria-label="Patient type"><button class="patient-list-tab active" type="button" role="tab" aria-selected="true" data-patient-tab="primary">Primary patients</button><button class="patient-list-tab" type="button" role="tab" aria-selected="false" data-patient-tab="referred">Referred patients</button></div><div class="patients-list-body"><div class="patient-list-group" data-patient-group="primary">{% for patient in patients %}<button class="patient-row {% if forloop.first %}active{% endif %}" type="button" data-patient="{{ forloop.counter }}" data-kind="primary" style="width:100%;border:0;text-align:left;background:transparent"><span class="patient-avatar">{% avatar_url patient.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>{{ patient.name|first }}</span>{% else %}{{ patient.name|first }}{% endif %}</span><span style="min-width:0"><strong>{{ patient.name }}</strong><small>{{ patient.email }}</small></span></button>{% empty %}<div class="patients-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2">group_off</span><h2>No primary patients</h2><p>Accepted patient connections will appear here.</p></div>{% endfor %}</div><div class="patient-list-group" data-patient-group="referred" hidden>{% for patient in referred_patients %}<button class="patient-row" type="button" data-patient="referred-{{ forloop.counter }}" data-kind="referred" style="width:100%;border:0;text-align:left;background:transparent"><span class="patient-avatar">{% avatar_url patient.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>{{ patient.name|first }}</span>{% else %}{{ patient.name|first }}{% endif %}</span><span style="min-width:0"><strong>{{ patient.name }}</strong><small>{{ patient.email }}</small></span><span class="referred-badge">{{ patient.referral_count }}</span></button>{% empty %}<div class="patients-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2">send</span><h2>No referred patients</h2><p>Patients referred to you will appear here.</p></div>{% endfor %}</div><div class="doctor-patients-art"><img src="{% static 'images/care-team.svg' %}" alt="" aria-hidden="true"><p>Your patients, connected.<br>Select a patient to review their care and consultations.</p></div></div></aside>
-<main class="patients-pane patients-detail"><header class="patients-head"><span class="material-symbols-outlined" style="color:#087f8c">person</span><span><h2 id="patientPaneTitle">{% if patients %}{{ patients.0.name }}{% else %}Patient details{% endif %}</h2><small id="patientPaneType">Connected patient</small></span><button class="patients-close" type="button" data-close="detail"><span class="material-symbols-outlined">close</span></button></header><div class="patients-detail-body">{% for patient in patients %}<section class="patient-profile {% if forloop.first %}active{% endif %}" data-profile="{{ forloop.counter }}"><div class="patient-profile-inner"><div class="patient-hero-avatar">{% avatar_url patient.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden><span class="material-symbols-outlined" style="font-size:42px">person</span></span>{% else %}<span class="material-symbols-outlined" style="font-size:42px">person</span>{% endif %}</div><h3>{{ patient.name }}</h3><p>Connected patient</p><div class="patient-info"><div class="patient-info-row"><span class="material-symbols-outlined">mail</span><div><div class="patient-info-label">Email</div><div class="patient-info-value">{{ patient.email }}</div></div></div><div class="patient-info-row"><span class="material-symbols-outlined">calendar_today</span><div><div class="patient-info-label">Connected since</div><div class="patient-info-value">{{ patient.joined_at|date:'d M Y, g:i A' }}</div></div></div><div class="patient-info-row"><span class="material-symbols-outlined">forum</span><div><div class="patient-info-label">Messages</div><div class="patient-info-value">{{ patient.message_count }}</div></div></div></div><a href="{% url 'doctor_direct_messages' patient.thread_id %}" class="patient-message"><span class="material-symbols-outlined" style="font-size:18px">chat</span>Open Direct Messages</a></div></section>{% empty %}<div class="patients-empty" data-primary-empty><span class="material-symbols-outlined" style="font-size:48px;color:#39a5b2">person_search</span><h2>Your Patients</h2><p>Accept a connection request to add a patient here.</p></div>{% endfor %}{% for patient in referred_patients %}<section class="patient-profile" data-profile="referred-{{ forloop.counter }}"><div class="referred-profile-inner"><div class="patient-hero-avatar">{% avatar_url patient.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden><span class="material-symbols-outlined" style="font-size:42px">person</span></span>{% else %}<span class="material-symbols-outlined" style="font-size:42px">person</span>{% endif %}</div><h3>{{ patient.name }}</h3><p>Referred patient</p><div class="patient-info"><div class="patient-info-row"><span class="material-symbols-outlined">mail</span><div><div class="patient-info-label">Email</div><div class="patient-info-value">{{ patient.email }}</div></div></div><div class="patient-info-row"><span class="material-symbols-outlined">stethoscope</span><div><div class="patient-info-label">Referred by</div><div class="patient-info-value">Dr. {{ patient.referring_doctor }}</div></div></div><div class="patient-info-row"><span class="material-symbols-outlined">medical_services</span><div><div class="patient-info-label">Referral type</div><div class="patient-info-value">{{ patient.referral_type }} · {{ patient.status }}</div></div></div><div class="patient-info-row"><span class="material-symbols-outlined">calendar_today</span><div><div class="patient-info-label">Referred on</div><div class="patient-info-value">{{ patient.referred_at|date:'d M Y, g:i A' }}</div></div></div></div><div class="patient-tools"><button class="patient-tool" type="button" title="Video consultation" aria-label="Video consultation" data-referred-tool="meet" data-patient-id="{{ patient.patient_id }}"><span class="material-symbols-outlined">videocam</span></button><button class="patient-tool" type="button" title="Shared digital reports" aria-label="Shared digital reports" data-referred-tool="reports" data-patient-id="{{ patient.patient_id }}"><span class="material-symbols-outlined">folder_open</span></button><button class="patient-tool" type="button" title="Refer patient" aria-label="Refer patient" data-referred-tool="referrals" data-patient-id="{{ patient.patient_id }}"><span class="material-symbols-outlined">send</span></button><button class="patient-tool" type="button" title="Close thread" aria-label="Close thread" data-referred-tool="close" data-referral-id="{{ patient.referral_id }}"><span class="material-symbols-outlined">close</span></button></div>{% include "doctor_portal/referral_timeline.html" %}</div></section>{% endfor %}</div></main>
+<style>.patients-list{background:var(--md-sys-color-surface,#f7f9fc)}.patient-list-tabs{justify-content:flex-start;gap:18px;margin:0;padding:0 20px;border-radius:0;background:transparent;border-bottom:1px solid #dce7ef}.patient-list-tab{flex:0 0 auto;max-width:none;padding:14px 0;border-radius:0;border-bottom:2px solid transparent;font-size:13px;font-weight:400}.patient-list-tab.active{background:transparent;color:#087f8c;border-bottom-color:#087f8c;box-shadow:none;font-weight:600}.patient-row{padding:12px;border:1.5px solid transparent!important;border-radius:10px;margin-bottom:6px;font:inherit;min-height:86px}.patient-row:hover{background:#edf3f6!important}.patient-row.active{background:rgba(8,127,140,.1)!important;border-color:rgba(8,127,140,.3)!important}.patient-row strong{font-size:13px;font-weight:600}.patient-avatar{background:linear-gradient(135deg,#e8f0fe,#d2e3fc);color:#087f8c}</style><aside class="patients-pane patients-list"><header class="patients-head"><span class="material-symbols-outlined" style="color:#087f8c">groups</span><span><h1>Your Patients</h1><small>Primary and referred care</small></span><button class="patients-close" type="button" data-close="list"><span class="material-symbols-outlined">close</span></button></header><div class="patient-list-tabs" role="tablist" aria-label="Patient type"><button class="patient-list-tab active" type="button" role="tab" aria-selected="true" data-patient-tab="primary">Primary patients</button><button class="patient-list-tab" type="button" role="tab" aria-selected="false" data-patient-tab="referred">Referred patients</button></div><div class="patients-list-body"><div class="patient-list-group" data-patient-group="primary">{% for patient in patients %}<button class="patient-row {% if forloop.first %}active{% endif %}" type="button" data-patient="{{ forloop.counter }}" data-referral-patient-id="{{ patient.patient_id }}" data-portal-id="{{ patient.portal_patient_id }}" data-kind="primary" style="width:100%;border:0;text-align:left;background:transparent"><span class="patient-avatar">{% avatar_url patient.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>{{ patient.name|first }}</span>{% else %}{{ patient.name|first }}{% endif %}</span><span class="patient-row-details"><span class="patient-row-identity"><strong>{{ patient.name }}</strong>{% if patient.portal_patient_id %}<small>Patient ID {{ patient.portal_patient_id }}</small>{% endif %}</span><span class="patient-row-email"><span class="material-symbols-outlined" aria-hidden="true">mail</span><span>{{ patient.email }}</span></span></span></button>{% empty %}<div class="patients-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2">group_off</span><h2>No primary patients</h2><p>Accepted patient connections will appear here.</p></div>{% endfor %}</div><div class="patient-list-group" data-patient-group="referred" hidden>{% for patient in referred_patients %}<button class="patient-row" type="button" data-patient="referred-{{ forloop.counter }}" data-referral-patient-id="{{ patient.patient_id }}" data-portal-id="{{ patient.portal_patient_id }}" data-kind="referred" style="width:100%;border:0;text-align:left;background:transparent"><span class="patient-avatar">{% avatar_url patient.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>{{ patient.name|first }}</span>{% else %}{{ patient.name|first }}{% endif %}</span><span class="patient-row-details"><span class="patient-row-identity"><strong>{{ patient.name }}</strong>{% if patient.portal_patient_id %}<small>Patient ID {{ patient.portal_patient_id }}</small>{% endif %}</span><span class="patient-row-email"><span class="material-symbols-outlined" aria-hidden="true">mail</span><span>{{ patient.email }}</span></span></span><span class="referred-badge">{{ patient.referral_count }}</span></button>{% empty %}<div class="patients-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2">send</span><h2>No referred patients</h2><p>Patients referred to you will appear here.</p></div>{% endfor %}</div><div class="doctor-patients-art"><img src="{% static 'images/care-team.svg' %}" alt="" aria-hidden="true"><p>Your patients, connected.<br>Select a patient to review their care and consultations.</p></div></div></aside>
+<main class="patients-pane patients-detail"><header class="patients-head"><span class="material-symbols-outlined" style="color:#087f8c">person</span><span><div class="patient-pane-identity"><h2 id="patientPaneTitle">{% if patients %}{{ patients.0.name }}{% else %}Patient details{% endif %}</h2><small id="patientPaneType" class="patient-pane-status"{% if not patients %} hidden{% endif %}>Connected patient</small></div><small id="patientPaneId"{% if not patients.0.portal_patient_id %} hidden{% endif %}>Patient ID {{ patients.0.portal_patient_id }}</small></span><button class="patients-close" type="button" data-close="detail"><span class="material-symbols-outlined">close</span></button></header><div class="patients-detail-body">{% for patient in patients %}<section class="patient-profile {% if forloop.first %}active{% endif %}" data-profile="{{ forloop.counter }}"><div class="patient-profile-inner"><div class="patient-hero-avatar">{% avatar_url patient.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden><span class="material-symbols-outlined" style="font-size:42px">person</span></span>{% else %}<span class="material-symbols-outlined" style="font-size:42px">person</span>{% endif %}</div><a href="{% url 'doctor_direct_messages' patient.thread_id %}" class="patient-message"><span class="material-symbols-outlined" style="font-size:18px">chat</span>Open Direct Messages</a></div></section>{% empty %}<div class="patients-empty" data-primary-empty><span class="material-symbols-outlined" style="font-size:48px;color:#39a5b2">person_search</span><h2>Your Patients</h2><p>Accept a connection request to add a patient here.</p></div>{% endfor %}{% for patient in referred_patients %}<section class="patient-profile" data-profile="referred-{{ forloop.counter }}"><div class="referred-profile-inner"><div class="patient-hero-avatar">{% avatar_url patient.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden><span class="material-symbols-outlined" style="font-size:42px">person</span></span>{% else %}<span class="material-symbols-outlined" style="font-size:42px">person</span>{% endif %}</div><div class="patient-info"><div class="patient-info-row"><span class="material-symbols-outlined">mail</span><div><div class="patient-info-label">Email</div><div class="patient-info-value">{{ patient.email }}</div></div></div><div class="patient-info-row"><span class="material-symbols-outlined">stethoscope</span><div><div class="patient-info-label">Referred by</div><div class="patient-info-value">Dr. {{ patient.referring_doctor }}</div></div></div><div class="patient-info-row"><span class="material-symbols-outlined">medical_services</span><div><div class="patient-info-label">Referral type</div><div class="patient-info-value">{{ patient.referral_type }} · {{ patient.status }}</div></div></div><div class="patient-info-row"><span class="material-symbols-outlined">calendar_today</span><div><div class="patient-info-label">Referred on</div><div class="patient-info-value">{{ patient.referred_at|date:'d M Y, g:i A' }}</div></div></div></div><div class="patient-tools"><button class="patient-tool" type="button" title="Video consultation" aria-label="Video consultation" data-referred-tool="meet" data-patient-id="{{ patient.patient_id }}"><span class="material-symbols-outlined">videocam</span></button><button class="patient-tool" type="button" title="Shared digital reports" aria-label="Shared digital reports" data-referred-tool="reports" data-patient-id="{{ patient.patient_id }}"><span class="material-symbols-outlined">folder_open</span></button><button class="patient-tool" type="button" title="Refer patient" aria-label="Refer patient" data-referred-tool="referrals" data-patient-id="{{ patient.patient_id }}"><span class="material-symbols-outlined">send</span></button><button class="patient-tool" type="button" title="Close thread" aria-label="Close thread" data-referred-tool="close" data-referral-id="{{ patient.referral_id }}"><span class="material-symbols-outlined">close</span></button></div>{% include "doctor_portal/referral_timeline.html" %}</div></section>{% endfor %}</div></main>
 </section>
 <style>
 .patients-list-body[aria-busy="true"] .patient-list-group,.patients-detail-body[aria-busy="true"]>.patient-profile{display:none!important}
@@ -42,6 +58,7 @@
   const detail = document.querySelector('.patients-detail-body');
   const title = document.getElementById('patientPaneTitle');
   const type = document.getElementById('patientPaneType');
+  const portalId = document.getElementById('patientPaneId');
   let controller;
   let currentTab;
   const skeleton = () => {
@@ -65,6 +82,9 @@
     detail.removeAttribute('aria-busy');
     document.querySelectorAll('[data-patient],[data-profile]').forEach(node => node.classList.remove('active'));
     detail.querySelectorAll('[data-primary-empty],.patient-load-message').forEach(node => node.remove());
+    type.hidden = !row;
+    portalId.hidden = !row?.dataset.portalId;
+    portalId.textContent = row?.dataset.portalId ? 'Patient ID ' + row.dataset.portalId : '';
     if (!row) {
       title.textContent = 'Patient details';
       type.textContent = currentTab === 'referred' ? 'Referred patients' : 'Primary patients';
@@ -84,6 +104,12 @@
     profileRevealTimer = setTimeout(() => { placeholder.remove(); detail.removeAttribute('aria-busy'); }, 320);
     title.textContent = row.querySelector('strong').textContent;
     type.textContent = currentTab === 'referred' ? 'Referred patient' : 'Connected patient';
+
+  }
+  function defaultRow(group) {
+    const rows = [...group.querySelectorAll('[data-patient]')];
+    const requestedPatient = new URLSearchParams(window.location.search).get('patient');
+    return rows.find(row => row.dataset.referralPatientId === requestedPatient) || rows[0];
   }
   async function showTab(kind, push = false) {
     controller?.abort();
@@ -102,12 +128,14 @@
     });
     list.querySelectorAll('[data-patient-group]').forEach(group => group.hidden = group.dataset.patientGroup !== currentTab);
     if (currentTab === 'primary') {
-      selectRow(list.querySelector('[data-patient-group="primary"] [data-patient]'));
+      selectRow(defaultRow(list.querySelector('[data-patient-group="primary"]')));
       return;
     }
     document.querySelectorAll('[data-profile]').forEach(node => node.classList.remove('active'));
     detail.querySelector('[data-primary-empty]')?.remove();
     title.textContent = 'Referred patients';
+    portalId.hidden = true;
+    type.hidden = false;
     type.textContent = 'Loading patients…';
     [list, detail].forEach(panel => { panel.setAttribute('aria-busy', 'true'); panel.append(skeleton()); });
     const request = controller = new AbortController();
@@ -126,7 +154,7 @@
       page.querySelectorAll('[data-profile^="referred-"]').forEach(node => detail.append(node));
       window.styleReferredProfiles?.();
       clearLoading();
-      selectRow(group.querySelector('[data-patient]'));
+      selectRow(defaultRow(group));
     } catch (error) {
       if (request.signal.aborted) return;
       clearLoading();
@@ -161,7 +189,17 @@
     document.querySelector(button.dataset.close === 'list' ? '.patients-list' : '.patients-detail').style.display = 'none';
     if (![...document.querySelectorAll('.patients-pane')].some(panel => panel.offsetParent)) window.location.assign('{% url "doctor_dashboard" %}');
   }));
-  showTab(new URL(window.location.href).searchParams.get('tab'));
+  window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    await showTab(params.get('tab'));
+    if (params.has('consultation_patient')) return;
+    const tool = params.get('workspace');
+    if (!['meet', 'reports', 'referrals', 'consultation'].includes(tool)) return;
+    const selected = list.querySelector('[data-patient].active');
+    if (selected?.dataset.referralPatientId !== params.get('patient')) return;
+    const profile = detail.querySelector('.patient-profile.active');
+    profile?.querySelector('[data-patient-tool="' + tool + '"], [data-referred-tool="' + tool + '"]')?.click();
+  });
 })();
 </script>
 <script>
@@ -206,6 +244,7 @@
       if (!fragment) throw new Error('Could not load this workspace.');
       if (!profile.isConnected) return;
       profile.replaceChildren(fragment);
+      if (tool === 'meet') restoreDoctorMeetingTab(profile);
       fragment.querySelector('.panel-back').onclick = restore;
       const form = fragment.querySelector('form');
       if (!form || !endpoints[tool]) return;
@@ -271,14 +310,26 @@
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'patient-tool'; button.title = label; button.setAttribute('aria-label', label);
       button.dataset.patientTool = tool;
-      button.innerHTML = `<span class="material-symbols-outlined">${icon}</span>`;
+      const descriptions = {meet: 'Schedule a video visit', reports: 'Review shared assessments', referrals: 'Refer to another doctor', consultation: 'Add consultation details'};
+      button.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">${icon}</span><span class="patient-action-copy"><strong>${label}</strong><small>${descriptions[tool]}</small></span>`;
       tools.appendChild(button);
     });
+    const messageUrl = profile.querySelector('.patient-message')?.href;
+    if (messageUrl) {
+      const message = document.createElement('a');
+      message.className = 'patient-tool patient-secure-messages';
+      message.href = messageUrl + '?layout=single';
+      message.setAttribute('aria-label', 'Secure messages');
+      message.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">chat</span><span class="patient-action-copy"><strong>Secure messages</strong><small>Ask questions and share updates</small></span>';
+      tools.appendChild(message);
+    }
     profile.insertBefore(tools, profile.querySelector('.patient-message'));
   });
 </script>
 <script>
   (() => {
+    const requestLink = new URLSearchParams(window.location.search);
+    const consultationPatient = requestLink.get('consultation_patient');
     const workspaces = { {% for patient in patients %}'{{ forloop.counter }}': {consultation:{panel:'{% url "doctor_consultation_workspace" patient.patient_id %}',api:'{% url "doctor_consultation_workspace" patient.patient_id %}'},meet:{panel:'{% url "doctor_meet_workspace" patient.patient_id %}',api:'{% url "doctor_schedule_meet" patient.patient_id %}'},reports:{panel:'{% url "doctor_reports_workspace" patient.patient_id %}'},referrals:{panel:'{% url "doctor_referral_workspace" patient.patient_id %}',api:'{% url "doctor_patient_referrals" patient.patient_id %}'}},{% endfor %} };
     const csrf = () => document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
     document.querySelectorAll('.patient-profile-inner').forEach((profile) => profile.addEventListener('click', async (event) => {
@@ -290,9 +341,19 @@
       const original = profile.innerHTML;
       profile.innerHTML = '<div class="panel-loading">Loading…</div>';
       try {
-        const response = await fetch(`${config.panel}?panel=1`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+        const requestPanel = tool === 'meet' && event.target.closest('[data-open-patient-requests]');
+        const panelUrl = config.panel + (requestPanel ? '?panel=1&tab=requests' : '?panel=1');
+        const response = await fetch(panelUrl, {headers:{'X-Requested-With':'XMLHttpRequest'}});
         if (!response.ok) throw new Error('Could not open this workspace.');
         profile.innerHTML = await response.text();
+        if (tool === 'meet') restoreDoctorMeetingTab(profile);
+        if (requestPanel) {
+          const card = document.getElementById('patient-request-' + requestLink.get('request_id'));
+          if (card && profile.contains(card)) {
+            card.classList.add('patient-request-highlight');
+            card.scrollIntoView({block:'nearest'});
+          }
+        }
         const back = profile.querySelector('.panel-back');
         if (back) back.onclick = () => { profile.innerHTML = original; };
         const form = profile.querySelector('[data-workspace-form]');
@@ -309,9 +370,62 @@
           if(tool==='meet') window.dispatchEvent(new CustomEvent('oasis:meeting-created',{detail:data})); result.className='panel-result';
           result.innerHTML = tool==='consultation' ? 'Consultation saved to the patient’s history.' : tool==='meet' && data.meet_url ? `Meeting scheduled. <a href="${data.meet_url}" target="_blank" rel="noopener">Join Google Meet</a>` : 'Referral thread started.';
         };
-      } catch (error) { profile.innerHTML = `<div class="panel-loading">${error.message}</div><button class="panel-back" type="button">Back</button>`; profile.querySelector('.panel-back').onclick=()=>{profile.innerHTML=original;}; }
+      } catch (error) { profile.innerHTML = `<div class="panel-loading">${error.message}</div><button class="panel-back" type="button" aria-label="Go back"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span></button>`; profile.querySelector('.panel-back').onclick=()=>{profile.innerHTML=original;}; }
     }, true));
+    const profileIndex = consultationPatient && Object.keys(workspaces).find(index =>
+      workspaces[index].meet.panel === '{% url "doctor_meet_workspace" 0 %}'.replace('/0/', '/' + consultationPatient + '/')
+    );
+    if (profileIndex) window.addEventListener('DOMContentLoaded', () => {
+      document.querySelector('[data-patient="' + profileIndex + '"]')?.click();
+      const button = document.querySelector('[data-profile="' + profileIndex + '"] [data-patient-tool="meet"]');
+      if (button) {
+        button.setAttribute('data-open-patient-requests', '');
+        button.click();
+        button.removeAttribute('data-open-patient-requests');
+      }
+    });
   })();
+</script>
+<script>
+function restoreDoctorMeetingTab(profile) {
+    const tab = new URLSearchParams(window.location.search).get('meeting_tab');
+    if (['schedule', 'scheduled', 'requests'].includes(tab)) {
+        profile.querySelector('[data-meet-tab="' + tab + '"]')?.click();
+    }
+}
+
+document.addEventListener('click', event => {
+    const url = new URL(window.location.href);
+    const row = event.target.closest('[data-patient]');
+    const tool = event.target.closest('[data-patient-tool], [data-referred-tool]');
+    const workspace = tool?.dataset.patientTool || tool?.dataset.referredTool;
+    const tab = event.target.closest('[data-meet-tab]');
+
+    if (row && event.isTrusted) {
+        url.searchParams.set('patient', row.dataset.referralPatientId);
+    } else if (['meet', 'reports', 'referrals', 'consultation'].includes(workspace)) {
+        const profile = tool.closest('[data-profile]');
+        const selected = [...document.querySelectorAll('[data-patient]')].find(row => row.dataset.patient === profile?.dataset.profile);
+        if (!selected) return;
+        url.searchParams.set('patient', selected.dataset.referralPatientId);
+        url.searchParams.set('tab', selected.dataset.kind);
+        url.searchParams.set('workspace', workspace);
+        if (tool.hasAttribute('data-open-patient-requests')) url.searchParams.set('meeting_tab', 'requests');
+        else if (event.isTrusted) url.searchParams.delete('meeting_tab');
+        url.searchParams.delete('consultation_patient');
+        history.replaceState(history.state, '', url);
+        return;
+    } else if (tab) {
+        url.searchParams.set('meeting_tab', tab.dataset.meetTab);
+        history.replaceState(history.state, '', url);
+        return;
+    } else if (!event.target.closest('.panel-back, [data-close="detail"], [data-patient-tab]')) {
+        return;
+    }
+
+    for (const key of ['workspace', 'meeting_tab', 'consultation_patient', 'request_id']) url.searchParams.delete(key);
+    history.replaceState(history.state, '', url);
+}, true);
 </script>
 <form hidden>{% csrf_token %}</form>
 <script>
@@ -360,7 +474,7 @@
       tools[0]?.addEventListener('click', () => {
         const patientId = patientIds[profile.closest('[data-profile]').dataset.profile];
         const endpoint = `{% url 'doctor_schedule_meet' 0 %}`.replace('/0/', `/${patientId}/`);
-        profile.innerHTML = `<form class="meet-form"><h3>Schedule Google Meet</h3><p>Schedule a consultation and send the Meet invitation to this patient.</p><label>Meeting title</label><input name="title" required value="Consultation"><label>Start</label><input name="start" type="datetime-local" required><label>End</label><input name="end" type="datetime-local" required><label>Notes</label><textarea name="description" placeholder="Optional consultation notes"></textarea><div class="meet-form-actions"><button class="meet-submit" type="submit">Schedule Meet</button><button class="meet-back" type="button">Back</button></div><div class="meet-result" hidden></div></form>`;
+        profile.innerHTML = `<form class="meet-form"><h3>Schedule Google Meet</h3><p>Schedule a consultation and send the Meet invitation to this patient.</p><label>Meeting title</label><input name="title" required value="Consultation"><label>Start</label><input name="start" type="datetime-local" required><label>End</label><input name="end" type="datetime-local" required><label>Notes</label><textarea name="description" placeholder="Optional consultation notes"></textarea><div class="meet-form-actions"><button class="meet-submit" type="submit">Schedule Meet</button><button class="meet-back" type="button" aria-label="Go back"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span></button></div><div class="meet-result" hidden></div></form>`;
         const form = profile.querySelector('form'); const result = profile.querySelector('.meet-result');
         profile.querySelector('.meet-back').onclick = () => { profile.innerHTML = original; };
         form.onsubmit = async (event) => { event.preventDefault(); result.hidden=false; result.textContent='Scheduling Google Meet…'; try { const response=await fetch(endpoint,{method:'POST',headers:{'X-CSRFToken':csrf},body:new FormData(form)}); const data=await response.json(); if(!response.ok) throw new Error(data.error); result.innerHTML=data.meet_url ? `Meeting scheduled. <a href="${data.meet_url}" target="_blank" rel="noopener">Open Google Meet</a>` : 'Meeting scheduled, but Google did not return a Meet link.'; } catch(error) { result.textContent=error.message || 'Could not schedule the meeting.'; } };
@@ -409,9 +523,9 @@
           const payload = await response.json();
           if (!response.ok) throw new Error(payload.error || 'Reports could not be loaded.');
           const cards = payload.reports?.length ? `<div class="patient-report-list">${payload.reports.map(report => `<article class="patient-report-card"><h4>Eye assessment report</h4><small>Generated ${report.generated_at} · Shared ${report.shared_at}</small><div class="patient-report-metrics"><div class="patient-report-metric"><strong>${report.blink_rate}</strong><span>Blinks / min</span></div><div class="patient-report-metric"><strong>${report.redness_score}</strong><span>Redness</span></div><div class="patient-report-metric"><strong>${report.tracking_quality}%</strong><span>Tracking</span></div></div></article>`).join('')}</div>` : '<div class="patients-empty"><span class="material-symbols-outlined" style="font-size:42px;color:#39a5b2">folder_off</span><h2>No shared reports</h2><p>This patient has not shared a generated report yet.</p></div>';
-          profile.innerHTML = `<section class="patient-reports"><span class="material-symbols-outlined" style="font-size:42px;color:#087f8c">folder_open</span><h3>Shared digital reports</h3><p>Generated assessment results shared by this patient.</p>${cards}<button class="patient-reports-back" type="button">Back to patient details</button></section>`;
+          profile.innerHTML = `<section class="patient-reports"><span class="material-symbols-outlined" style="font-size:42px;color:#087f8c">folder_open</span><h3>Shared digital reports</h3><p>Generated assessment results shared by this patient.</p>${cards}<button class="patient-reports-back" type="button" aria-label="Go back"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span></button></section>`;
         } catch (error) {
-          profile.innerHTML = `<section class="patient-reports"><span class="material-symbols-outlined" style="font-size:42px;color:#087f8c">folder_off</span><h3>Shared digital reports</h3><p>${error.message || 'Reports could not be loaded right now.'}</p><button class="patient-reports-back" type="button">Back to patient details</button></section>`;
+          profile.innerHTML = `<section class="patient-reports"><span class="material-symbols-outlined" style="font-size:42px;color:#087f8c">folder_off</span><h3>Shared digital reports</h3><p>${error.message || 'Reports could not be loaded right now.'}</p><button class="patient-reports-back" type="button" aria-label="Go back"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span></button></section>`;
         }
         profile.querySelector('.patient-reports-back')?.addEventListener('click', () => { profile.innerHTML = original; });
       });
@@ -504,4 +618,35 @@ window.styleReferredProfiles = () => document.querySelectorAll('.referred-profil
 });
 window.styleReferredProfiles();
 </script>
+<style>
+/* Patient profile presentation mirrors the patient portal; actions retain their existing styles and behaviour. */
+.patients-detail-body{background:#f7f9fc}
+.patient-profile:has(> .patient-profile-inner > .patient-hero-avatar),.patient-profile:has(> .referred-profile-inner > .patient-hero-avatar){align-items:flex-start;overflow-y:auto;padding:16px 16px 32px}
+.patient-profile-inner:has(> .patient-hero-avatar),.referred-profile-inner:has(> .patient-hero-avatar){width:100%;max-width:580px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.patient-profile-inner:has(> .patient-hero-avatar)::before,.referred-profile-inner:has(> .patient-hero-avatar)::before{content:'';display:block;width:100%;height:140px;flex:none;background:linear-gradient(110deg,#218b96,#5e85bf)}
+.patient-profile-inner > .patient-hero-avatar,.referred-profile-inner > .patient-hero-avatar{width:110px;height:110px;flex:none;position:relative;margin:-55px auto 0;border:5px solid #fff;background:#d9ebf2;box-shadow:0 8px 22px rgba(25,70,90,.14)}
+.patient-profile-inner > h3,.referred-profile-inner > h3{order:2;margin:8px 0 0;font-size:22px}
+.patient-profile-inner > p,.referred-profile-inner > p{order:1;margin:14px 0 0;font-size:12px;font-weight:700;letter-spacing:.035em;text-transform:uppercase;color:#087f8c}
+.patient-profile-inner > p::before,.referred-profile-inner > p::before{content:'';display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;background:#22b686}
+.patient-profile-inner > .patient-info,.referred-profile-inner > .patient-info{order:3;width:100%;max-width:500px;margin:22px 0;text-align:left}
+.patient-profile-inner > .patient-tools,.referred-profile-inner > .patient-tools{order:4;width:100%;max-width:500px}
+.referred-profile-inner > :not(.patient-hero-avatar):not(h3):not(p):not(.patient-info):not(.patient-tools){order:5;width:100%}
+@media(max-width:600px){.patient-profile:has(> .patient-profile-inner > .patient-hero-avatar),.patient-profile:has(> .referred-profile-inner > .patient-hero-avatar){padding:12px}.patient-profile-inner:has(> .patient-hero-avatar)::before,.referred-profile-inner:has(> .patient-hero-avatar)::before{height:115px}}
+</style>
+<style>
+/* The doctor's existing actions use the same labelled tiles as the patient portal. */
+.patient-profile-inner > .patient-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.patient-profile-inner > .patient-tools .patient-tool{min-height:104px;padding:13px 10px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;text-align:center;background:#eaf2f7;color:#2b5374;border:1px solid transparent;border-radius:14px;box-shadow:none;transform:none}
+.patient-profile-inner > .patient-tools .patient-tool .material-symbols-outlined{font-size:25px;color:inherit}
+.patient-action-copy strong,.patient-action-copy small{display:block}.patient-action-copy strong{font-size:12px;line-height:1.3}.patient-action-copy small{margin-top:5px;max-width:155px;color:#68819d;font-size:11px;font-weight:400;line-height:1.35}
+.patient-profile-inner > .patient-tools .patient-tool:hover{background:#dceeed;border-color:#a7ccca;color:#087f8c}.patient-profile-inner > .patient-tools .patient-tool:focus-visible{outline:3px solid #79bcc4;outline-offset:3px}
+@media(max-width:400px){.patient-profile-inner > .patient-tools .patient-tool{min-height:96px;padding:10px 6px}}
+</style>
+<style>
+.patient-profile-inner > .patient-tools .patient-secure-messages{grid-column:1/-1;width:calc(50% - 5px);justify-self:center;box-sizing:border-box;text-decoration:none;cursor:pointer}
+@media(max-width:400px){.patient-profile-inner > .patient-tools .patient-secure-messages{width:calc(50% - 5px)}}
+</style>
+<style>
+.patients-workspace .patient-row-details{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;align-items:center}.patients-workspace .patient-row-identity{min-width:0}.patient-row-identity small{display:block;margin-top:3px;color:#526c87;font-size:12px;overflow-wrap:anywhere}.patient-row-details strong{white-space:normal;overflow-wrap:anywhere}.patients-workspace .patient-row-email{display:flex;align-items:center;gap:8px;min-width:0;padding-left:16px;border-left:1px solid #cfe1e4;color:#607590;font-size:12px}.patients-workspace .patient-row-email>.material-symbols-outlined{font-size:18px;color:#43858d;flex:none}.patients-workspace .patient-row-email>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.patients-list-body{container-type:inline-size}@container(max-width:480px){.patients-workspace .patient-row-details{grid-template-columns:1fr;gap:5px}.patients-workspace .patient-row-email{border:0;padding:0}.patients-workspace .patient-row-email>.material-symbols-outlined{font-size:15px}}
+</style>
 {% endblock %}

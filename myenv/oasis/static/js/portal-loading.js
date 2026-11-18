@@ -15,8 +15,10 @@
     pending.set(container, {node, timer});
   };
   document.addEventListener('click', event => {
+    if (event.defaultPrevented) return;
     const control = event.target.closest('a,button,[role="tab"],.ds-doc-row,.patient-row');
     if (!control || control.disabled || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    if (control.closest('[data-local-action]')) return;
     if (control.closest('form') || control.matches('[type="submit"]') || control.querySelector('input')) return;
     const label = (control.getAttribute('aria-label') || control.title || control.textContent).trim();
     if (/^(close|pause|resume|start exercise|reset|delete|sound|skip)/i.test(label) || control.matches('[data-close],#closePanelBtn')) return;
@@ -39,7 +41,7 @@
       else target = control.closest('.side-panel-body,.panel-workspace,.main-content');
       show(target);
     });
-  }, true);
+  });
   window.addEventListener('pageshow', () => document.querySelectorAll('.portal-skeleton').forEach(node => node.remove()));
   show(document.querySelector('.main-content'));
 })();

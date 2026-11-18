@@ -1,0 +1,60 @@
+<style>
+.meet-request-nav {display:flex;gap:16px;margin-bottom:18px;border-bottom:1px solid #d5e3e9}
+.meet-request-nav a {padding:10px 0;color:#526c87;text-decoration:none}
+.meet-request-nav a[aria-current] {color:#087f8c;border-bottom:2px solid}
+.patient-request-list {display:grid;gap:14px;color:#102f52}
+.patient-request-card,.patient-request-empty {padding:18px;border:1px solid #c9dfe1;border-radius:14px;background:#f7fbfb}
+.patient-request-highlight {border-color:#087f8c}
+.patient-request-card header,.patient-request-actions {display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.patient-request-card header {justify-content:space-between}
+.patient-request-card p {margin:10px 0;overflow-wrap:anywhere;white-space:pre-wrap}
+.patient-request-status {padding:4px 10px;border-radius:20px;background:#e1f1ef;color:#00656f;font-size:13px}
+.patient-request-actions {margin-top:16px;align-items:flex-start}
+.patient-request-actions button,.patient-request-actions summary {display:inline-block;padding:8px 14px;border:1px solid #a6cdd0;border-radius:20px;background:#fff;color:#00656f;font:inherit;cursor:pointer}
+.patient-request-actions button[value=accept] {background:#087f8c;color:#fff}
+.patient-request-actions .reject-action {color:#9c3038;border-color:#e2b9be}
+.patient-request-actions details form {display:grid;gap:8px;margin-top:10px}
+.patient-request-actions label {display:grid;gap:6px}
+.patient-request-actions input,.patient-request-actions textarea {max-width:100%;padding:8px;border:1px solid #a6cdd0;border-radius:8px;font:inherit}
+</style>
+<div class="patient-request-list">
+    {% if show_requests %}
+        {% for message in messages %}<p class="meet-result {{ message.tags }}" role="status">{{ message }}</p>{% endfor %}
+    {% endif %}
+    {% for item in patient_requests %}
+    <article class="patient-request-card" id="patient-request-{{ item.pk }}">
+        <header><strong>Consultation request</strong><span class="patient-request-status">{{ item.get_status_display }}</span></header>
+        <p><strong>Preferred time</strong> {{ item.preferred_datetime|date:"d M Y, g:i A" }} · {{ item.duration_minutes }} minutes</p>
+        <p><strong>Reason</strong> {{ item.reason }}</p>
+        {% if item.notes %}<p><strong>Patient notes</strong> {{ item.notes }}</p>{% endif %}
+        {% if item.proposed_datetime %}<p><strong>Proposed time</strong> {{ item.proposed_datetime|date:"d M Y, g:i A" }}</p>{% endif %}
+        {% if item.rejection_reason %}<p><strong>Rejection reason</strong> {{ item.rejection_reason }}</p>{% endif %}
+        {% if item.status == 'requested' %}
+        <div class="patient-request-actions">
+            <form method="post" action="{% url 'doctor_meet_workspace' patient.pk %}">
+                {% csrf_token %}<input type="hidden" name="request_id" value="{{ item.pk }}">
+                <button name="decision" value="accept">Accept</button>
+            </form>
+            <details>
+                <summary>Propose a new time</summary>
+                <form method="post" action="{% url 'doctor_meet_workspace' patient.pk %}">
+                    {% csrf_token %}<input type="hidden" name="request_id" value="{{ item.pk }}">
+                    <label>New date and time<input type="datetime-local" name="proposed_datetime" required></label>
+                    <button name="decision" value="propose">Send proposal</button>
+                </form>
+            </details>
+            <details>
+                <summary class="reject-action">Reject</summary>
+                <form method="post" action="{% url 'doctor_meet_workspace' patient.pk %}">
+                    {% csrf_token %}<input type="hidden" name="request_id" value="{{ item.pk }}">
+                    <label>Reason for rejecting<textarea name="reason" maxlength="2000" required></textarea></label>
+                    <button class="reject-action" name="decision" value="reject">Confirm rejection</button>
+                </form>
+            </details>
+        </div>
+        {% endif %}
+    </article>
+    {% empty %}
+    <p class="patient-request-empty">No consultation requests from this patient yet.</p>
+    {% endfor %}
+</div>

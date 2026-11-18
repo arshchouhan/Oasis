@@ -34,3 +34,20 @@ class EyeScan(models.Model):
 
     def __str__(self):
         return f'Eye scan for {self.user} at {self.created_at:%Y-%m-%d %H:%M}'
+
+
+class EyeImageReview(models.Model):
+    """A patient-uploaded eye photo kept with their symptom-tracker record."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='eye_image_reviews')
+    image = models.FileField(upload_to='eye-image-reviews/%Y/%m/%d/')
+    original_name = models.CharField(max_length=255)
+    analysis = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+        db_table = 'symptoms_eyeimagereview'
+
+    def __str__(self):
+        return f'Image review for {self.user} at {self.created_at:%Y-%m-%d %H:%M}'

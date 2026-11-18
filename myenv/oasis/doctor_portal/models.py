@@ -61,6 +61,19 @@ class DoctorProfile(models.Model):
         return f'Doctor profile: {self.user}'
 
 
+class DoctorAvailability(models.Model):
+    doctor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='availability_windows')
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ('starts_at',)
+        constraints = [
+            models.CheckConstraint(condition=models.Q(ends_at__gt=models.F('starts_at')), name='doctor_availability_positive_window'),
+            models.UniqueConstraint(fields=('doctor', 'starts_at'), name='doctor_availability_unique_start'),
+        ]
+
+
 class GoogleCalendarConnection(models.Model):
     """OAuth tokens a doctor grants specifically for their Calendar events."""
 

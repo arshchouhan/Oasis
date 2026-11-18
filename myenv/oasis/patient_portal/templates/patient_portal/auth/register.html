@@ -1,9 +1,64 @@
 {% extends 'patient_portal/auth/auth_base.html' %}
-{% block title %}Create account | ClearEye{% endblock %}
+{% block title %}Create Oasis account{% endblock %}
 {% block content %}
-<h1>Create your ClearEye account</h1>
+<style>
+    .registration-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 14px;
+        row-gap: 0;
+    }
+
+    .registration-form .auth-field {
+        min-inline-size: 0;
+    }
+
+    .registration-form .auth-field:nth-of-type(3),
+    .registration-form .auth-field:nth-of-type(4),
+    .registration-form .auth-field:nth-of-type(5),
+    .registration-form .auth-field:nth-of-type(6) {
+        grid-column: span 1;
+    }
+
+    .registration-form .account-type-grid,
+    .registration-form .auth-submit {
+        grid-column: 1 / -1;
+    }
+
+    .registration-form .account-type-grid {
+        margin-block-end: 16px;
+    }
+
+    .registration-form .auth-field {
+        margin-block-end: 12px;
+    }
+
+    .auth-card:has(.registration-form) {
+        inline-size: min(100%, 560px);
+    }
+
+    @media (min-inline-size: 851px) {
+        .auth-page:has(.registration-form) {
+            grid-template-columns: minmax(0, 1fr) minmax(500px, 560px);
+            max-inline-size: 1270px;
+        }
+    }
+
+    @media (max-inline-size: 560px) {
+        .registration-form {
+            grid-template-columns: 1fr;
+        }
+
+        .registration-form .auth-field,
+        .registration-form .account-type-grid,
+        .registration-form .auth-submit {
+            grid-column: 1;
+        }
+    }
+</style>
+<h1>Create Oasis account</h1>
 <p>{% if portal_role == 'doctor' %}Create your doctor workspace account.{% elif portal_role == 'patient' %}Create your patient workspace account.{% else %}Choose whether you are joining as a patient or a doctor.{% endif %}</p>
-<form method="post" novalidate>
+<form class="registration-form" method="post" novalidate>
     {% csrf_token %}
     {% if portal_role %}
     <input type="hidden" name="account_type" value="{{ portal_role }}">
@@ -15,7 +70,7 @@
     </div>
     {% endif %}
     <div class="auth-field"><label for="first_name">First name</label><input id="first_name" name="first_name" autocomplete="given-name" required></div>
-    <div class="auth-field"><label for="last_name">Surname</label><input id="last_name" name="last_name" autocomplete="family-name" required></div>
+    <div class="auth-field"><label for="last_name">Last name</label><input id="last_name" name="last_name" autocomplete="family-name" required></div>
     <div class="auth-field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
     <div class="auth-field"><label for="username">Username <small>(optional)</small></label><input id="username" name="username" autocomplete="username"></div>
     <div class="auth-field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="new-password" required></div>

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Eye-care marketplace | Oasis{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/marketplace.css' %}">
+<section class="marketplace" aria-labelledby="marketplaceTitle">
+  <header class="marketplace-hero">
+    <div>
+      <span class="marketplace-kicker"><span class="material-symbols-outlined">storefront</span>OASIS MARKETPLACE</span>
+      <h1 id="marketplaceTitle">Everyday eye care,<br><em>chosen with care.</em></h1>
+      <p>Browse practical, non-prescription comfort and care essentials. Product information supports your routine—it does not replace personalised medical advice.</p>
+    </div>
+    <button class="marketplace-cart-toggle" type="button" id="cartToggle" aria-controls="cartDrawer" aria-expanded="false">
+      <span class="material-symbols-outlined">shopping_bag</span>
+      <span>Your basket</span><b>{{ cart_count }}</b>
+    </button>
+  </header>
+
+  {% if messages %}{% for message in messages %}<div class="marketplace-notice {{ message.tags }}">{{ message }}</div>{% endfor %}{% endif %}
+
+  <nav class="marketplace-filters" aria-label="Product categories">
+    <a class="{% if not active_category %}is-active{% endif %}" href="{% url 'marketplace' %}">All care</a>
+    {% for value, label in categories %}<a class="{% if active_category == value %}is-active{% endif %}" href="{% url 'marketplace' %}?category={{ value }}">{{ label }}</a>{% endfor %}
+  </nav>
+
+  <div class="marketplace-content">
+    <section class="product-grid" aria-label="Eye-care products">
+      {% for product in products %}
+      <article class="product-card {% if product.is_featured %}is-featured{% endif %}">
+        <div class="product-image"><img src="{% if product.image_path|slice:':4' == 'http' %}{{ product.image_path }}{% else %}{% static product.image_path %}{% endif %}" alt="{{ product.name }}"><span>{{ product.get_category_display }}</span></div>
+        <div class="product-copy">
+          {% if product.badge %}<small>{{ product.badge }}</small>{% endif %}
+          <h2>{{ product.name }}</h2><p>{{ product.short_description }}</p>
+          <details><summary>Product details <span class="material-symbols-outlined">add</span></summary><div>{{ product.details }}</div></details>
+          <footer><div><strong>₹{{ product.price }}</strong><span>{% if product.stock %}{{ product.stock }} in stock{% else %}Out of stock{% endif %}</span></div>
+            <form method="post" action="{% url 'marketplace_cart_add' product.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" {% if not product.stock %}disabled{% endif %}><span class="material-symbols-outlined">add_shopping_cart</span>{% if product.stock %}Add{% else %}Unavailable{% endif %}</button></form>
+          </footer>
+        </div>
+      </article>
+      {% empty %}<div class="marketplace-empty"><span class="material-symbols-outlined">inventory_2</span><h2>No products in this category yet.</h2><a href="{% url 'marketplace' %}">View all care</a></div>{% endfor %}
+    </section>
+    <aside class="care-note"><span class="material-symbols-outlined">health_and_safety</span><h2>Choose what suits your routine.</h2><p>For ongoing eye pain, sudden changes in sight, injury, or persistent redness, contact an eye-care professional instead of self-treating.</p><a href="{% url 'doctor_search' %}">Find your doctor <span>↗</span></a></aside>
+  </div>
+</section>
+
+<div class="cart-scrim" id="cartScrim" hidden></div>
+<aside class="cart-drawer" id="cartDrawer" aria-label="Your marketplace basket" aria-hidden="true">
+  <header><div><small>YOUR BASKET</small><h2>{{ cart_count }} item{{ cart_count|pluralize }}</h2></div><button type="button" id="cartClose" aria-label="Close basket"><span class="material-symbols-outlined">close</span></button></header>
+  <div class="cart-lines">
+    {% for item in cart_items %}<article><img src="{% if item.product.image_path|slice:':4' == 'http' %}{{ item.product.image_path }}{% else %}{% static item.product.image_path %}{% endif %}" alt=""><div><h3>{{ item.product.name }}</h3><small>₹{{ item.product.price }} each</small><div class="cart-controls"><form method="post" action="{% url 'marketplace_cart_update' item.id %}">{% csrf_token %}<input type="hidden" name="action" value="decrease"><button aria-label="Reduce quantity">−</button></form><span>{{ item.quantity }}</span><form method="post" action="{% url 'marketplace_cart_update' item.id %}">{% csrf_token %}<input type="hidden" name="action" value="increase"><button aria-label="Increase quantity">+</button></form><form method="post" action="{% url 'marketplace_cart_update' item.id %}">{% csrf_token %}<input type="hidden" name="action" value="remove"><button class="cart-remove">Remove</button></form></div></div><strong>₹{{ item.product.price|floatformat:2 }}</strong></article>{% empty %}<div class="cart-empty"><span class="material-symbols-outlined">shopping_bag</span><h3>Your basket is empty.</h3><p>Add an item when you find something useful for your routine.</p></div>{% endfor %}
+  </div>
+  <footer><div><span>Estimated total</span><strong>₹{{ cart_total|floatformat:2 }}</strong></div><a class="cart-checkout-link {% if not cart_items %}is-disabled{% endif %}" href="{% if cart_items %}{% url 'marketplace_checkout' %}{% else %}#{% endif %}" {% if not cart_items %}aria-disabled="true"{% endif %}>Continue to checkout <span>→</span></a><p>Demo checkout only. No real payment is processed.</p></footer>
+</aside>
+<script src="{% static 'js/marketplace.js' %}"></script>
+{% endblock %}

@@ -2,7 +2,7 @@
 from django.urls import path
 
 from oasis import views as core_views
-from . import auth_views, symptom_views, visit_views, task_views
+from . import auth_views, symptom_views, visit_views, task_views, other_test_views, marketplace_views
 from doctor_portal.views import community
 
 
@@ -19,13 +19,33 @@ urlpatterns = [
     path('auth/google/callback/', auth_views.google_callback, name='google_callback'),
     path('dashboard/', core_views.patient_dashboard, name='patient_dashboard'),
     path('dashboard/symptom-tracker/', symptom_views.symptom_tracker, name='symptom_tracker'),
+    path('dashboard/other-tests/', core_views.other_eye_tests, name='other_eye_tests'),
+    path('dashboard/plan/', core_views.patient_plan, name='plan'),
+    path('dashboard/marketplace/', marketplace_views.marketplace, name='marketplace'),
+    path('dashboard/marketplace/cart/add/<int:product_id>/', marketplace_views.cart_add, name='marketplace_cart_add'),
+    path('dashboard/marketplace/cart/<int:item_id>/', marketplace_views.cart_update, name='marketplace_cart_update'),
+    path('dashboard/marketplace/checkout/', marketplace_views.checkout, name='marketplace_checkout'),
+    path('dashboard/marketplace/checkout/order/', marketplace_views.create_payment_order, name='marketplace_payment_order'),
+    path('dashboard/other-tests/colour-session/start/', other_test_views.start_colour_session, name='colour_session_start'),
+    path('dashboard/other-tests/colour-session/save/', other_test_views.save_colour_session, name='colour_session_save'),
+    path('dashboard/other-tests/colour-session/finish/', other_test_views.finish_colour_session, name='colour_session_finish'),
+    path('dashboard/other-tests/result-chat/', other_test_views.result_insight_chat, name='result_insight_chat'),
     path('dashboard/symptom-tracker/save-eye-scan/', symptom_views.save_eye_scan, name='save_eye_scan'),
+    path('dashboard/symptom-tracker/eye-spacing/', symptom_views.estimate_eye_spacing, name='estimate_eye_spacing'),
+    path('dashboard/symptom-tracker/image-review/', symptom_views.save_eye_image_review, name='save_eye_image_review'),
+    path('dashboard/symptom-tracker/image-review/<int:review_id>/analyse/', symptom_views.analyse_eye_image_review, name='analyse_eye_image_review'),
+    path('dashboard/symptom-tracker/image-review/<int:review_id>/local-review/', symptom_views.save_local_image_review, name='save_local_image_review'),
+    path('dashboard/symptom-tracker/image-review/<int:review_id>/chat/', symptom_views.image_review_chat, name='image_review_chat'),
     path('dashboard/reports/', symptom_views.symptom_report, name='reports'),
     path('dashboard/visits/', visit_views.visits_home, name='visits'),
     path('dashboard/visits/find-doctor/', visit_views.visits_home, name='find_doctor'),
     path('dashboard/visits/search/', visit_views.doctor_search, name='doctor_search'),
     path('dashboard/visits/google-meet/', visit_views.patient_google_meet, name='patient_google_meet'),
+    path('dashboard/visits/session-request/<int:connection_id>/', visit_views.session_request, name='session_request'),
+    path('dashboard/visits/session-request/payment-order/', visit_views.create_session_request_order, name='session_request_payment_order'),
+    path('dashboard/visits/session-request/verify-payment/', visit_views.verify_session_request_payment, name='session_request_verify_payment'),
     path('dashboard/visits/digital-reports/', visit_views.digital_reports, name='digital_reports'),
+    path('dashboard/visits/your-requests/', visit_views.your_requests, name='patient_your_requests'),
     path('dashboard/visits/doctor-directory/', visit_views.doctor_directory, name='doctor_directory'),
     path('dashboard/visits/direct-messages/start/', visit_views.direct_message_start, name='direct_message_start'),
     path('dashboard/visits/direct-messages/', visit_views.direct_messages, name='direct_messages'),

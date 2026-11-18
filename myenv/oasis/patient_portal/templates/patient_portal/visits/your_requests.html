@@ -1,0 +1,69 @@
+<div class="request-popover-heading">
+    <span class="material-symbols-outlined" aria-hidden="true">assignment</span>
+    <strong>Your requests</strong>
+</div>
+
+<div class="request-popover-switch" role="group" aria-label="Request type">
+    <button type="button" data-request-filter aria-controls="connectionRequestList" aria-pressed="true">Connection requests</button>
+    <button type="button" data-request-filter aria-controls="consultationRequestList" aria-pressed="false">Consultation requests</button>
+</div>
+
+<section id="connectionRequestList" aria-label="Connection requests">
+<ul>
+    {% for item in connection_requests %}
+    <li class="request-popover-row">
+        <span class="material-symbols-outlined request-popover-icon" aria-hidden="true">person_add</span>
+        <div class="request-popover-details">
+            <strong>{{ item.recipient_email }}</strong>
+            <div class="request-popover-meta">
+                {% if item.profile_connection_id %}
+                <a class="request-status request-status--accepted request-status--link" href="{% url 'doctor_search' %}?profile_connection={{ item.profile_connection_id }}" aria-label="Accepted. View doctor profile for {{ item.recipient_email }}">
+                    <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>Accepted
+                    <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                </a>
+                {% else %}
+                <span class="request-status request-status--{{ item.status }}">{% if item.status == 'accepted' %}<span class="material-symbols-outlined" aria-hidden="true">check_circle</span>Accepted{% elif item.status == 'declined' %}<span class="material-symbols-outlined" aria-hidden="true">cancel</span>Rejected{% elif item.status == 'pending' %}<span class="material-symbols-outlined" aria-hidden="true">schedule</span>Awaiting doctor approval{% else %}{{ item.get_status_display }}{% endif %}</span>
+                {% endif %}
+                <time datetime="{{ item.requested_at|date:'c' }}">{{ item.requested_at|date:"d M Y" }}</time>
+            </div>
+        </div>
+    </li>
+    {% empty %}
+    <li class="request-popover-empty">No connection requests yet.</li>
+    {% endfor %}
+</ul>
+
+</section>
+
+<section id="consultationRequestList" aria-label="Consultation requests" hidden>
+<ul>
+    {% for item in consultation_requests %}
+    <li>
+        {% if item.video_connection_id %}
+        <a class="request-popover-row request-popover-row-link" href="{% url 'doctor_search' %}?video_connection={{ item.video_connection_id }}">
+        {% else %}
+        <div class="request-popover-row">
+        {% endif %}
+        <span class="material-symbols-outlined request-popover-icon" aria-hidden="true">event_available</span>
+        <div class="request-popover-details">
+            <strong>Dr. {{ item.doctor.get_full_name|default:item.doctor.username }}</strong>
+            <div class="request-popover-meta">
+                <span class="request-status request-status--{{ item.status }}">{% if item.status == 'requested' %}Sent to doctor{% elif item.status == 'payment_pending' %}Awaiting payment confirmation{% else %}{{ item.get_status_display }}{% endif %}</span>
+                <time datetime="{{ item.created_at|date:'c' }}">{{ item.created_at|date:"d M Y" }}</time>
+            </div>
+            <p>Requested time: {{ item.preferred_datetime|date:"d M Y, g:i A" }} ({{ item.duration_minutes }} minutes)</p>
+            {% if item.proposed_datetime %}<p>Proposed time: {{ item.proposed_datetime|date:"d M Y, g:i A" }}</p>{% endif %}
+            {% if item.rejection_reason %}<p>Rejection reason: {{ item.rejection_reason }}</p>{% endif %}
+        </div>
+        {% if item.video_connection_id %}
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        </a>
+        {% else %}
+        </div>
+        {% endif %}
+    </li>
+    {% empty %}
+    <li class="request-popover-empty">No consultation requests yet.</li>
+    {% endfor %}
+</ul>
+</section>

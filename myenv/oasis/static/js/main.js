@@ -1,4 +1,188 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const requestsWrap = document.getElementById('yourRequestsWrap');
+    if (requestsWrap) {
+        const trigger = document.getElementById('yourRequestsTrigger');
+        const menu = document.getElementById('yourRequestsMenu');
+        const results = document.getElementById('yourRequestsResults');
+        let controller;
+
+        function closeRequests() {
+            controller?.abort();
+            menu.hidden = true;
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        trigger.addEventListener('click', async () => {
+            if (!menu.hidden) {
+                closeRequests();
+                return;
+            }
+            menu.hidden = false;
+            trigger.setAttribute('aria-expanded', 'true');
+            results.textContent = 'Loading your requests…';
+            controller = new AbortController();
+            const {signal} = controller;
+            try {
+                const response = await fetch(menu.dataset.url, {signal, cache: 'no-store'});
+                if (!response.ok || response.redirected) throw new Error();
+                const content = await response.text();
+                if (!signal.aborted) results.innerHTML = content;
+            } catch {
+                if (!signal.aborted) results.textContent = 'Could not load your requests. Close and reopen to try again.';
+            }
+        });
+        results.addEventListener('click', event => {
+            const selected = event.target.closest('[data-request-filter]');
+            if (!selected) return;
+
+            for (const button of results.querySelectorAll('[data-request-filter]')) {
+                const isSelected = button === selected;
+                button.setAttribute('aria-pressed', String(isSelected));
+                document.getElementById(button.getAttribute('aria-controls')).hidden = !isSelected;
+            }
+        });
+        document.addEventListener('click', event => {
+            if (!menu.hidden && !requestsWrap.contains(event.target)) closeRequests();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !menu.hidden) {
+                closeRequests();
+                trigger.focus();
+            }
+        });
+    }
+
+    const resizablePanes = '.side-panel, .patients-pane, .ds-left-pane, .ds-right-pane, .v-left-pane, .v-right-pane, .st-left-pane, .st-right-pane, .rp-pane, .doctor-dm-list, .doctor-dm-chat, .dm-list, .dm-chat';
+    document.querySelectorAll(resizablePanes).forEach(right => {
+        const left = right.previousElementSibling;
+        if (!left?.matches(resizablePanes + ', .main-content')) return;
+
+        const layout = right.parentElement;
+        const minimumWidth = 240;
+        let narrow = false;
+        let collapsed = false;
+        let showingRight = right.id === 'sidePanel';
+        const controls = [];
+
+        function contentWidth() {
+            const style = getComputedStyle(layout);
+            return layout.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        }
+
+        function updateLayout() {
+            const bothVisible = [left, right].every(pane =>
+                !pane.hidden && getComputedStyle(pane).display !== 'none' &&
+                (pane.id !== 'sidePanel' || pane.classList.contains('open'))
+            );
+            narrow = bothVisible && contentWidth() < minimumWidth * 2 + 16;
+            if (!bothVisible) collapsed = false;
+            const singlePane = narrow || collapsed;
+            layout.classList.toggle('pane-single-layout', singlePane);
+            left.classList.toggle('pane-inactive', singlePane && showingRight);
+            right.classList.toggle('pane-inactive', singlePane && !showingRight);
+            controls.forEach(({grip, toggle}, index) => {
+                grip.hidden = !bothVisible || singlePane;
+                toggle.hidden = !singlePane;
+                const label = collapsed && !narrow ? 'Show both panels'
+                    : index === 0 ? 'Show right panel' : 'Show left panel';
+                toggle.title = label;
+                toggle.setAttribute('aria-label', label);
+            });
+        }
+
+        function resize(leftWidth) {
+            const available = contentWidth() - (parseFloat(getComputedStyle(layout).columnGap) || 0);
+            if (available <= minimumWidth * 2) return;
+            if (leftWidth < minimumWidth - 24 || leftWidth > available - minimumWidth + 24) {
+                collapsed = true;
+                showingRight = leftWidth < minimumWidth;
+                updateLayout();
+                controls[showingRight ? 1 : 0].toggle.focus();
+                return;
+            }
+            const width = Math.max(minimumWidth, Math.min(leftWidth, available - minimumWidth));
+            layout.style.setProperty('--split-left', (width / available * 100) + '%');
+            layout.classList.add('pane-resized-layout');
+        }
+
+        function reset() {
+            layout.classList.remove('pane-resized-layout');
+            layout.style.removeProperty('--split-left');
+        }
+
+        for (const pane of [left, right]) {
+            const grip = document.createElement('div');
+            grip.className = 'pane-resize-handle';
+            grip.tabIndex = 0;
+            grip.setAttribute('role', 'separator');
+            grip.setAttribute('aria-label', 'Resize panels');
+            grip.setAttribute('aria-orientation', 'vertical');
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'pane-switch-button';
+            const icon = document.createElement('span');
+            icon.className = 'material-symbols-outlined';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = 'menu';
+            toggle.append(icon);
+            toggle.addEventListener('click', () => {
+                if (collapsed && !narrow) {
+                    collapsed = false;
+                    updateLayout();
+                    grip.focus();
+                    return;
+                }
+                showingRight = pane === left;
+                updateLayout();
+                controls[showingRight ? 1 : 0].toggle.focus();
+            });
+            pane.classList.add('pane-resizable', pane === left ? 'pane-split-left' : 'pane-split-right');
+            pane.prepend(grip);
+            const header = pane.querySelector(':scope > :is(.patients-head, .ds-pane-header, .side-panel-header, .v-pane-header, .st-pane-header, .rp-head, .doctor-dm-head, .doctor-dm-list-heading, .dm-chat-head, .dm-list-head)');
+            if (header) {
+                toggle.classList.add('pane-switch-in-header');
+                header.prepend(toggle);
+            } else {
+                pane.prepend(toggle);
+            }
+            controls.push({grip, toggle});
+
+            grip.addEventListener('pointerdown', event => {
+                if (event.button !== 0) return;
+                event.preventDefault();
+                grip.setPointerCapture(event.pointerId);
+                const startX = event.clientX;
+                const startWidth = left.getBoundingClientRect().width;
+                const move = event => resize(startWidth + event.clientX - startX);
+                grip.addEventListener('pointermove', move);
+                grip.addEventListener('lostpointercapture', () => grip.removeEventListener('pointermove', move), {once: true});
+            });
+            grip.addEventListener('dblclick', reset);
+            grip.addEventListener('keydown', event => {
+                if (event.key === 'Escape') reset();
+                if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+                event.preventDefault();
+                resize(left.getBoundingClientRect().width + (event.key === 'ArrowRight' ? 24 : -24));
+            });
+        }
+
+        const observer = new ResizeObserver(updateLayout);
+        observer.observe(layout);
+        observer.observe(left);
+        observer.observe(right);
+        const visibilityObserver = new MutationObserver(() => {
+            if ([left, right].some(pane => pane.hidden || getComputedStyle(pane).display === 'none' ||
+                (pane.id === 'sidePanel' && !pane.classList.contains('open')))) reset();
+            updateLayout();
+        });
+        for (const pane of [left, right]) {
+            visibilityObserver.observe(pane, {attributes: true, attributeFilter: ['style', 'hidden']});
+        }
+        right.addEventListener('oasis:panel-closed', () => { reset(); requestAnimationFrame(updateLayout); });
+        right.addEventListener('oasis:panel-opened', () => { showingRight = true; updateLayout(); });
+        updateLayout();
+    });
+
     // Patient "Connect to doctor" Material-style dropdown.
     const doctorConnectTrigger = document.getElementById('doctorConnectTrigger');
     const doctorConnectMenu = document.getElementById('doctorConnectMenu');
@@ -249,7 +433,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (meetingsUrl) loadUpcomingMeetings(meetingsUrl);
         const referralsUrl = button.dataset.referralsUrl;
         if (referralsUrl) loadReferralManager(referralsUrl);
+        if (button.dataset.availabilityUrl) loadDoctorAvailability(button.dataset.availabilityUrl);
+        sidePanel.classList.toggle('meetings-panel', Boolean(meetingsUrl));
         sidePanel.classList.add('open');
+        sidePanel.dispatchEvent(new Event('oasis:panel-opened'));
         activePanel = panelName;
         if (persist) {
             try { localStorage.setItem(ACTIVE_PANEL_KEY, panelName); } catch (e) {}
@@ -261,6 +448,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!Number.isNaN(date.getTime())) node.textContent = date.toLocaleString([], {dateStyle:'medium', timeStyle:'short'});
     });
     document.addEventListener('click', event => {
+        const scheduled = event.target.closest('[data-meet-tab="scheduled"]');
+        scheduled?.closest('.panel-workspace').querySelectorAll('.patient-meeting-list time').forEach(node => {
+            const date = new Date(node.dateTime);
+            if (!Number.isNaN(date.getTime())) node.textContent = date.toLocaleString([], {dateStyle: 'medium', timeStyle: 'short'});
+        });
         const tab = event.target.closest('[data-meet-tab]');
         if (!tab) return;
         const workspace = tab.closest('.panel-workspace');
@@ -280,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (list && meeting) {
             list.querySelector('.patient-meetings-empty')?.remove();
             const article = document.createElement('article');
-            article.style.cssText = 'padding:14px 0;border-bottom:1px solid #e2ebf1';
+            article.className = 'meeting-card';
             const title = document.createElement('strong'); title.textContent = meeting.title;
             const date = document.createElement('p');
             const start = new Date(meeting.start);
@@ -323,19 +515,67 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 sidePanelBody.innerHTML = events.map(event => {
-                    const date = new Date(event.start);
-                    const start = Number.isNaN(date.getTime()) ? escapeHtml(event.start) : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+                    const start = new Date(event.start);
+                    const end = event.end ? new Date(event.end) : null;
+                    const formatter = new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'short'});
+                    const time = Number.isNaN(start.getTime()) ? event.start
+                        : end && end >= start ? formatter.formatRange(start, end) : formatter.format(start);
+                    const host = event.doctor_name ? `<div><dt>Doctor</dt><dd>${escapeHtml(event.doctor_name)}</dd></div>` : '';
                     let meetUrl;
                     try { meetUrl = new URL(event.meet_url); } catch { return ''; }
                     if (meetUrl.protocol !== 'https:' || meetUrl.hostname !== 'meet.google.com') return '';
                     const meetIcon = '<svg width="28" height="24" viewBox="0 0 28 24" role="img" aria-label="Google Meet"><path d="M3 3h13v18H3z" fill="#4285f4"/><path d="M3 3h8v6H3z" fill="#ea4335"/><path d="M3 15h8v6H3z" fill="#34a853"/><path d="M11 3h8v18h-8z" fill="#fbbc04"/><path d="m17 9 9-6v18l-9-6z" fill="#34a853"/><path d="M11 9h8v6h-8z" fill="#188038"/></svg>';
-                    return `<div class="panel-item">${meetIcon}<div class="panel-item-text" style="min-width:0;flex:1;"><strong>${escapeHtml(event.title)}</strong><div style="margin-top:6px;font-size:13px;">${escapeHtml(start)}</div><a href="${escapeHtml(meetUrl.href)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 16px;border-radius:20px;background:#087f8c;color:#fff;text-decoration:none;font-weight:600;font-size:13px;"><span class="material-symbols-outlined" style="font-size:18px;">videocam</span>Join</a></div></div>`;
+                    return `<article class="panel-item meeting-card"><header class="meeting-card-heading">${meetIcon}<strong>${escapeHtml(event.title)}</strong></header><dl class="meeting-card-details">${host}<div><dt>Patient</dt><dd>${escapeHtml((event.patient_names || []).join(', ') || 'Unavailable')}</dd></div><div><dt>Time</dt><dd>${escapeHtml(time)}</dd></div></dl><a href="${escapeHtml(meetUrl.href)}" target="_blank" rel="noopener noreferrer" class="meeting-card-join"><span class="material-symbols-outlined" style="font-size:18px;">videocam</span>Join</a></article>`;
                 }).join('');
             })
             .catch(() => {
                 if (activePanel === requestedPanel) sidePanelBody.innerHTML = '<p class="panel-placeholder">Upcoming meetings could not be loaded. Please try again.</p>';
             });
     }
+
+    async function availabilityFragment(url, options = {}) {
+        const response = await fetch(url, { cache: 'no-store', ...options });
+        if (!response.ok) throw new Error('Availability request failed.');
+        const template = document.createElement('template');
+        template.innerHTML = await response.text();
+        const panel = template.content.querySelector('[data-availability-panel]');
+        if (!panel) throw new Error('Availability panel was missing.');
+        return panel;
+    }
+
+    async function loadDoctorAvailability(url) {
+        sidePanelBody.innerHTML = '<p class="panel-placeholder">Loading availability…</p>';
+        const placeholder = sidePanelBody.firstElementChild;
+        try {
+            const panel = await availabilityFragment(url);
+            if (activePanel === 'availability' && placeholder.isConnected) placeholder.replaceWith(panel);
+        } catch {
+            if (activePanel === 'availability' && placeholder.isConnected) {
+                placeholder.textContent = 'Availability could not be loaded. Reopen the panel to try again.';
+            }
+        }
+    }
+
+    sidePanelBody?.addEventListener('submit', async event => {
+        const form = event.target;
+        const panel = form.closest('[data-availability-panel]');
+        if (!panel) return;
+        event.preventDefault();
+        if (panel.getAttribute('aria-busy') === 'true') return;
+        const body = new FormData(form, event.submitter);
+        const error = panel.querySelector('[data-availability-error]');
+        error.hidden = true;
+        panel.setAttribute('aria-busy', 'true');
+        try {
+            const updated = await availabilityFragment(form.action, { method: 'POST', body });
+            if (activePanel === 'availability' && panel.isConnected) panel.replaceWith(updated);
+        } catch {
+            error.textContent = 'Availability could not be updated. Try again.';
+            error.hidden = false;
+        } finally {
+            panel.removeAttribute('aria-busy');
+        }
+    });
 
     function loadReferralManager(url) {
         const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
@@ -351,15 +591,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     const referrals = payload[selected] || [];
                     const cards = referrals.length ? referrals.map(referral => {
                         const title = selected === 'sent' ? `To ${escapeHtml(referral.doctor_name)}` : `From ${escapeHtml(referral.doctor_name)}`;
-                        const actions = selected === 'received' && referral.status === 'Open' ? `<div style="display:flex;gap:7px;margin-top:10px;"><button data-referral-action="accept" data-referral-id="${referral.id}" style="border:0;border-radius:16px;padding:6px 10px;background:#087f8c;color:#fff;font-weight:700;cursor:pointer;">Accept</button><button data-referral-action="close" data-referral-id="${referral.id}" style="border:0;border-radius:16px;padding:6px 10px;background:#edf3f8;color:#38546e;font-weight:700;cursor:pointer;">Close</button></div>` : '';
-                        return `<article style="padding:12px;border-radius:12px;background:#f5f8fb;margin-top:9px;"><strong style="display:block;color:#102f52;">${title}</strong><small style="display:block;margin-top:3px;color:#607590;">Patient: ${escapeHtml(referral.patient_name)} · ${escapeHtml(referral.updated_at)}</small>${referral.note ? `<p style="margin:8px 0 0;color:#50657d;font-size:12px;line-height:1.4;">${escapeHtml(referral.note)}</p>` : ''}<span style="display:inline-block;margin-top:8px;padding:3px 8px;border-radius:10px;background:#d9f1ee;color:#087f8c;font-size:11px;font-weight:700;">${escapeHtml(referral.status)}</span>${actions}</article>`;
+                        const actions = selected === 'received' && referral.status === 'Open' ? `
+                            <div class="referral-card-actions">
+                                <button type="button" class="meeting-card-join referral-accept" data-referral-action="accept" data-referral-id="${referral.id}">Accept referral</button>
+                                <button type="button" class="meeting-card-join" data-referral-action="close" data-referral-id="${referral.id}">Close referral</button>
+                            </div>` : '';
+                        return `<article class="referral-card"><strong>${title}</strong><dl class="meeting-card-details"><div><dt>Patient</dt><dd>${escapeHtml(referral.patient_name)}</dd></div><div><dt>Updated</dt><dd>${escapeHtml(referral.updated_at)}</dd></div></dl>${referral.note ? `<div class="referral-card-note"><strong>Referral note</strong><p>${escapeHtml(referral.note)}</p></div>` : ''}${referral.status === 'Open' ? '' : `<span class="referral-card-status">${escapeHtml(referral.status)}</span>`}<a class="meeting-card-join" href="${escapeHtml(referral.patient_url)}">View patient</a>${actions}</article>`;
                     }).join('') : '';
-                    const tabs = `<div style="display:flex;justify-content:center;gap:0;"><button data-referral-tab="received" style="border:0;border-radius:18px 0 0 18px;padding:10px 13px;cursor:pointer;font-weight:700;${selected === 'received' ? 'background:#087f8c;color:#fff;' : 'background:#edf3f8;color:#38546e;'}">Received (${payload.received.length})</button><button data-referral-tab="sent" style="border:0;border-radius:0 18px 18px 0;padding:10px 13px;cursor:pointer;font-weight:700;${selected === 'sent' ? 'background:#087f8c;color:#fff;' : 'background:#edf3f8;color:#38546e;'}">Sent (${payload.sent.length})</button></div>`;
-                    sidePanelBody.innerHTML = referrals.length ? `<div style="min-height:calc(100vh - 220px);display:flex;flex-direction:column;"><p style="margin:0 0 10px;color:#607590;font-size:12px;">Referral threads are linked to patient referrals.</p><div>${cards}</div><div style="margin-top:auto;padding:24px 0 4px;">${tabs}</div></div>` : `<div style="min-height:calc(100vh - 220px);display:flex;flex-direction:column;"><section style="margin-top:12px;padding:30px 18px;border-radius:22px;background:#f5f8fb;text-align:center;"><span class="material-symbols-outlined" style="display:inline-grid;place-items:center;width:86px;height:86px;border-radius:50%;background:#dcecff;color:#087f8c;font-size:43px;">forum</span><h3 style="margin:16px 0 7px;color:#102f52;font-size:20px;">All caught up!</h3><p style="margin:0;color:#607590;line-height:1.45;">No ${selected} referral threads right now. Switch sections to manage the other referral threads.</p></section><div style="margin-top:auto;padding:24px 0 4px;">${tabs}</div></div>`;
+                    const tabs = ['received', 'sent'].map(tab => {
+                        const label = tab === 'received' ? 'Received' : 'Sent';
+                        return `<button type="button" data-referral-tab="${tab}" aria-pressed="${selected === tab}">${label} (${payload[tab].length})</button>`;
+                    }).join('');
+                    const empty = `<section class="referral-empty">
+                        <span class="material-symbols-outlined" aria-hidden="true">forum</span>
+                        <h3>All caught up!</h3>
+                        <p>No ${selected} referral threads right now.</p>
+                    </section>`;
+                    sidePanelBody.innerHTML = `<div class="referral-switch" role="group" aria-label="Referral direction">${tabs}</div>${cards || empty}`;
                 };
                 sidePanelBody.onclick = async event => {
                     const tab = event.target.closest('[data-referral-tab]');
-                    if (tab) { selected = tab.dataset.referralTab; render(); return; }
+                    if (tab) { selected = tab.dataset.referralTab; render(); sidePanelBody.scrollTop = 0; sidePanelBody.querySelector('[aria-pressed=true]')?.focus(); return; }
                     const action = event.target.closest('[data-referral-action]');
                     if (!action) return;
                     action.disabled = true;
@@ -386,6 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close panel
     function closePanel() {
+        sidePanel.dispatchEvent(new Event('oasis:panel-closed'));
         sidePanel.classList.remove('open');
         railBtns.forEach(b => b.classList.remove('active'));
         activePanel = null;

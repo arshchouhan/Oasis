@@ -1,0 +1,10 @@
+<div class="doctor-request-switch" role="group" aria-label="Request type">
+    <button type="button" aria-pressed="true" aria-controls="doctorConnectionRequests">Connection requests</button>
+    <button type="button" aria-pressed="false" aria-controls="doctorConsultationRequests">Consultation requests</button>
+</div>
+<section id="doctorConnectionRequests" aria-label="Connection requests">
+    {% for item in patient_requests %}<article class="request-item"><div><h3>{{ item.thread.patient.get_full_name|default:item.thread.patient.username }}</h3><p>{{ item.thread.patient.email }}</p><small>Requested {{ item.request.requested_at|date:'d M Y, g:i A' }}</small></div><a href="{% url 'doctor_direct_messages' item.thread.pk %}?layout=single">Review request <span aria-hidden="true">↗</span></a></article>{% empty %}<div class="request-empty">No new patient connection requests.</div>{% endfor %}
+</section>
+<section id="doctorConsultationRequests" aria-label="Consultation requests" hidden>
+    {% for item in consultation_requests %}<article class="request-item"><div><h3>{{ item.patient.get_full_name|default:item.patient.username }}</h3><p>Preferred: {{ item.preferred_datetime|date:'d M Y, g:i A' }} · {{ item.duration_minutes }} minutes</p><p>{{ item.reason }}</p>{% if item.notes %}<p>{{ item.notes }}</p>{% endif %}<small>Requested {{ item.created_at|date:'d M Y, g:i A' }}</small></div><a href="{% url 'doctor_connections' %}?consultation_patient={{ item.patient_id }}&amp;request_id={{ item.pk }}">View request <span aria-hidden="true">↗</span></a></article>{% empty %}<div class="request-empty">No new consultation requests.</div>{% endfor %}
+</section>

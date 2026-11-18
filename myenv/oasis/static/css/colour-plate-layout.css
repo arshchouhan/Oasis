@@ -1,0 +1,104 @@
+/* Desktop colour-plate session: a split workspace that can grow with saved feedback. */
+@media (min-width: 721px) {
+  .main-content:has(.ot-colour-check:not([hidden])) > .other-tests {
+    overflow: auto;
+  }
+
+  .ot-colour-check {
+    height: auto;
+    min-height: 100%;
+    display: block;
+    overflow: visible;
+  }
+
+  .occ-session-bar {
+    max-width: none;
+    padding: 14px 38px;
+    border-bottom: 1px solid #d8e7e5;
+  }
+
+  .occ-stage {
+    min-height: 560px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(470px, 1.25fr) minmax(330px, .75fr);
+    align-items: stretch;
+    text-align: left;
+    background: #fff;
+    overflow: visible;
+  }
+
+  .occ-plate-column {
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 34px 20px;
+    background: linear-gradient(135deg, #f7fbfa 0%, #e9f5f2 100%);
+    overflow: visible;
+  }
+
+  .occ-stage canvas {
+    width: min(39vh, 390px);
+    height: min(39vh, 390px);
+    flex: 0 1 auto;
+    box-shadow: 0 14px 0 #c8dedb, 0 22px 36px #10284a20;
+  }
+
+  .occ-answer-row { margin-top: 22px; }
+  .occ-result { width: min(570px, 100%); margin-top: 16px; }
+  .occ-feedback { margin: 8px 0 0; }
+  .occ-next { margin-top: 2px; }
+
+  .occ-control-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+    padding: 44px 42px;
+    border-left: 1px solid #d8e7e5;
+    background: #fff;
+  }
+
+  .occ-prompt { max-width: 430px; }
+  .occ-prompt h3 { font-size: 30px; }
+  .occ-prompt p { margin-bottom: 0; line-height: 1.55; }
+  .occ-controls { flex-wrap: wrap; }
+  .occ-controls button { min-height: 44px; }
+  .occ-controls .occ-end-control {
+    border-color: #d7a5a5;
+    color: #9d3434;
+    background: #fffafa;
+  }
+  .occ-controls .occ-end-control:hover { background: #fff0f0; }
+
+  .occ-control-note {
+    display: flex;
+    gap: 12px;
+    padding-top: 22px;
+    border-top: 1px solid #d8e7e5;
+    color: #587493;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .occ-control-note span { color: #087f8c; }
+  .occ-control-note p { max-width: 330px; margin: 0; }
+
+  .occ-stage.complete { display: flex; min-height: 0; }
+  .occ-stage.complete .occ-plate-column { width: 100%; box-sizing: border-box; }
+  .occ-stage.complete .occ-control-panel { display: none; }
+}
+
+@media (max-width: 720px) {
+  .occ-control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    margin-top: 22px;
+  }
+
+  .occ-control-note { display: none; }
+}

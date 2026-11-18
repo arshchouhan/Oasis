@@ -1,0 +1,16 @@
+<section id="liveTracking" class="lt-workspace" hidden data-local-action aria-label="Live blink tracking">
+    <header class="lt-heading"><div><h2>Live eye tracking</h2><p>Keep both eyes visible and blink naturally. Your camera stays on until you stop.</p></div><button id="ltStop" type="button">Stop &amp; return</button></header>
+    <div id="ltAlert" class="lt-alert" role="status" hidden></div>
+    <div class="lt-columns">
+        <section class="lt-card"><header><h3>Camera preview</h3><span id="ltState">Starting…</span></header><div id="ltCamera"><canvas id="ltOverlay"></canvas></div><label class="lt-overlay-label"><input type="checkbox" id="ltShowOverlay" checked> Show eye landmarks</label><p id="ltDetection" role="status">Loading eye detector…</p></section>
+        <section class="lt-card"><h3>Blink statistics</h3><div class="lt-stat"><strong id="ltMinute">0</strong><span>blinks this minute</span></div><div class="lt-stat"><strong id="ltTotal">0</strong><span>blinks this session</span></div><div class="lt-stat"><strong id="ltAverage">—</strong><span>average blinks / min</span></div><p id="ltElapsed">Session 0:00</p></section>
+    </div>
+    <section class="lt-card"><div class="lt-chart-head"><div><h3>Blink rate</h3><p>Average blinks per minute over time.</p></div><fieldset id="ltRanges" aria-label="Chart time range"><label><input type="radio" name="ltRange" value="today" checked> Today</label><label><input type="radio" name="ltRange" value="week"> Week</label><label><input type="radio" name="ltRange" value="month"> Month</label><label><input type="radio" name="ltRange" value="year"> Year</label></fieldset></div><div class="lt-legend" id="ltLegend"></div><svg id="ltChart" viewBox="0 0 800 190" role="img" aria-label="Session blink counts and alert threshold"></svg><p id="ltChartEmpty">No blink data recorded for this period. Start tracking to see your history.</p></section>
+    <section class="lt-card"><h3>Alert settings</h3><p>Personal reminders when your measured blink count stays low.</p>
+        <label class="lt-setting"><span>Low blink rate threshold<small>Blinks per tracked minute</small></span><input id="ltThreshold" type="number" min="1" max="60" value="10"></label>
+        <label class="lt-setting"><span>Alert after<small>Consecutive tracked minutes below threshold</small></span><input id="ltDelay" type="number" min="1" max="10" value="1"></label>
+        <label class="lt-setting"><span>Alert type</span><select id="ltAlertType"><option value="banner">Slide notification</option><option value="off">Off</option></select></label>
+        <label class="lt-setting"><span>Sound</span><select id="ltSound"><option value="off">Off</option><option value="on">On</option></select></label>
+        <button id="ltTest" type="button">Test alert</button><p>Tracking runs locally in this tab. No video is recorded or uploaded in this mode. Estimates are for personal awareness, not diagnosis.</p>
+    </section>
+</section>

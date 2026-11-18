@@ -1,3 +1,8 @@
+import json
+from datetime import datetime, timedelta
+from decimal import Decimal
+
+import razorpay
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,11 +11,11 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
-from django.shortcuts import render, redirect
+from django.views.decorators.http import require_GET, require_POST
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.utils import timezone
-from .visit_models import DoctorConnection, DoctorConnectionRequest
+from .visit_models import ConsultationSessionRequest, DoctorConnection, DoctorConnectionRequest
 from .models import DirectMessage, DirectMessageThread, DoctorDirectorySearch, User
 from .symptom_models import EyeScan
 from doctor_portal.models import SharedDigitalReport
@@ -36,6 +41,208 @@ DEMO_DOCTOR_PROFILES = (
         'experience_years': 14, 'next_available': 'Friday · 11:00 AM',
     },
 )
+
+
+SESSION_DURATION_FEES = {
+    60: Decimal('100.00'),
+    120: Decimal('1500.00'),
+    180: Decimal('4000.00'),
+}
+
+
+def _razorpay_configured():
+    return settings.RAZORPAY_KEY_ID.startswith('rzp_test_') and bool(settings.RAZORPAY_KEY_SECRET)
+
+
+def _session_connection(request, connection_id):
+    connection = get_object_or_404(
+        DoctorConnection,
+        pk=connection_id,
+        user=request.user,
+        source='oasis_doctor_portal',
+    )
+    doctor = User.objects.filter(
+        email__iexact=connection.doctor_email,
+        account_type=User.AccountType.DOCTOR,
+    ).first()
+    if not doctor:
+        return connection, None
+    return connection, doctor
+
+
+@login_required
+def session_request(request, connection_id):
+    """Show the paid follow-up request form for one connected doctor."""
+    if request.user.account_type != User.AccountType.PATIENT:
+        return redirect('doctor_dashboard')
+    connection, doctor = _session_connection(request, connection_id)
+    if not doctor:
+        messages.error(request, 'This doctor is no longer available for session requests.')
+        return redirect('doctor_search')
+    submitted_request = None
+    submitted_id = request.GET.get('submitted')
+    if submitted_id and submitted_id.isdigit():
+        submitted_request = ConsultationSessionRequest.objects.filter(
+            pk=int(submitted_id), patient=request.user, doctor_connection_id=connection.pk,
+            status=ConsultationSessionRequest.Status.REQUESTED,
+        ).first()
+    return render(request, 'patient_portal/visits/session_request.html', {
+        'connection': connection,
+        'doctor': doctor,
+        'duration_fees': SESSION_DURATION_FEES,
+        'submitted_request': submitted_request,
+        'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+        'available_times': [
+            {'start': window.starts_at, 'minutes': (window.ends_at - window.starts_at) // timedelta(minutes=1)}
+            for window in doctor.availability_windows.filter(starts_at__gt=timezone.now())
+        ],
+        'availability_timezone': timezone.get_current_timezone_name(),
+    })
+
+
+def _parse_preferred_datetime(value):
+    try:
+        scheduled = datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+    if timezone.is_naive(scheduled):
+        scheduled = timezone.make_aware(scheduled, timezone.get_current_timezone())
+    return scheduled
+
+
+@login_required
+@require_POST
+def create_session_request_order(request):
+    """Create an amount-validated Razorpay order for a consultation request."""
+    if request.user.account_type != User.AccountType.PATIENT:
+        return JsonResponse({'error': 'A patient account is required.'}, status=403)
+    if not _razorpay_configured():
+        return JsonResponse({'error': 'Razorpay test keys are not configured on the server.'}, status=503)
+    try:
+        connection_id = int(request.POST.get('connection_id', ''))
+        duration = int(request.POST.get('duration_minutes', ''))
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Choose a valid session duration.'}, status=400)
+    fee = SESSION_DURATION_FEES.get(duration)
+    preferred_datetime = _parse_preferred_datetime(request.POST.get('preferred_datetime', ''))
+    reason = request.POST.get('reason', '').strip()
+    notes = request.POST.get('notes', '').strip()
+    if not fee:
+        return JsonResponse({'error': 'Choose one of the available session durations.'}, status=400)
+    if not preferred_datetime or preferred_datetime <= timezone.now():
+        return JsonResponse({'error': 'Choose a preferred date and time in the future.'}, status=400)
+    if not reason:
+        return JsonResponse({'error': 'Tell your doctor what you would like to discuss.'}, status=400)
+    if len(reason) > 240 or len(notes) > 2000:
+        return JsonResponse({'error': 'Please shorten the reason or notes and try again.'}, status=400)
+    connection, doctor = _session_connection(request, connection_id)
+    if not doctor:
+        return JsonResponse({'error': 'This doctor is no longer available for session requests.'}, status=404)
+    window = doctor.availability_windows.filter(starts_at=preferred_datetime).first()
+    if not window or window.ends_at - window.starts_at < timedelta(minutes=duration):
+        return JsonResponse({'error': 'That time is unavailable for this session length. Refresh and choose another time.'}, status=400)
+    session_request = ConsultationSessionRequest.objects.create(
+        patient=request.user,
+        doctor=doctor,
+        doctor_connection_id=connection.pk,
+        duration_minutes=duration,
+        amount=fee,
+        preferred_datetime=preferred_datetime,
+        reason=reason,
+        notes=notes,
+    )
+    try:
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        order = client.order.create({
+            'amount': int(fee * 100),
+            'currency': 'INR',
+            'receipt': f'oasis_session_{session_request.pk}_{timezone.now():%m%d%H%M%S}',
+            'notes': {
+                'session_request_id': str(session_request.pk),
+                'patient_id': str(request.user.pk),
+                'doctor_id': str(doctor.pk),
+                'duration_minutes': str(duration),
+            },
+        })
+    except razorpay.errors.BadRequestError:
+        session_request.delete()
+        return JsonResponse({'error': 'Razorpay could not create the payment order. Please try again.'}, status=502)
+    session_request.razorpay_order_id = order['id']
+    session_request.save(update_fields=('razorpay_order_id', 'updated_at'))
+    return JsonResponse({
+        'request_id': session_request.pk,
+        'key_id': settings.RAZORPAY_KEY_ID,
+        'order_id': order['id'],
+        'amount': order['amount'],
+        'currency': order['currency'],
+        'description': f'{duration // 60}-hour session with Dr. {doctor.get_full_name() or doctor.username}',
+    })
+
+
+@login_required
+@require_POST
+def verify_session_request_payment(request):
+    """Verify Razorpay's signature and only then mark the request as paid."""
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+        request_id = int(payload.get('request_id'))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return JsonResponse({'error': 'The payment response was invalid.'}, status=400)
+    session_request = get_object_or_404(ConsultationSessionRequest, pk=request_id, patient=request.user)
+    if session_request.payment_verified_at or session_request.status == ConsultationSessionRequest.Status.REQUESTED:
+        return JsonResponse({'redirect_url': f"{reverse('session_request', args=[session_request.doctor_connection_id])}?submitted={session_request.pk}"})
+    if payload.get('razorpay_order_id') != session_request.razorpay_order_id:
+        return JsonResponse({'error': 'The payment order does not match this request.'}, status=400)
+    try:
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        client.utility.verify_payment_signature({
+            'razorpay_payment_id': payload.get('razorpay_payment_id', ''),
+            'razorpay_order_id': payload.get('razorpay_order_id', ''),
+            'razorpay_signature': payload.get('razorpay_signature', ''),
+        })
+        order = client.order.fetch(session_request.razorpay_order_id)
+        if order.get('currency') != 'INR' or int(order.get('amount', 0)) != int(session_request.amount * 100):
+            raise ValueError('Payment amount mismatch.')
+    except (razorpay.errors.SignatureVerificationError, razorpay.errors.BadRequestError, ValueError):
+        return JsonResponse({'error': 'We could not verify that payment. No session request was submitted.'}, status=400)
+    now = timezone.now()
+    ConsultationSessionRequest.objects.filter(pk=session_request.pk, status=ConsultationSessionRequest.Status.PAYMENT_PENDING).update(
+        status=ConsultationSessionRequest.Status.REQUESTED,
+        razorpay_payment_id=payload['razorpay_payment_id'],
+        payment_verified_at=now,
+        updated_at=now,
+    )
+    return JsonResponse({'redirect_url': f"{reverse('session_request', args=[session_request.doctor_connection_id])}?submitted={session_request.pk}"})
+
+
+@login_required
+@require_GET
+def your_requests(request):
+    if request.user.account_type != User.AccountType.PATIENT:
+        return JsonResponse({'error': 'A patient account is required.'}, status=403)
+    connections = {
+        connection.doctor_email.casefold(): connection.pk
+        for connection in DoctorConnection.objects.filter(
+            user=request.user, source='oasis_doctor_portal',
+        )
+    }
+    profiles = {
+        connection.doctor_email.casefold(): connection.pk
+        for connection in DoctorConnection.objects.filter(user=request.user)
+    }
+    connection_requests = DoctorConnectionRequest.objects.filter(user=request.user)
+    for item in connection_requests:
+        if item.status == DoctorConnectionRequest.Status.ACCEPTED:
+            item.profile_connection_id = profiles.get(item.recipient_email.casefold())
+    consultation_requests = ConsultationSessionRequest.objects.filter(
+        patient=request.user,
+    ).select_related('doctor').order_by('-created_at')
+    for item in consultation_requests:
+        item.video_connection_id = connections.get(item.doctor.email.casefold())
+    return render(request, 'patient_portal/visits/your_requests.html', {
+        'connection_requests': connection_requests,
+        'consultation_requests': consultation_requests,
+    })
 
 
 @login_required
@@ -128,7 +335,7 @@ def direct_messages(request, thread_id=None):
             user=request.user,
             recipient_email__iexact=thread.doctor.email,
         ).order_by('-requested_at').first()
-    if request.method == 'POST' and thread:
+    if request.method == 'POST' and thread and connection_request and connection_request.status == DoctorConnectionRequest.Status.ACCEPTED:
         body = request.POST.get('body', '').strip()
         if body:
             DirectMessage.objects.create(thread=thread, sender=request.user, body=body)
@@ -483,7 +690,6 @@ def doctor_search(request):
     lookup = _connection_filter(request)
     connected_doctors = list(DoctorConnection.objects.filter(**lookup))
     connected_doctor = connected_doctors[0] if connected_doctors else None
-    request_just_sent = request.GET.get('request') == 'sent'
 
     for connection in connected_doctors:
         if connection.source != 'oasis_doctor_portal':
@@ -496,37 +702,13 @@ def doctor_search(request):
                 setattr(connection, field, value)
             connection.save(update_fields=[*values.keys(), 'updated_at'])
 
-    pending_request = None
-    if not connected_doctor:
-        pending_request = DoctorConnectionRequest.objects.filter(
-            **lookup,
-            status=DoctorConnectionRequest.Status.PENDING,
-        ).order_by('-requested_at').first()
-
-    if connected_doctors:
-        doctors = [{
-            'connection_id': connection.id, 'name': connection.doctor_name,
-            'specialty': connection.specialty, 'rating': '', 'experience': '', 'available': '',
-            'clinic_name': connection.clinic_name, 'clinic_address': connection.clinic_address,
-            'phone': connection.phone, 'email': connection.doctor_email, 'source': connection.source,
-            'icon': 'person',
-        } for connection in connected_doctors]
-    else:
-        email = pending_request.recipient_email if pending_request else 'doctor@clinic.com'
-        profile = _demo_profile_for(email)
-        doctors = [{
-            'name': profile['doctor_name'],
-            'specialty': profile['specialty'],
-            'rating': f"{profile['rating']} ★ ({profile['review_count']} reviews)",
-            'experience': f"{profile['experience_years']} yrs exp",
-            'available': f"Next available: {profile['next_available']}",
-            'icon': 'person',
-        }]
-        connected_doctor = type('PendingConnection', (), {
-            'clinic_name': profile['clinic_name'],
-            'clinic_address': profile['clinic_address'],
-            'doctor_email': email,
-        })()
+    doctors = [{
+        'connection_id': connection.id, 'name': connection.doctor_name,
+        'specialty': connection.specialty, 'rating': '', 'experience': '', 'available': '',
+        'clinic_name': connection.clinic_name, 'clinic_address': connection.clinic_address,
+        'phone': connection.phone, 'email': connection.doctor_email, 'source': connection.source,
+        'icon': 'person',
+    } for connection in connected_doctors]
 
     from doctor_portal.models import ReferralThread
     for doc in doctors:
@@ -539,18 +721,21 @@ def doctor_search(request):
             seen.add(referral.referred_doctor_id)
             user = referral.referred_doctor
             profile = getattr(user, 'doctor_profile', None)
-            doctors.append({'name':f'Dr. {user.get_full_name() or user.username}', 'specialty':profile.specialty if profile else '', 'clinic_name':profile.clinic_name if profile else '', 'clinic_address':profile.city if profile else '', 'phone':profile.phone if profile else '', 'email':user.email, 'source':'referral', 'group':'referred', 'referral_id':referral.pk, 'referring_name':referral.referring_doctor.get_full_name() or referral.referring_doctor.username, 'referral_type':referral.referral_type, 'referral_status':referral.get_status_display(), 'icon':'person'})
+            doctors.append({'name':f'Dr. {user.get_full_name() or user.username}', 'specialty':profile.specialty if profile else '', 'clinic_name':profile.clinic_name if profile else '', 'clinic_address':profile.city if profile else '', 'phone':profile.phone if profile else '', 'email':user.email, 'source':'referral', 'group':'referred', 'referral_id':referral.pk, 'referring_name':referral.referring_doctor.get_full_name() or referral.referring_doctor.username, 'referring_doctor_id':referral.referring_doctor.doctor_id, 'referral_type':referral.referral_type, 'referral_status':referral.get_status_display(), 'icon':'person'})
     for doc in doctors:
         doctor_user = User.objects.filter(email__iexact=doc.get('email', ''), account_type=User.AccountType.DOCTOR).first() if doc.get('email') else None
         if doctor_user:
             doc['doctor_id'] = doctor_user.pk
+            doc['portal_doctor_id'] = doctor_user.doctor_id
+            doc['profile_image_url'] = doctor_user.profile_image_url
+            doc['availability_windows'] = doctor_user.availability_windows.filter(starts_at__gt=timezone.now())[:5]
             thread = DirectMessageThread.objects.filter(patient=request.user, doctor=doctor_user).first() if request.user.is_authenticated else None
             doc['message_url'] = reverse('direct_messages', args=[thread.pk]) if thread else ''
     context = {
         'doctors': doctors,
         'query': '',
-        'selected_doctor': doctors[0],
         'connected_doctor': connected_doctor,
+        'availability_timezone': timezone.get_current_timezone_name(),
     }
     return render(request, 'patient_portal/visits/doctor_search.html', context)
 
@@ -604,6 +789,7 @@ def patient_google_meet(request):
             'doctor_name': doctor.get_full_name() or doctor.username,
             'notice': notice,
             'events': events,
+            'request_session_url': reverse('session_request', args=[connection.pk]),
         })
     return render(request, 'patient_portal/visits/google_meet.html', {
         'doctor': doctor, 'events': events, 'notice': notice,

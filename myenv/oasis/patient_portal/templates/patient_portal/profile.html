@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends profile_base|default:'base.html' %}
 {% block title %}Profile & Settings | Oasis{% endblock %}
 {% block content %}
 <style>
@@ -11,7 +11,11 @@
 <div><dt>Full name</dt><dd>{{ request.user.get_full_name|default:'Not provided' }}</dd></div>
 <div><dt>Email address</dt><dd>{{ request.user.email }}</dd></div>
 <div><dt>Username</dt><dd>{{ request.user.username }}</dd></div>
+{% if is_doctor_profile %}
+<div><dt>Doctor ID</dt><dd>{{ request.user.doctor_id|default:'Not assigned' }}</dd></div>
+{% else %}
 <div><dt>Patient ID</dt><dd>{{ request.user.patient_id|default:'Not assigned' }}</dd></div>
+{% endif %}
 <div><dt>Member since</dt><dd>{{ request.user.date_joined|date:'d F Y' }}</dd></div>
 <div><dt>Account type</dt><dd>{{ request.user.get_account_type_display }}</dd></div>
 </dl>

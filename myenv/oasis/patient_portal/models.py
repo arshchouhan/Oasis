@@ -107,5 +107,72 @@ class PatientNote(models.Model):
         ordering = ('-updated_at',)
 
 
-from .symptom_models import EyeScan  # noqa: E402,F401
-from .visit_models import DoctorConnection, DoctorConnectionRequest  # noqa: E402,F401
+class ColourVisionSession(models.Model):
+    """A resumable, patient-owned colour-plate activity."""
+
+    class Status(models.TextChoices):
+        ACTIVE = 'active', 'Active'
+        COMPLETED = 'completed', 'Completed'
+        ENDED = 'ended', 'Ended early'
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='colour_vision_sessions')
+    current_plate = models.PositiveSmallIntegerField(default=0)
+    correct_answers = models.PositiveSmallIntegerField(default=0)
+    elapsed_seconds = models.PositiveIntegerField(default=0)
+    responses = models.JSONField(default=list, blank=True)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.ACTIVE)
+    started_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('-updated_at',)
+
+
+class MarketplaceProduct(models.Model):
+    """A clinician-neutral eye-care product shown in the patient marketplace."""
+
+    class Category(models.TextChoices):
+        SCREEN_COMFORT = 'screen_comfort', 'Screen comfort'
+        DRY_EYE = 'dry_eye', 'Dry-eye support'
+        LENS_CARE = 'lens_care', 'Lens care'
+        PROTECTION = 'protection', 'Eye protection'
+        EVERYDAY = 'everyday', 'Everyday care'
+
+    name = models.CharField(max_length=140)
+    slug = models.SlugField(unique=True)
+    category = models.CharField(max_length=32, choices=Category.choices)
+    short_description = models.CharField(max_length=220)
+    details = models.TextField(max_length=1200)
+    image_path = models.CharField(max_length=220, help_text='Path relative to the static directory.')
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
+    badge = models.CharField(max_length=48, blank=True)
+    is_featured = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-is_featured', 'category', 'name')
+
+    def __str__(self):
+        return self.name
+
+
+class MarketplaceCartItem(models.Model):
+    """A patient-owned marketplace basket that persists between visits."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='marketplace_cart_items')
+    product = models.ForeignKey(MarketplaceProduct, on_delete=models.CASCADE, related_name='cart_items')
+    quantity = models.PositiveSmallIntegerField(default=1)
+    added_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-updated_at',)
+        constraints = [models.UniqueConstraint(fields=('user', 'product'), name='unique_marketplace_cart_item')]
+
+
+from .symptom_models import EyeImageReview, EyeScan  # noqa: E402,F401
+from .visit_models import ConsultationSessionRequest, DoctorConnection, DoctorConnectionRequest  # noqa: E402,F401

@@ -1,0 +1,64 @@
+.plan-page{max-width:1280px;margin:0 auto;padding:30px 34px 52px;color:#10284a}
+.plan-header{display:flex;justify-content:space-between;align-items:flex-end;gap:28px;margin-bottom:24px}
+.plan-eyebrow{display:block;color:#087f8c;font-size:11px;font-weight:800;letter-spacing:.14em}
+.plan-header h1{max-width:720px;margin:8px 0 8px;color:#062d57;font-size:clamp(30px,4vw,48px);letter-spacing:-1.8px;line-height:1.04}
+.plan-header p{max-width:720px;margin:0;color:#587493;line-height:1.6}
+.plan-month-picker{display:grid;gap:7px;min-width:170px;color:#587493;font-size:12px;font-weight:700}
+.plan-month-picker input{border:1px solid #b9d7d2;border-radius:4px;padding:11px 12px;color:#174663;background:#fff;font:inherit}
+.plan-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-bottom:22px;border:1px solid #d5e3e7;background:#d5e3e7}
+.plan-summary>div{display:grid;grid-template-columns:30px 1fr;align-items:center;column-gap:8px;padding:15px 18px;background:#fff}
+.plan-summary .material-symbols-outlined{grid-row:span 2;color:#087f8c}
+.plan-summary strong{font-size:20px;color:#062d57}.plan-summary small{color:#587493;font-size:12px}
+.plan-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.75fr);gap:22px;align-items:start}
+.plan-main,.plan-card{border:1px solid #d5e3e7;background:#fff}
+.plan-main{padding:24px}
+.plan-section-heading{display:flex;justify-content:space-between;align-items:end;gap:16px}
+.plan-section-heading h2{margin:7px 0 0;color:#062d57;font-size:25px}
+.plan-reset{border:0;background:transparent;color:#087f8c;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.plan-reset:hover{text-decoration:underline}
+.plan-weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:22px;border-bottom:1px solid #d5e3e7}
+.plan-week{display:grid;gap:4px;border:0;border-bottom:3px solid transparent;padding:12px 8px;background:#f6faf9;color:#587493;font:inherit;text-align:left;cursor:pointer}
+.plan-week span{font-weight:800}.plan-week small{font-size:11px}.plan-week:hover{background:#edf7f5}.plan-week.is-active{border-color:#087f8c;background:#fff;color:#087f8c}
+.plan-week-intro{min-height:44px;padding:18px 0 8px;color:#587493;font-size:13px;line-height:1.5}
+.plan-days{display:grid;gap:10px}
+.plan-day{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:14px;border:1px solid #e1ebed;padding:13px 15px;background:#fbfdfd}
+.plan-day.is-complete{border-color:#b9d7d2;background:#f0f8f6}.plan-day-number{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#e2f1ed;color:#087f8c;font-size:12px;font-weight:800}
+.plan-day-content{min-width:0}.plan-day h3{margin:0 0 3px;color:#174663;font-size:15px}.plan-day p{margin:0;color:#587493;font-size:12px;line-height:1.4}.plan-day time{display:block;color:#8aa0ad;font-size:11px}
+.plan-edit-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.plan-edit-controls label{display:grid;gap:4px;color:#587493;font-size:10px;font-weight:700}.plan-edit-controls select,.plan-edit-controls input{min-height:30px;border:1px solid #c5dcd9;border-radius:3px;padding:4px 7px;background:#fff;color:#174663;font:inherit;font-size:11px}
+.plan-day-actions{display:grid;justify-items:end;gap:7px}.plan-guide-link{color:#087f8c;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap}.plan-guide-link:hover{text-decoration:underline}.plan-check{display:inline-flex;align-items:center;gap:6px;border:1px solid #a8c6c5;border-radius:4px;padding:8px 10px;background:#fff;color:#087f8c;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}.plan-check:hover{background:#e8f7f5}.plan-day.is-complete .plan-check{border-color:#087f8c;background:#087f8c;color:#fff}
+.plan-side{display:grid;gap:16px}.plan-card{padding:23px}.plan-card h2{margin:8px 0;color:#062d57;font-size:21px;line-height:1.2}.plan-card p{margin:0 0 19px;color:#587493;font-size:13px;line-height:1.55}.plan-today{background:linear-gradient(145deg,#f0faf7,#fff)}
+.plan-today-link{display:inline-flex;align-items:center;gap:4px;margin-bottom:16px}.plan-today-link .material-symbols-outlined{font-size:15px}.plan-primary{display:inline-flex;align-items:center;gap:7px;border:0;padding:11px 14px;background:#087f8c;color:#fff;font:inherit;font-size:12px;font-weight:800;cursor:pointer}.plan-primary:hover{background:#066f7a}.plan-primary .material-symbols-outlined{font-size:17px}
+.plan-card-heading{display:flex;align-items:center;gap:8px}.plan-card-heading .material-symbols-outlined{color:#087f8c}.plan-card-heading h2{margin:0;font-size:17px}.plan-tips{display:grid;gap:13px;margin:18px 0 0;padding:0 0 0 20px;color:#587493;font-size:13px;line-height:1.5}.plan-tips li::marker{color:#087f8c}
+@media(max-width:850px){.plan-page{padding:22px 18px 40px}.plan-header{display:grid;align-items:start}.plan-layout{grid-template-columns:1fr}.plan-side{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.plan-summary{grid-template-columns:1fr}.plan-summary>div{padding:12px 16px}.plan-main{padding:17px}.plan-weeks{overflow:auto}.plan-week{min-width:110px}.plan-day{grid-template-columns:36px minmax(0,1fr);gap:10px;padding:12px}.plan-day-actions{grid-column:2;justify-items:start}.plan-day .plan-check{justify-self:start}.plan-side{grid-template-columns:1fr}}
+
+.plan-consult {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    margin: 14px 0;
+    padding: 12px 14px;
+    border: 1px solid #bed9dc;
+    border-radius: 12px;
+    background: #f3f8f9;
+    color: #102f52;
+}
+.plan-consult p { margin: 3px 0 0; color: #526c87; font-size: 13px; }
+.plan-consult a { text-decoration: none; }
+
+.plan-start-exercise {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #006d78;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+.plan-start-exercise:hover { background: #005863; }
+.plan-start-exercise .material-symbols-outlined { font-size: 18px; }

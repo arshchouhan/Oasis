@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Checkout | Oasis{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/marketplace.css' %}">
+<section class="checkout-page" aria-labelledby="checkoutTitle">
+  {% if order_placed %}
+  <div class="checkout-success">
+    <span class="material-symbols-outlined">check_circle</span>
+    <span class="marketplace-kicker">ORDER CONFIRMED</span>
+    <h1 id="checkoutTitle">Your care order is confirmed.</h1>
+    <p>Your payment was verified and your order has been placed.</p>
+    <strong>Reference: {{ order_reference }}</strong>
+    <a class="checkout-button" href="{% url 'marketplace' %}">Return to marketplace</a>
+  </div>
+  {% else %}
+  <a class="checkout-back" href="{% url 'marketplace' %}"><span class="material-symbols-outlined">arrow_back</span>Back to marketplace</a>
+  <header class="checkout-header"><span class="marketplace-kicker">SECURE CHECKOUT</span><h1 id="checkoutTitle">Complete your care order.</h1><p>Enter your delivery details, then continue to secure payment.</p></header>
+  <div class="checkout-layout">
+    <form class="checkout-form" id="checkoutForm" method="post" data-order-url="{% url 'marketplace_payment_order' %}">
+      {% csrf_token %}
+      <section><h2>Delivery details</h2><div class="checkout-fields"><label>Full name<input name="full_name" required autocomplete="name"></label><label>Address<input name="address" required autocomplete="street-address"></label><label>City<input name="city" required autocomplete="address-level2"></label><label>Postal code<input name="postal_code" required inputmode="numeric" autocomplete="postal-code"></label></div></section>
+      <section><h2>Payment</h2><p class="checkout-demo-note"><span class="material-symbols-outlined">lock</span>You will choose your payment method in the secure payment window.</p><button class="checkout-button checkout-pay-trigger" id="openPayment" type="button">Continue to payment <span class="material-symbols-outlined">arrow_forward</span></button></section>
+    </form>
+    <aside class="checkout-summary"><span class="plan-eyebrow">ORDER SUMMARY</span>{% for item in cart_items %}<div><span>{{ item.product.name }} × {{ item.quantity }}</span><strong>₹{{ item.product.price|floatformat:2 }}</strong></div>{% endfor %}<hr><div class="checkout-total"><span>Total</span><strong>₹{{ cart_total|floatformat:2 }}</strong></div></aside>
+  </div>
+  {% endif %}
+</section>
+{% if not order_placed %}<script src="https://checkout.razorpay.com/v1/checkout.js"></script><script src="{% static 'js/checkout.js' %}"></script>{% endif %}
+{% endblock %}

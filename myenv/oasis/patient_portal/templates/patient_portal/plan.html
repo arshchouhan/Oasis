@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Monthly Plan | Oasis{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/plan.css' %}">
+<section class="plan-page" data-plan-key="oasis-monthly-plan-{{ request.user.pk }}" data-guided-url="{% url 'environment' %}">
+    <header class="plan-header">
+        <div>
+            <span class="plan-eyebrow">YOUR MONTHLY ROUTINE</span>
+            <h1>Plan a kinder month for your eyes.</h1>
+            <p>Small, repeatable habits can make screen-heavy days feel more manageable. Use this plan as a gentle guide, not a medical prescription.</p>
+        </div>
+        <div class="plan-month-picker">
+            <label for="planMonth">Planning month</label>
+            <input id="planMonth" type="month">
+        </div>
+    </header>
+
+    <div class="plan-summary" aria-label="Monthly plan summary">
+        <div><span class="material-symbols-outlined">event_available</span><strong id="planCompleted">0</strong><small>completed this month</small></div>
+        <div><span class="material-symbols-outlined">track_changes</span><strong id="planStreak">0</strong><small>day streak</small></div>
+        <div><span class="material-symbols-outlined">schedule</span><strong>5–10 min</strong><small>most daily routines</small></div>
+    </div>
+
+    <div class="plan-layout">
+        <section class="plan-main" aria-labelledby="routineTitle">
+            <div class="plan-section-heading">
+                <div><span class="plan-eyebrow">FOUR WEEK GUIDE</span><h2 id="routineTitle">Build your routine gradually</h2></div>
+                <button class="plan-reset" id="planReset" type="button">Reset progress</button>
+            </div>
+            <div class="plan-weeks" role="tablist" aria-label="Plan weeks">
+                <button class="plan-week is-active" type="button" role="tab" aria-selected="true" data-week="1"><span>Week 1</span><small>Start gently</small></button>
+                <button class="plan-week" type="button" role="tab" aria-selected="false" data-week="2"><span>Week 2</span><small>Add variety</small></button>
+                <button class="plan-week" type="button" role="tab" aria-selected="false" data-week="3"><span>Week 3</span><small>Build rhythm</small></button>
+                <button class="plan-week" type="button" role="tab" aria-selected="false" data-week="4"><span>Week 4</span><small>Reflect gently</small></button>
+            </div>
+            <div class="plan-consult">
+                <div><strong>Want help with your eye-care plan?</strong><p>Choose a doctor to view consultation options.</p></div>
+                <a class="btn btn-primary-outline" href="{% url 'doctor_search' %}">
+                    <span class="material-symbols-outlined" aria-hidden="true">videocam</span>
+                    Consult a doctor
+                </a>
+            </div>
+            <div class="plan-week-intro" id="planWeekIntro">Choose an exercise and time for each day. Your plan is saved on this device.</div>
+            <div class="plan-days" id="planDays"></div>
+        </section>
+
+        <aside class="plan-side">
+            <section class="plan-card plan-today">
+                <span class="plan-eyebrow">TODAY'S FOCUS</span>
+                <h2 id="todayTitle">A comfortable screen break</h2>
+                <p id="todayCopy">Look into the distance, relax your shoulders, and let your eyes soften for a few minutes.</p>
+                <a class="plan-guide-link plan-today-link" id="todayGuideLink" href="{% url 'environment' %}">Start exercise <span class="material-symbols-outlined">arrow_forward</span></a>
+                <button class="plan-primary" id="todayAction" type="button">Mark today complete <span class="material-symbols-outlined">check</span></button>
+            </section>
+            <section class="plan-card">
+                <div class="plan-card-heading"><span class="material-symbols-outlined">lightbulb</span><h2>Make it easier to follow</h2></div>
+                <ul class="plan-tips">
+                    <li>Attach the routine to a habit you already have, like lunch or your evening tea.</li>
+                    <li>Missed a day? Continue with the next one—there is no need to catch up.</li>
+                    <li>Stop if you feel pain, dizziness, or a sudden change in vision.</li>
+                </ul>
+            </section>
+        </aside>
+    </div>
+</section>
+<script src="{% static 'js/plan.js' %}"></script>
+{% endblock %}

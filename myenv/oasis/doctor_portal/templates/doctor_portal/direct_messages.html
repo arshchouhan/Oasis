@@ -10,6 +10,7 @@
     .doctor-dm-list::-webkit-scrollbar,.doctor-dm-body::-webkit-scrollbar { display:none; }
     .doctor-dm-list-heading { display:flex; align-items:center; justify-content:space-between; margin:0 4px 16px 12px; }
     .doctor-dm-list h1 { margin:0; font-size:24px; font-weight:500; }
+    .doctor-dm-heading-count{display:inline-grid;place-items:center;min-width:22px;height:22px;margin-left:7px;padding:0 6px;border-radius:99px;background:#e6f4f1;color:#087f8c;font-size:11px;font-weight:800;vertical-align:middle}
     .doctor-dm-close { width:36px; height:36px; display:grid; place-items:center; border:0; border-radius:50%; color:#526d8d; background:transparent; cursor:pointer; }
     .doctor-dm-close:hover { background:#edf3f6; }
     .doctor-dm-item { margin:4px 0; padding:10px; border-radius:14px; }
@@ -24,6 +25,7 @@
     .doctor-dm-actions button { width:29px; height:29px; display:grid; place-items:center; border:0; border-radius:50%; cursor:pointer; }
     .doctor-dm-accept { background:#087f8c; color:#fff; } .doctor-dm-decline { background:#fbe8e7; color:#b33a32; }
     .doctor-dm-state { margin:8px 0 0 51px; color:#607590; font-size:12px; }
+    .doctor-request-card{display:flex;align-items:flex-start;gap:12px;margin:0 22px 12px;padding:15px;border:1px solid #b9d7d2;border-radius:14px;background:#f0faf7}.doctor-request-card .material-symbols-outlined{color:#087f8c;font-size:24px}.doctor-request-card strong{display:block;color:#10284a;font-size:13px}.doctor-request-card p{margin:4px 0 12px;color:#527194;font-size:12px;line-height:1.45}.doctor-request-actions{display:flex;gap:8px}.doctor-request-actions button{border:0;border-radius:4px;padding:8px 11px;font:700 12px inherit;cursor:pointer}.doctor-request-actions .accept{background:#087f8c;color:#fff}.doctor-request-actions .decline{border:1px solid #e5b7b4;background:#fff;color:#a33d38}
     .doctor-dm-chat { min-width:0; flex:1; display:flex; flex-direction:column; overflow:hidden; }
     .doctor-dm-head { display:flex; align-items:center; gap:12px; padding:18px 22px; border-bottom:1px solid #e2ebf1; }
     .doctor-dm-head h2 { margin:0; font-size:17px; } .doctor-dm-head small { color:#698098; }
@@ -43,9 +45,10 @@
     .doctor-dm-list,.doctor-dm-chat { transition:width .28s ease, min-width .28s ease, flex .28s ease, padding .28s ease, opacity .2s ease, transform .28s ease; }
     @media (max-width:800px) { .doctor-dm { gap:10px; } .doctor-dm-list { width:38%; min-width:200px; } .doctor-dm-body { padding:22px; } }
 </style>
+<style>.doctor-dm-back{display:grid;place-items:center;color:#087f8c;text-decoration:none;width:36px;height:36px;border-radius:50%}.doctor-dm-back:hover{background:#e8f4f3}.doctor-dm-back:focus-visible{outline:2px solid #087f8c}</style>
 <section class="doctor-dm">
-    <aside class="doctor-dm-list" data-doctor-pane="list">
-        <div class="doctor-dm-list-heading"><h1>Direct messages</h1><button type="button" class="doctor-dm-close" data-close-pane="list" aria-label="Close direct message list"><span class="material-symbols-outlined">close</span></button></div>
+    {% if not single_layout %}<aside class="doctor-dm-list" data-doctor-pane="list">
+        <div class="doctor-dm-list-heading"><h1>Direct messages{% if pending_request_count %}<span class="doctor-dm-heading-count">{{ pending_request_count }} pending</span>{% endif %}</h1><button type="button" class="doctor-dm-close" data-close-pane="list" aria-label="Close direct message list"><span class="material-symbols-outlined">close</span></button></div>
         {% for item in thread_items %}
             <div class="doctor-dm-item {% if thread and item.thread.id == thread.id %}active{% endif %}">
                 <a class="doctor-dm-thread" href="{% url 'doctor_direct_messages' item.thread.id %}">
@@ -61,13 +64,13 @@
                 {% elif item.connection_request %}<div class="doctor-dm-state">{{ item.connection_request.get_status_display }}</div>{% endif %}
             </div>
         {% empty %}<p style="padding:12px;color:#698098;line-height:1.5;">Patient connection chats will appear here.</p>{% endfor %}
-<div class="dm-list-art"><img src="{% static 'images/chat-care.svg' %}" alt="" aria-hidden="true"><p>Stay connected with your care team.<br>Keep your questions and care conversations in one place.</p></div>    </aside>
+<div class="dm-list-art"><img src="{% static 'images/chat-care.svg' %}" alt="" aria-hidden="true"><p>Stay connected with your care team.<br>Keep your questions and care conversations in one place.</p></div>    </aside>{% endif %}
     <main class="doctor-dm-chat" data-doctor-pane="chat">
         {% if thread %}
-            <header class="doctor-dm-head"><span class="doctor-dm-avatar">{% avatar_url thread.patient as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>{{ thread.patient.first_name|first|default:thread.patient.username|first }}{{ thread.patient.last_name|first }}</span>{% else %}{{ thread.patient.first_name|first|default:thread.patient.username|first }}{{ thread.patient.last_name|first }}{% endif %}</span><span><h2>{{ thread.patient.get_full_name|default:thread.patient.username }}</h2><small>{% if connection_request %}{{ connection_request.get_status_display }} connection request{% else %}Patient conversation{% endif %}</small></span><button type="button" class="doctor-dm-close" style="margin-left:auto;" data-close-pane="chat" aria-label="Close conversation"><span class="material-symbols-outlined">close</span></button></header>
+            <header class="doctor-dm-head">{% if single_layout %}<a href="{% url 'doctor_connections' %}" class="doctor-dm-back" aria-label="Back to patients"><span class="material-symbols-outlined">arrow_back</span></a>{% endif %}<span class="doctor-dm-avatar">{% avatar_url thread.patient as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>{{ thread.patient.first_name|first|default:thread.patient.username|first }}{{ thread.patient.last_name|first }}</span>{% else %}{{ thread.patient.first_name|first|default:thread.patient.username|first }}{{ thread.patient.last_name|first }}{% endif %}</span><span><h2>{{ thread.patient.get_full_name|default:thread.patient.username }}</h2><small>{% if connection_request and connection_request.status == 'accepted' %}<span style="color:#087f8c;">● Connected</span>{% elif connection_request %}{{ connection_request.get_status_display }} · action needed{% else %}Patient conversation{% endif %}{% if thread.patient.patient_id %} &middot; Patient ID {{ thread.patient.patient_id }}{% endif %}</small></span>{% if not single_layout %}<button type="button" class="doctor-dm-close" style="margin-left:auto;" data-close-pane="chat" aria-label="Close conversation"><span class="material-symbols-outlined">close</span></button>{% endif %}</header>
             <div class="doctor-dm-body">
                 {% if connection_request and connection_request.status == 'pending' %}
-                    <div class="doctor-dm-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2;">person_add</span><h3>Connection request pending</h3><p>Accept this patient's request using the check button on the left to start chatting.</p></div>
+                    <div class="doctor-request-card"><span class="material-symbols-outlined">person_add</span><div><strong>{{ thread.patient.get_full_name|default:thread.patient.username }} wants to connect</strong><p>Accept to open a private conversation. Declining keeps the patient from sending messages.</p><div class="doctor-request-actions"><form method="post" action="{% url 'doctor_connection_request_decision' thread.id %}">{% csrf_token %}<button class="accept" type="submit" name="decision" value="accept">Accept request</button></form><form method="post" action="{% url 'doctor_connection_request_decision' thread.id %}">{% csrf_token %}<button class="decline" type="submit" name="decision" value="decline">Decline</button></form></div></div></div><div class="doctor-dm-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#39a5b2;">forum</span><h3>Review before you reply</h3><p>You control when this patient can start a private chat.</p></div>
                 {% elif connection_request and connection_request.status == 'declined' %}
                     <div class="doctor-dm-empty"><span class="material-symbols-outlined" style="font-size:44px;color:#899aaa;">block</span><h3>Connection declined</h3><p>This conversation is not available for replies.</p></div>
                 {% else %}

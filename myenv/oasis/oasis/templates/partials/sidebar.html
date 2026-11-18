@@ -9,7 +9,7 @@
     <nav class="sidebar-nav">
         <ul class="nav-list">
             <li
-                class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'symptom_tracker' or request.resolver_match.url_name == 'reports' %}open{% endif %}">
+                class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'symptom_tracker' or request.resolver_match.url_name == 'reports' or request.resolver_match.url_name == 'other_eye_tests' or request.resolver_match.url_name == 'plan' %}open{% endif %}">
                 <a href="#" class="nav-link nav-link-toggle" role="button" aria-expanded="false">
                     <span class="material-symbols-outlined nav-caret">arrow_right</span>
                     <span class="material-symbols-outlined nav-main-icon">dashboard</span>
@@ -25,14 +25,26 @@
                     <li class="nav-submenu-item">
                         <a href="{% url 'reports' %}"
                             class="nav-submenu-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
-                            <span class="nav-text">Reports</span>
+                            <span class="nav-text">Tracker reports</span>
+                        </a>
+                    </li>
+                    <li class="nav-submenu-item">
+                        <a href="{% url 'other_eye_tests' %}"
+                            class="nav-submenu-link {% if request.resolver_match.url_name == 'other_eye_tests' %}active{% endif %}">
+                            <span class="nav-text">Other tests</span>
+                        </a>
+                    </li>
+                    <li class="nav-submenu-item">
+                        <a href="{% url 'plan' %}"
+                            class="nav-submenu-link {% if request.resolver_match.url_name == 'plan' %}active{% endif %}">
+                            <span class="nav-text">Plan</span>
                         </a>
                     </li>
                 </ul>
             </li>
 
             <li
-                class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'find_doctor' or request.resolver_match.url_name == 'doctor_search' or request.resolver_match.url_name == 'direct_messages' %}open{% endif %}">
+                class="nav-item nav-item-has-submenu {% if request.resolver_match.url_name == 'find_doctor' or request.resolver_match.url_name == 'doctor_search' %}open{% endif %}">
                 <a href="#" class="nav-link nav-link-toggle" role="button" aria-expanded="false">
                     <span class="material-symbols-outlined nav-caret">arrow_right</span>
                     <span class="material-symbols-outlined nav-main-icon">stethoscope</span>
@@ -45,12 +57,6 @@
                             <span class="nav-text">Your Doctor</span>
                         </a>
                     </li>
-                    <li class="nav-submenu-item">
-                        <a href="{% url 'direct_messages' %}"
-                            class="nav-submenu-link {% if request.resolver_match.url_name == 'direct_messages' %}active{% endif %}">
-                            <span class="nav-text">Direct Messages</span>
-                        </a>
-                    </li>
                 </ul>
             </li>
 
@@ -60,6 +66,14 @@
                     <span class="material-symbols-outlined nav-arrow">arrow_right</span>
                     <span class="material-symbols-outlined">self_improvement</span>
                     <span class="nav-text">Guided Eye Care</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'marketplace' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'marketplace' %}active{% endif %}">
+                    <span class="material-symbols-outlined nav-arrow">arrow_right</span>
+                    <span class="material-symbols-outlined">storefront</span>
+                    <span class="nav-text">Marketplace</span>
                 </a>
             </li>
         </ul>

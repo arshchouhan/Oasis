@@ -1,0 +1,92 @@
+<style>
+.doctor-request-wrap { position: relative; }
+.doctor-request-popover {
+    position: absolute; z-index: 50; right: 0; top: calc(100% + 10px);
+    width: min(420px, calc(100vw - 32px)); max-height: min(480px, 70vh);
+    overflow: auto; box-sizing: border-box; padding: 14px;
+    background: #fff; border: 1px solid #c9dfe1; border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(19,49,74,.18); color: #102f52;
+}
+.doctor-request-popover header { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: #e8f2f2; }
+.doctor-request-popover header .material-symbols-outlined { color: #087f8c; }
+.doctor-request-switch { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin: 14px 0; }
+.doctor-request-switch button,.doctor-request-popover .request-item a {
+    padding: 8px 10px; border: 1px solid #bed9dc; border-radius: 10px;
+    background: #f7fbfb; color: #00656f; font: inherit; font-size: 13px;
+    font-weight: 600; cursor: pointer;
+}
+.doctor-request-switch button[aria-pressed="true"],.doctor-request-popover .request-item a:hover { background: #e1f1ef; border-color: #087f8c; }
+.doctor-request-popover .request-item,.doctor-request-popover .request-empty {
+    margin-top: 8px; padding: 12px; border: 1px solid #bed9dc;
+    border-radius: 12px; background: #f7fbfb; overflow-wrap: anywhere;
+}
+.doctor-request-popover .request-item h3 { margin: 0 0 4px; font-size: 15px; }
+.doctor-request-popover .request-item p,.doctor-request-popover small,.doctor-request-popover .request-empty { margin: 4px 0; color: #526c87; font-size: 13px; }
+.doctor-request-popover .request-item a { display: inline-block; margin-top: 10px; text-decoration: none; background: #fff; }
+@media (max-width: 600px) { .doctor-request-popover { position: fixed; inset: 70px 16px auto; width: auto; } }
+</style>
+<div class="doctor-request-wrap" id="doctorRequestWrap">
+    <button class="btn btn-primary-outline" id="doctorRequestTrigger" type="button" aria-expanded="false" aria-controls="doctorRequestPopover">
+        <span class="material-symbols-outlined" aria-hidden="true">notifications_active</span>Requests
+    </button>
+    <section class="doctor-request-popover" id="doctorRequestPopover" aria-label="Requests" hidden>
+        <header><span class="material-symbols-outlined" aria-hidden="true">assignment</span><strong>Requests</strong></header>
+        <div id="doctorRequestResults" aria-live="polite"></div>
+    </section>
+</div>
+<script>
+(() => {
+    const wrap = document.getElementById('doctorRequestWrap');
+    const trigger = document.getElementById('doctorRequestTrigger');
+    const popover = document.getElementById('doctorRequestPopover');
+    const results = document.getElementById('doctorRequestResults');
+    let controller;
+
+    function close() {
+        controller?.abort();
+        popover.hidden = true;
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    trigger.addEventListener('click', async () => {
+        if (!popover.hidden) {
+            close();
+            return;
+        }
+        popover.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+        results.textContent = 'Loading requests…';
+        controller = new AbortController();
+        const {signal} = controller;
+        try {
+            const response = await fetch('{% url "doctor_requests" %}?panel=1', {signal, cache: 'no-store'});
+            if (!response.ok || response.redirected) throw new Error();
+            const content = await response.text();
+            if (!signal.aborted) results.innerHTML = content;
+        } catch {
+            if (!signal.aborted) results.textContent = 'Could not load requests. Close and reopen to try again.';
+        }
+    });
+
+    results.addEventListener('click', event => {
+        const selected = event.target.closest('.doctor-request-switch button');
+        if (!selected) return;
+        for (const button of results.querySelectorAll('.doctor-request-switch button')) {
+            const active = button === selected;
+            button.setAttribute('aria-pressed', String(active));
+            document.getElementById(button.getAttribute('aria-controls')).hidden = !active;
+        }
+    });
+    document.addEventListener('click', event => {
+        if (!popover.hidden && !wrap.contains(event.target)) close();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !popover.hidden) {
+            close();
+            trigger.focus();
+        }
+    });
+
+    if (new URLSearchParams(window.location.search).get('requests') === 'open') trigger.click();
+})();
+</script>

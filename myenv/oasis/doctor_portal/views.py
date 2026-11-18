@@ -9,10 +9,12 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django import forms
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Exists, OuterRef
 from django.views.decorators.http import require_http_methods
-from django.http import JsonResponse
+from django.db import transaction
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from django.shortcuts import redirect, render
@@ -20,8 +22,8 @@ from django.urls import reverse
 from django.urls import reverse
 
 from patient_portal.models import DirectMessage, DirectMessageThread, User
-from patient_portal.visit_models import DoctorConnection, DoctorConnectionRequest
-from .models import DoctorProfile, GoogleCalendarConnection, ReferralActivity, ReferralThread, SharedDigitalReport
+from patient_portal.visit_models import ConsultationSessionRequest, DoctorConnection, DoctorConnectionRequest
+from .models import DoctorAvailability, DoctorProfile, GoogleCalendarConnection, ReferralActivity, ReferralThread, SharedDigitalReport
 from .models import CommunityPost, CommunityReply
 from .community_forms import CommunityPostForm, CommunityReplyForm
 
@@ -29,7 +31,8 @@ from .community_forms import CommunityPostForm, CommunityReplyForm
 @login_required
 @require_http_methods(['GET', 'POST'])
 def consultation_workspace(request, patient_id):
-    from django.forms import modelform_factory, DateTimeInput, Textarea
+    from django.forms import ChoiceField, DateTimeInput, Textarea, modelform_factory
+    from patient_portal.models import MarketplaceProduct
     from .models import ConsultationRecord
     patient = _care_patient(request.user, patient_id)
     if not patient:
@@ -37,10 +40,16 @@ def consultation_workspace(request, patient_id):
     Form = modelform_factory(ConsultationRecord, fields=('consulted_at', 'notes', 'prescription', 'follow_up'), widgets={
         'consulted_at': DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
         'notes': Textarea(attrs={'rows':4,'placeholder':'Consultation summary and advice discussed with the patient'}),
-        'prescription': Textarea(attrs={'rows':4,'placeholder':'Medication, dose, frequency and duration, if prescribed'}),
         'follow_up': Textarea(attrs={'rows':3,'placeholder':'Next review date and care instructions'}),
     })
     form = Form(request.POST or None, initial={'consulted_at': timezone.localtime().strftime('%Y-%m-%dT%H:%M')})
+    product_names = MarketplaceProduct.objects.filter(is_active=True).order_by('name').values_list('name', flat=True).distinct()
+    form.fields['prescription'] = ChoiceField(
+        label='Marketplace item',
+        required=False,
+        choices=[('', 'Select an eye-care item'), *((name, name) for name in product_names)],
+        error_messages={'invalid_choice': 'Select an item from the patient marketplace.'},
+    )
     if request.method == 'POST':
         if not form.is_valid():
             return JsonResponse({'error': ' '.join(f'{field}: {", ".join(errors)}' for field,errors in form.errors.items())}, status=400)
@@ -112,7 +121,13 @@ def get_doctor_meet_events(doctor, patient=None, history=False):
         meet_url = next((entry.get('uri') for entry in entries if entry.get('entryPointType') == 'video'), event.get('hangoutLink', ''))
         if meet_url:
             attendee = next((item for item in event.get('attendees', []) if patient and item.get('email', '').lower() == patient.email.lower()), {})
-            events.append({'title': event.get('summary') or 'Google Meet consultation', 'start': event.get('start', {}).get('dateTime', event.get('start', {}).get('date', '')), 'end': event.get('end', {}).get('dateTime', event.get('end', {}).get('date', '')), 'timezone': event.get('start', {}).get('timeZone') or 'Asia/Kolkata', 'description': event.get('description', ''), 'status': event.get('status', 'confirmed'), 'invitation_status': attendee.get('responseStatus', ''), 'doctor_name': doctor.get_full_name() or doctor.username, 'doctor_email': doctor.email, 'meet_url': meet_url})
+            if patient:
+                patient_names = [patient.get_full_name() or patient.username]
+            else:
+                attendee_emails = [item.get('email', '') for item in event.get('attendees', [])]
+                patients = User.objects.filter(account_type=User.AccountType.PATIENT, email__in=attendee_emails)
+                patient_names = [person.get_full_name() or person.username for person in patients]
+            events.append({'title': event.get('summary') or 'Google Meet consultation', 'start': event.get('start', {}).get('dateTime', event.get('start', {}).get('date', '')), 'end': event.get('end', {}).get('dateTime', event.get('end', {}).get('date', '')), 'timezone': event.get('start', {}).get('timeZone') or 'Asia/Kolkata', 'description': event.get('description', ''), 'status': event.get('status', 'confirmed'), 'invitation_status': attendee.get('responseStatus', ''), 'doctor_name': doctor.get_full_name() or doctor.username, 'doctor_email': doctor.email, 'patient_names': patient_names, 'meet_url': meet_url})
     events.sort(key=lambda event: event['start'])
     return events, ''
 
@@ -245,6 +260,7 @@ def connections(request):
             'patient_id': referral.patient_id,
             'name': referral.patient.get_full_name() or referral.patient.username,
             'email': referral.patient.email,
+            'portal_patient_id': referral.patient.patient_id or '',
             'referred_at': referral.created_at,
             'referring_doctor': referral.referring_doctor.get_full_name() or referral.referring_doctor.username,
             'referral_type': referral.referral_type,
@@ -400,6 +416,9 @@ def referral_manager(request):
         return {
             'id': referral.id,
             'direction': direction,
+            'patient_url': reverse('doctor_connections') + (
+                f'?tab={"referred" if direction == "received" else "primary"}&patient={referral.patient_id}'
+            ),
             'patient_name': referral.patient.get_full_name() or referral.patient.username,
             'doctor_name': f"Dr. {counterpart.get_full_name() or counterpart.username}",
             'status': referral.get_status_display(),
@@ -420,6 +439,27 @@ def _doctor_thread_request(thread, doctor):
 
 
 @login_required(login_url='doctor_login')
+def doctor_requests(request):
+    if request.user.account_type != User.AccountType.DOCTOR:
+        return redirect('patient_dashboard')
+    if request.GET.get('panel') != '1':
+        return redirect(reverse('doctor_connections') + '?requests=open')
+    threads = DirectMessageThread.objects.filter(doctor=request.user).select_related('patient')
+    patient_requests = []
+    for thread in threads:
+        connection_request = _doctor_thread_request(thread, request.user)
+        if connection_request and connection_request.status == DoctorConnectionRequest.Status.PENDING:
+            patient_requests.append({'thread': thread, 'request': connection_request})
+    consultations = ConsultationSessionRequest.objects.filter(
+        doctor=request.user, status=ConsultationSessionRequest.Status.REQUESTED,
+    ).select_related('patient').order_by('-created_at')
+    return render(request, 'doctor_portal/requests.html', {
+        'patient_requests': patient_requests,
+        'consultation_requests': consultations,
+    })
+
+
+@login_required(login_url='doctor_login')
 def direct_messages(request, thread_id=None):
     """Doctor-side conversation workspace for patient connection requests."""
     if request.user.account_type != User.AccountType.DOCTOR:
@@ -432,17 +472,26 @@ def direct_messages(request, thread_id=None):
         {'thread': item, 'connection_request': _doctor_thread_request(item, request.user)}
         for item in threads
     ]
+    pending_request_count = sum(
+        item['connection_request'] is not None
+        and item['connection_request'].status == DoctorConnectionRequest.Status.PENDING
+        for item in thread_items
+    )
     connection_request = _doctor_thread_request(thread, request.user) if thread else None
     if request.method == 'POST' and thread and connection_request and connection_request.status == DoctorConnectionRequest.Status.ACCEPTED:
         body = request.POST.get('body', '').strip()
         if body:
             DirectMessage.objects.create(thread=thread, sender=request.user, body=body)
             thread.save(update_fields=('updated_at',))
+        if request.GET.get('layout') == 'single':
+            from django.urls import reverse
+            return redirect(reverse('doctor_direct_messages', kwargs={'thread_id': thread.id}) + '?layout=single')
         return redirect('doctor_direct_messages', thread_id=thread.id)
     return render(request, 'doctor_portal/direct_messages.html', {
         'thread_items': thread_items,
         'thread': thread,
         'connection_request': connection_request,
+        'pending_request_count': pending_request_count,
         'single_layout': request.GET.get('layout') == 'single',
     })
 
@@ -573,10 +622,6 @@ def schedule_google_meet(request, patient_id):
     patient = _care_patient(request.user, patient_id)
     if not patient:
         return JsonResponse({'error': 'This patient is not connected to your portal.'}, status=404)
-    connection = GoogleCalendarConnection.objects.filter(user=request.user).first()
-    token = _calendar_token(connection) if connection else ''
-    if not token:
-        return JsonResponse({'error': 'Connect or reconnect Google Calendar before scheduling a Meet.'}, status=400)
     title = request.POST.get('title', '').strip() or f'Consultation with {patient.get_full_name() or patient.username}'
     start = request.POST.get('start', '').strip()
     end = request.POST.get('end', '').strip()
@@ -592,14 +637,27 @@ def schedule_google_meet(request, patient_id):
         end_value = timezone.make_aware(end_value, timezone.get_current_timezone())
     if end_value <= start_value:
         return JsonResponse({'error': 'The meeting end time must be after its start time.'}, status=400)
+    return _create_calendar_meeting(
+        request.user, patient, title, start_value, end_value,
+        description=request.POST.get('description', '').strip(),
+    )
+
+
+def _create_calendar_meeting(doctor, patient, title, start_value, end_value, *, description='', event_id=None):
+    connection = GoogleCalendarConnection.objects.filter(user=doctor).first()
+    token = _calendar_token(connection) if connection else ''
+    if not token:
+        return JsonResponse({'error': 'Connect or reconnect Google Calendar before scheduling a Meet.'}, status=400)
     event = {
         'summary': title,
-        'description': request.POST.get('description', '').strip(),
+        'description': description,
         'start': {'dateTime': start_value.isoformat(), 'timeZone': 'Asia/Kolkata'},
         'end': {'dateTime': end_value.isoformat(), 'timeZone': 'Asia/Kolkata'},
         'attendees': [{'email': patient.email}],
         'conferenceData': {'createRequest': {'requestId': str(uuid.uuid4())}},
     }
+    if event_id:
+        event['id'] = event_id
     try:
         api_request = Request(
             'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
@@ -610,6 +668,8 @@ def schedule_google_meet(request, patient_id):
         with urlopen(api_request, timeout=15) as response:
             created = json.load(response)
     except HTTPError as error:
+        if event_id and error.code == 409:
+            return JsonResponse({'title': title, 'start': start_value.isoformat()})
         try:
             reason = json.load(error).get('error', {}).get('message', 'Google Calendar rejected the request.')
         except Exception:
@@ -619,7 +679,7 @@ def schedule_google_meet(request, patient_id):
         return JsonResponse({'error': 'Google Calendar could not schedule the meeting. Reconnect Calendar and try again.'}, status=502)
     entries = created.get('conferenceData', {}).get('entryPoints', [])
     meet_url = next((entry.get('uri') for entry in entries if entry.get('entryPointType') == 'video'), created.get('hangoutLink', ''))
-    return JsonResponse({'title': created.get('summary', title), 'meet_url': meet_url, 'start': created.get('start', {}).get('dateTime', start)})
+    return JsonResponse({'title': created.get('summary', title), 'meet_url': meet_url, 'start': created.get('start', {}).get('dateTime', start_value.isoformat())})
 
 
 @login_required(login_url='doctor_login')
@@ -631,8 +691,70 @@ def meet_workspace(request, patient_id):
     if not patient:
         messages.error(request, 'This patient is not connected to your portal.')
         return redirect('doctor_connections')
+    status = ConsultationSessionRequest.Status
+    requests = ConsultationSessionRequest.objects.filter(
+        doctor=request.user, patient=patient,
+        status__in=(status.REQUESTED, status.ACCEPTED, status.REJECTED, status.PROPOSED),
+    ).order_by('-created_at')
+    requests_url = reverse('doctor_connections') + f'?consultation_patient={patient.pk}'
+    if request.method == 'POST':
+        decision = request.POST.get('decision')
+        updates = {'updated_at': timezone.now()}
+        if decision == 'accept':
+            updates['status'] = status.ACCEPTED
+        elif decision == 'reject':
+            reason = request.POST.get('reason', '').strip()
+            if not reason or len(reason) > 2000:
+                messages.error(request, 'Enter a rejection reason of up to 2,000 characters.')
+                return redirect(requests_url)
+            updates.update(status=status.REJECTED, rejection_reason=reason)
+        elif decision == 'propose':
+            try:
+                proposed = parse_datetime(request.POST.get('proposed_datetime', ''))
+            except ValueError:
+                proposed = None
+            if proposed and timezone.is_naive(proposed):
+                proposed = timezone.make_aware(proposed)
+            if not proposed or proposed <= timezone.now():
+                messages.error(request, 'Choose a future date and time.')
+                return redirect(requests_url)
+            updates.update(status=status.PROPOSED, proposed_datetime=proposed)
+        else:
+            return HttpResponseBadRequest('Choose a consultation decision.')
+        request_id = request.POST.get('request_id', '')
+        if not request_id.isascii() or not request_id.isdecimal() or len(request_id) > 18:
+            return HttpResponseBadRequest('Invalid consultation request.')
+        pending = requests.filter(pk=request_id, status=status.REQUESTED)
+        request_url = requests_url + '&request_id=' + request_id
+        with transaction.atomic():
+            if not pending.update(**updates):
+                messages.error(request, 'This request is no longer awaiting a decision.')
+            elif decision == 'accept':
+                consultation = requests.get(pk=request_id)
+                start = consultation.preferred_datetime
+                if start <= timezone.now():
+                    transaction.set_rollback(True)
+                    messages.error(request, 'The requested time has passed. Propose a new time instead.')
+                    return redirect(request_url)
+                meeting = _create_calendar_meeting(
+                    request.user, patient,
+                    f'Consultation with {patient.get_full_name() or patient.username}',
+                    start, start + timedelta(minutes=consultation.duration_minutes),
+                    event_id=f'oasisconsultation{consultation.pk:x}',
+                )
+                if meeting.status_code >= 400:
+                    transaction.set_rollback(True)
+                    messages.error(request, json.loads(meeting.content)['error'])
+                else:
+                    messages.success(request, 'Consultation accepted and Google Meet invitation scheduled.')
+        return redirect(request_url)
+
+    show_requests = request.GET.get('tab') == 'requests'
     events, meeting_notice = get_doctor_meet_events(request.user, patient=patient)
-    context = {'patient': patient, 'meetings': events, 'meeting_notice': meeting_notice}
+    context = {
+        'patient': patient, 'meetings': events, 'meeting_notice': meeting_notice,
+        'patient_requests': requests, 'show_requests': show_requests,
+    }
     if request.GET.get('panel') == '1':
         return render(request, 'doctor_portal/meet_workspace_panel.html', context)
     return render(request, 'doctor_portal/meet_workspace.html', context)
@@ -662,6 +784,67 @@ def home(request):
     if not request.user.is_authenticated:
         return redirect('doctor_login')
     return redirect('doctor_dashboard' if request.user.account_type == User.AccountType.DOCTOR else 'patient_dashboard')
+
+
+@login_required(login_url='doctor_login')
+@require_http_methods(['GET', 'POST'])
+def availability(request):
+    if request.user.account_type != User.AccountType.DOCTOR:
+        return redirect('patient_dashboard')
+
+    windows = request.user.availability_windows
+    form = AvailabilityForm()
+    if request.method == 'POST':
+        if 'remove' in request.POST:
+            window_id = request.POST['remove']
+            if window_id.isascii() and window_id.isdigit() and len(window_id) <= 18:
+                windows.filter(pk=window_id).delete()
+            return redirect('doctor_availability')
+        form = AvailabilityForm(request.POST)
+        if form.is_valid():
+            _, created = windows.get_or_create(
+                starts_at=form.cleaned_data['starts_at'],
+                defaults={'ends_at': form.cleaned_data['ends_at']},
+            )
+            if created:
+                return redirect('doctor_availability')
+            form.add_error('starts_at', 'A window already starts at this time.')
+
+    return render(request, 'doctor_portal/availability.html', {
+        'form': form,
+        'windows': windows.filter(starts_at__gt=timezone.now()),
+        'availability_timezone': timezone.get_current_timezone_name(),
+    })
+
+
+class AvailabilityForm(forms.ModelForm):
+    class Meta:
+        model = DoctorAvailability
+        fields = ('starts_at', 'ends_at')
+        widgets = {
+            'starts_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'ends_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+
+    def clean(self):
+        data = super().clean()
+        start = data.get('starts_at')
+        end = data.get('ends_at')
+        if start and start <= timezone.now():
+            self.add_error('starts_at', 'Choose a start time in the future.')
+        if start and end and end - start < timedelta(hours=1):
+            self.add_error('ends_at', 'Allow at least one hour for a consultation.')
+        return data
+
+
+@login_required(login_url='doctor_login')
+def profile_settings(request):
+    if request.user.account_type != User.AccountType.DOCTOR:
+        return redirect('profile')
+    return render(request, 'patient_portal/profile.html', {
+        'profile_base': 'doctor_portal/base.html',
+        'is_doctor_profile': True,
+    })
 
 
 @login_required(login_url='doctor_login')

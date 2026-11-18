@@ -1,14 +1,19 @@
 {% extends "doctor_portal/base.html" %}
-
-{% block title %}Doctor dashboard | ClearEye{% endblock %}
-
+{% load static %}
+{% block title %}Doctor dashboard | Oasis{% endblock %}
 {% block content %}
-<section style="min-height: calc(100vh - 96px); display: grid; place-items: center; padding: 32px; box-sizing: border-box;">
-    <div style="width: min(100%, 620px); padding: 32px; border: 1px solid #dbe5f1; border-radius: 20px; background: var(--md-sys-color-surface, #fff); box-shadow: 0 8px 28px rgba(27,73,101,.08);">
-        <span class="material-symbols-outlined" style="color: #087f8c; font-size: 32px;">medical_services</span>
-        <h1 style="margin: 14px 0 8px; color: #0b315a; font-size: 26px;">Doctor dashboard</h1>
-        {% if messages %}{% for message in messages %}<div style="margin:14px 0;padding:12px 16px;border-radius:12px;background:#fff3cd;color:#664d03;">{{ message }}</div>{% endfor %}{% endif %}
-        <p style="margin: 0; color: #5f6f82; line-height: 1.5;">Your Doctor Portal dashboard is ready. Use Patient connections or Community from the sidebar to continue.</p>
-    </div>
+<style>
+.doctor-home{max-width:1120px;margin:0 auto;padding:36px 28px;text-align:center;color:#102f52;box-sizing:border-box}.doctor-home h1{font-size:clamp(27px,3vw,36px);font-weight:600;letter-spacing:-.04em;margin:0 0 12px}.doctor-home-intro{max-width:620px;margin:0 auto 30px;color:#607590;line-height:1.7}.doctor-home-paths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}.doctor-home-path{display:flex;flex-direction:column;align-items:stretch;text-align:left;background:#fff;border:1px solid #dbe9eb;border-radius:16px;padding:12px;box-shadow:0 8px 26px rgba(20,62,76,.05);min-width:0}.doctor-home-path img{display:block;width:100%;height:clamp(110px,21vh,190px);object-fit:contain}.doctor-home-path h2{font-size:18px;line-height:1.3;margin:14px 8px 8px}.doctor-home-path p{color:#607590;font-size:13px;line-height:1.6;margin:0 8px 18px;flex:1}.doctor-home-path a{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;margin:0 8px 8px;padding:10px 17px;border:1px solid #a4cbd0;border-radius:24px;color:#087f8c;text-decoration:none;font-size:13px;font-weight:600}.doctor-home-path:first-child a{background:#087f8c;border-color:#087f8c;color:white}.doctor-home-path a:hover{background:#e0f0ef}.doctor-home-path:first-child a:hover{background:#066b76}.doctor-home-path a .material-symbols-outlined{font-size:18px}.doctor-home-path a:focus-visible{outline:2px solid #087f8c;outline-offset:3px}.doctor-home-alert{margin:0 auto 20px;max-width:620px;padding:12px 16px;border:1px solid #e5d5a6;border-radius:10px;background:#fff8e5;color:#664d03;text-align:left}.doctor-home-secondary{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;border-top:1px solid #dce7ef;padding-top:20px;margin-top:26px}.doctor-home-secondary a{font-size:13px;color:#607590;text-decoration:none}.doctor-home-secondary a:hover{color:#087f8c}@media(min-width:801px){.main-content:has(>.doctor-home){overflow:auto}.doctor-home{min-height:100%;display:flex;flex-direction:column;justify-content:center}.doctor-home-intro{margin-bottom:clamp(16px,3vh,28px)}}@media(max-width:800px){.doctor-home{padding:28px 16px}.doctor-home-paths{grid-template-columns:1fr;gap:16px}.doctor-home-path{width:100%;max-width:500px;margin:auto}.doctor-home-path img{height:180px}}
+</style>
+<section class="doctor-home" aria-labelledby="doctor-home-title">
+  <h1 id="doctor-home-title">Welcome, {{ request.user.first_name|default:request.user.username|default:'doctor' }}</h1>
+  <p class="doctor-home-intro">Your space to stay connected with patients, keep conversations together, and share with the Oasis community.</p>
+  {% if messages %}{% for message in messages %}<div class="doctor-home-alert" role="status">{{ message }}</div>{% endfor %}{% endif %}
+  <div class="doctor-home-paths">
+    <section class="doctor-home-path"><img src="{% static 'images/care-team.svg' %}" alt="Illustration of a care team"><h2>Your patients</h2><p>View your patient connections and find the people in your care.</p><a href="{% url 'doctor_connections' %}">Patient connections <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a></section>
+    <section class="doctor-home-path"><img src="{% static 'images/chat-care.svg' %}" alt="Illustration representing a care conversation"><h2>Stay in touch</h2><p>Open your messages and continue conversations with connected patients.</p><a href="{% url 'doctor_connections' %}">Select a patient <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a></section>
+    <section class="doctor-home-path"><img src="{% static 'images/care-connect.svg' %}" alt="Illustration representing connected care"><h2>Connect with community</h2><p>Join discussions and share with doctors and patients in the Oasis community.</p><a href="{% url 'doctor_community' %}">Visit community <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a></section>
+  </div>
+  <nav class="doctor-home-secondary" aria-label="More doctor tools"><a href="{% url 'doctor_upcoming_meetings' %}">Upcoming meetings</a><a href="{% url 'doctor_referral_manager' %}">Referrals</a><a href="{% url 'doctor_profile' %}">Your profile</a></nav>
 </section>
 {% endblock %}

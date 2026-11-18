@@ -1,0 +1,50 @@
+.ot-astigmatism-check {
+  width: min(1180px, 100%);
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: 100%;
+  padding: 14px 26px;
+  box-sizing: border-box;
+  overflow: visible;
+  color: #082e56;
+}
+.astigmatism-back { margin-bottom: 10px; }
+.astigmatism-shell { display: flex; min-height: calc(100dvh - 169px); flex-direction: column; background: #fff; border: 1px solid #cfe0e2; box-shadow: none; overflow: visible; }
+.astigmatism-head { display: flex; flex: 0 0 auto; justify-content: space-between; gap: 32px; padding: 18px 28px 16px; border-bottom: 1px solid #d9e8e9; }
+.astigmatism-head h2 { margin: 5px 0 6px; font-size: clamp(24px, 2.5vw, 34px); letter-spacing: -1px; }
+.astigmatism-head p { max-width: 670px; margin: 0; color: #547392; line-height: 1.45; }
+.astigmatism-progress { min-width: 180px; padding-top: 8px; color: #087f8c; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.astigmatism-progress > div { height: 7px; margin-top: 10px; background: #e5f0ef; }
+.astigmatism-progress i { display: block; width: 33.333%; height: 100%; background: #078896; transition: width .25s ease; }
+.astigmatism-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr); flex: 1 1 auto; min-height: 0; overflow: visible; }
+.astigmatism-visual { display: grid; min-width: 0; place-items: center; align-content: center; padding: 22px 32px; background: linear-gradient(135deg, #f4fbfa, #e8f5f3); border-right: 1px solid #d9e8e9; overflow: visible; }
+.astigmatism-wheel { position: relative; width: min(280px, 28vw); max-height: 280px; aspect-ratio: 1; border-radius: 50%; background: #fff; box-shadow: 0 6px 18px rgba(16, 91, 100, .08); overflow: hidden; }
+.astigmatism-wheel::after { content: ''; position: absolute; inset: 46%; border-radius: 50%; background: #078896; box-shadow: 0 0 0 6px #d8f0ec; }
+.astigmatism-wheel i { position: absolute; left: calc(50% - 1px); top: 3%; width: 2px; height: 94%; transform-origin: 50% 50%; background: #345c78; }
+.astigmatism-wheel i:nth-child(2){transform:rotate(15deg)}.astigmatism-wheel i:nth-child(3){transform:rotate(30deg)}.astigmatism-wheel i:nth-child(4){transform:rotate(45deg)}.astigmatism-wheel i:nth-child(5){transform:rotate(60deg)}.astigmatism-wheel i:nth-child(6){transform:rotate(75deg)}.astigmatism-wheel i:nth-child(7){transform:rotate(90deg)}.astigmatism-wheel i:nth-child(8){transform:rotate(105deg)}.astigmatism-wheel i:nth-child(9){transform:rotate(120deg)}.astigmatism-wheel i:nth-child(10){transform:rotate(135deg)}.astigmatism-wheel i:nth-child(11){transform:rotate(150deg)}.astigmatism-wheel i:nth-child(12){transform:rotate(165deg)}
+.astigmatism-visual p { max-width: 410px; margin: 16px 0 0; text-align: center; color: #547392; line-height: 1.45; }
+.astigmatism-guide {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 26px 30px;
+  overflow: visible;
+}
+.astigmatism-guide h3 { margin: 7px 0 6px; font-size: 24px; line-height: 1.12; }
+.astigmatism-guide > p { margin: 0; color: #547392; line-height: 1.5; }
+.astigmatism-guide ul { display: grid; gap: 8px; margin: 18px 0 22px; padding: 0; list-style: none; color: #315d7c; }
+.astigmatism-guide li { padding-left: 26px; position: relative; }
+.astigmatism-guide li::before { content: '✓'; position: absolute; left: 0; color: #008a97; font-weight: 800; }
+.astigmatism-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.astigmatism-next { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #087f8c; background: #087f8c; color: #fff; padding: 12px 16px; font-weight: 800; box-shadow: none; }
+.astigmatism-next:hover { background: #066f7a; transform: translateY(-1px); box-shadow: none; }
+.astigmatism-observation { display: grid; gap: 14px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #d9e8e9; background: transparent; box-sizing: border-box; }
+.astigmatism-observation h3 { margin: 6px 0; font-size: 21px; }.astigmatism-observation p { margin: 0; color: #547392; line-height: 1.4; }
+.astigmatism-observation > div:first-child { min-width: 0; }
+.astigmatism-choice-set { display: grid; grid-template-columns: 1fr; width: 100%; min-width: 0; gap: 8px; }
+.astigmatism-choice-set button { display: inline-flex; width: 100%; min-width: 0; min-height: 48px; align-items: center; justify-content: flex-start; gap: 8px; border: 1px solid #bcd7da; background: #fff; color: #174663; padding: 10px 12px; font-weight: 700; line-height: 1.25; text-align: left; white-space: normal; box-sizing: border-box; box-shadow: none; }
+.astigmatism-choice-set button:hover,.astigmatism-choice-set button.is-selected { border-color: #078896; background: #e8f7f5; color: #007b87; }
+.astigmatism-feedback { width: 100%; margin: 0; padding-left: 14px; border-left: 3px solid #008a97; color: #315d7c; box-sizing: border-box; }
+@media (max-width: 760px) { .ot-astigmatism-check{height:auto;min-height:100%;padding:16px;overflow:visible}.astigmatism-shell{height:auto}.astigmatism-head{display:block;padding:24px}.astigmatism-progress{margin-top:18px}.astigmatism-body{display:block;overflow:visible}.astigmatism-visual{border-right:0;border-bottom:1px solid #d9e8e9;padding:28px;overflow:visible}.astigmatism-wheel{width:min(280px,70vw)}.astigmatism-guide{padding:28px;overflow:visible}.astigmatism-observation{display:grid;margin-top:20px}.astigmatism-choice-set{margin-top:4px}.astigmatism-choice-set button{min-height:54px;justify-content:flex-start}.astigmatism-feedback{margin-top:8px} }
+.astigmatism-target{position:absolute;z-index:3;width:16px;height:16px;border-radius:50%;background:#078896;border:3px solid #fff;box-shadow:0 0 0 3px #078896,0 2px 8px #0b586366;top:50%;left:50%;transform:translate(-50%,-50%);transition:left .2s ease}.astigmatism-target[data-position=right]{left:90%}.astigmatism-target[data-position=left]{left:10%}.astigmatism-previous{border:1px solid #bcd7da;background:#fff;color:#087f8c;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer}.astigmatism-previous[hidden],.astigmatism-next[hidden],.astigmatism-observation[hidden]{display:none!important}#astigmatismForm{display:grid;gap:18px}#astigmatismForm fieldset{border:1px solid #cde2e5;border-radius:12px;padding:14px;margin:0;display:grid;gap:8px}#astigmatismForm legend{font-weight:700;font-size:13px;color:#17375e;padding:0 6px}#astigmatismForm fieldset label{display:flex;gap:9px;align-items:flex-start;padding:9px;border-radius:8px;color:#315d7c;font-size:12px;line-height:1.4;cursor:pointer}#astigmatismForm fieldset label:has(input:checked){background:#e8f7f5;color:#006d76}#astigmatismForm input{accent-color:#087f8c;margin:2px 0 0}.astigmatism-notes{display:grid;gap:8px;color:#17375e;font-size:13px;font-weight:700}.astigmatism-notes span{font-size:11px;color:#7890a2;font-weight:400}.astigmatism-notes textarea{resize:vertical;box-sizing:border-box;width:100%;padding:10px 12px;border:1px solid #bcd7da;border-radius:8px;color:#17375e;font:inherit;font-weight:400}.astigmatism-save{border:1px solid #087f8c;border-radius:9px;background:#087f8c;color:#fff;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer}.astigmatism-feedback:empty{display:none}#astigmatismForm input:focus-visible,.astigmatism-previous:focus-visible,.astigmatism-save:focus-visible{outline:3px solid #81c8cf;outline-offset:2px}

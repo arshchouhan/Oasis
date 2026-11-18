@@ -26,7 +26,6 @@
                 </a>
                 <ul class="nav-submenu">
                     <li class="nav-submenu-item"><a href="{% url 'doctor_connections' %}" class="nav-submenu-link {% if request.resolver_match.url_name == 'doctor_connections' %}active{% endif %}">Your Patients</a></li>
-                    <li class="nav-submenu-item"><a href="{% url 'doctor_direct_messages' %}" class="nav-submenu-link {% if request.resolver_match.url_name == 'doctor_direct_messages' %}active{% endif %}">Direct Messages</a></li>
                 </ul>
             </li>
             <li class="nav-item">
@@ -38,10 +37,10 @@
             </li>
         </ul>
         <div class="sidebar-bottom">
-            <a href="{% url 'logout' %}" class="nav-link">
+            <a href="{% url 'doctor_profile_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'doctor_profile_settings' %}active{% endif %}">
                 <span class="material-symbols-outlined nav-arrow">arrow_right</span>
-                <span class="material-symbols-outlined">logout</span>
-                <span class="nav-text">Log out</span>
+                <span class="material-symbols-outlined">settings</span>
+                <span class="nav-text">Profile &amp; Settings</span>
             </a>
         </div>
     </nav>
@@ -50,6 +49,7 @@
 
 {% block right_rail %}
 <div class="right-rail">
+    <button class="rail-btn" type="button" data-panel="availability" data-icon="event_available" data-title="Consultation availability" data-availability-url="{% url 'doctor_availability' %}" title="Set availability" aria-label="Set availability"><span class="material-symbols-outlined">event_available</span></button>
     <button class="rail-btn" data-panel="analytics" data-icon="videocam" data-title="Upcoming meetings" data-meetings-url="{% url 'doctor_upcoming_meetings' %}" title="Upcoming meetings"><span class="material-symbols-outlined">videocam</span></button>
     <button class="rail-btn" data-panel="notes" data-icon="send" data-title="Referrals" data-referrals-url="{% url 'doctor_referral_manager' %}" title="Referral manager"><span class="material-symbols-outlined">send</span></button>
     <button class="rail-btn" data-panel="tasks" data-icon="task_alt" data-title="Tasks" data-personal-url="{% url 'patient_personal_workspace' %}" title="Tasks"><span class="material-symbols-outlined">task_alt</span></button>
@@ -67,6 +67,7 @@
 <header class="top-navbar">
     <div class="search-container"><span class="material-symbols-outlined search-icon">search</span><input class="search-input" placeholder="Search connected patients..." readonly></div>
     <div class="navbar-actions">
+        {% include "doctor_portal/request_popover.html" %}
         <div class="doctor-calendar-menu">
             <button class="doctor-calendar-toggle" type="button" id="doctorCalendarToggle" aria-expanded="false" aria-controls="doctorCalendarPopover" title="Google Calendar and Meet"><span class="material-symbols-outlined">calendar_month</span></button>
             <div class="doctor-calendar-popover" id="doctorCalendarPopover" hidden>

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Request a session | Oasis{% endblock %}
+{% block content %}
+<style>
+  .session-request { max-width: 1040px; margin: 28px auto; color:#082e58; }
+  .session-request__top { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:24px; }
+  .session-request__back { display:inline-flex; align-items:center; gap:7px; color:#087f8c; text-decoration:none; font-weight:700; }
+  .session-request__eyebrow { margin:0 0 7px; color:#00889a; font-size:12px; font-weight:800; letter-spacing:.11em; text-transform:uppercase; }
+  .session-request h1 { margin:0; font-size:clamp(28px, 4vw, 42px); line-height:1.05; }
+  .session-request__subtitle { max-width:660px; margin:12px 0 0; color:#587397; font-size:16px; line-height:1.55; }
+  .session-request__shell { display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(260px, .75fr); border:1px solid #c9e1e5; background:#fff; box-shadow:0 18px 48px rgba(20,62,91,.08); }
+  .session-request__form { padding:30px; }
+  .session-request__aside { padding:30px; background:linear-gradient(160deg,#e7f5f3,#f7fbfc); border-left:1px solid #c9e1e5; }
+  .session-request__doctor { display:flex; gap:14px; align-items:center; padding-bottom:24px; border-bottom:1px solid #d7e7ea; }
+  .session-request__avatar { width:50px; height:50px; border-radius:50%; display:grid; place-items:center; background:#d5ecf4; color:#007d90; font-weight:800; }
+  .session-request__doctor strong { display:block; font-size:18px; }.session-request__doctor span { color:#5d7899; font-size:14px; }
+  .session-request__field { display:grid; gap:8px; margin-top:21px; }.session-request__field label,.session-request__legend { font-weight:800; font-size:14px; }.session-request input,.session-request textarea { box-sizing:border-box; width:100%; border:1px solid #abcbd1; border-radius:8px; padding:13px 14px; font:inherit; color:#082e58; background:#fff; }.session-request textarea{min-height:100px;resize:vertical;}
+  .session-request__durations { border:0; padding:0; margin:26px 0 0; }.session-request__duration-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }.session-request__duration { position:relative; cursor:pointer; }.session-request__duration input { position:absolute; opacity:0; pointer-events:none; }.session-request__duration span { display:block; min-height:82px; box-sizing:border-box; padding:13px; border:1px solid #b7d4d8; border-radius:9px; background:#fff; transition:.18s ease; }.session-request__duration b{display:block;font-size:17px}.session-request__duration small{display:block;margin-top:5px;color:#63809c}.session-request__duration input:checked + span{border:2px solid #07889a;background:#e6f6f4;box-shadow:inset 0 0 0 1px #e6f6f4;}.session-request__duration input:focus-visible + span{outline:3px solid #72c9d4;outline-offset:2px;}
+  .session-request__pay { width:100%; margin-top:26px; padding:15px 18px; border:0; border-radius:8px; background:#078897; color:#fff; font:700 16px inherit; cursor:pointer; }.session-request__pay:hover{background:#006f80}.session-request__pay:disabled{opacity:.65;cursor:wait}.session-request__status{min-height:22px;margin:12px 0 0;color:#a33a3a;font-size:14px}.session-request__fineprint{margin:16px 0 0;color:#66809a;font-size:13px;line-height:1.45}
+  .session-request__aside h2{margin:0 0 14px;font-size:20px}.session-request__aside ul{padding:0;margin:0;list-style:none;display:grid;gap:16px}.session-request__aside li{display:grid;grid-template-columns:25px 1fr;gap:9px;color:#557293;line-height:1.45}.session-request__aside .material-symbols-outlined{color:#008596}.session-request__confirmation{padding:38px;border:1px solid #8dcdc8;background:#effaf8;box-shadow:0 14px 34px rgba(20,62,91,.07)}.session-request__confirmation h2{margin:8px 0;color:#073662}.session-request__confirmation p{max-width:670px;color:#557293;line-height:1.6}.session-request__confirmation a{display:inline-flex;margin-top:12px;padding:11px 15px;background:#078897;color:#fff;text-decoration:none;font-weight:700;border-radius:7px}
+  @media (max-width:760px){.session-request{margin:18px 14px}.session-request__shell{grid-template-columns:1fr}.session-request__aside{border-left:0;border-top:1px solid #c9e1e5}.session-request__duration-grid{grid-template-columns:1fr}.session-request__top{align-items:flex-start;flex-direction:column}.session-request__form,.session-request__aside{padding:22px}}
+</style>
+<section class="session-request">
+  <div class="session-request__top">
+    <div><p class="session-request__eyebrow">Consultation request</p><h1>Book time with Dr. {{ doctor.get_full_name|default:doctor.username }}</h1><p class="session-request__subtitle">Choose the session length that fits your needs, then select a preferred time and securely pay to send your request.</p></div>
+    <a class="session-request__back" href="{% url 'doctor_search' %}"><span class="material-symbols-outlined">arrow_back</span>Back to doctors</a>
+  </div>
+  {% if submitted_request %}
+    <div class="session-request__confirmation"><span class="material-symbols-outlined" style="font-size:34px;color:#008596">check_circle</span><h2>Your session request has been sent.</h2><p>Dr. {{ doctor.get_full_name|default:doctor.username }} will receive your request for {{ submitted_request.duration_minutes }} minutes on {{ submitted_request.preferred_datetime|date:"j M Y, g:i A" }}. Your payment of ₹{{ submitted_request.amount|floatformat:0 }} was verified securely.</p><a href="{% url 'patient_google_meet' %}?connection={{ connection.pk }}">View consultations</a></div>
+  {% else %}
+    <div class="session-request__shell">
+      <form class="session-request__form" id="sessionRequestForm" data-order-url="{% url 'session_request_payment_order' %}" data-verify-url="{% url 'session_request_verify_payment' %}">
+        {% csrf_token %}<input type="hidden" name="connection_id" value="{{ connection.pk }}">
+        <div class="session-request__doctor"><div class="session-request__avatar">{{ doctor.get_full_name|default:doctor.username|slice:":2"|upper }}</div><div><strong>Dr. {{ doctor.get_full_name|default:doctor.username }}</strong><span>{{ doctor.email }}</span></div></div>
+        <fieldset class="session-request__durations"><legend class="session-request__legend">Choose a session length</legend><div class="session-request__duration-grid"><label class="session-request__duration"><input type="radio" name="duration_minutes" value="60" checked><span><b>1 hour</b><small>₹100</small></span></label><label class="session-request__duration"><input type="radio" name="duration_minutes" value="120"><span><b>2 hours</b><small>₹1,500</small></span></label><label class="session-request__duration"><input type="radio" name="duration_minutes" value="180"><span><b>3 hours</b><small>₹4,000</small></span></label></div></fieldset>
+        <div class="session-request__field">
+          <label for="preferred_datetime">Available start time ({{ availability_timezone }})</label>
+          <select id="preferred_datetime" name="preferred_datetime" style="font:inherit;padding:13px 14px;border:1px solid #abcbd1;border-radius:8px;background:#fff;color:#082e58" required>
+            <option value="">Choose a time</option>
+            {% for time in available_times %}
+              <option value="{{ time.start|date:'c' }}" data-minutes="{{ time.minutes }}">{{ time.start|date:"D, j M Y, g:i A" }}</option>
+            {% endfor %}
+          </select>
+          <span id="availabilityMessage" aria-live="polite">{% if not available_times %}This doctor has no upcoming availability.{% endif %}</span>
+        </div>
+        <div class="session-request__field"><label for="reason">What would you like to discuss?</label><input id="reason" name="reason" maxlength="240" placeholder="For example: review my recent eye symptoms" required></div>
+        <div class="session-request__field"><label for="notes">Notes for the doctor <span style="font-weight:400">(optional)</span></label><textarea id="notes" name="notes" maxlength="2000" placeholder="Share anything helpful before the consultation."></textarea></div>
+        <button class="session-request__pay" type="submit" id="payButton"{% if not available_times %} disabled{% endif %}>Continue to payment · ₹100</button><p class="session-request__status" id="paymentStatus" role="alert"></p><p class="session-request__fineprint">Payment is processed by Razorpay. The request is sent only after payment is verified.</p>
+      </form>
+      <aside class="session-request__aside"><p class="session-request__eyebrow">Before you request</p><h2>A clear request helps your doctor prepare.</h2><ul><li><span class="material-symbols-outlined">event</span><span>Your preferred time is a request. Your doctor will confirm the final consultation time.</span></li><li><span class="material-symbols-outlined">lock</span><span>Your payment is verified on our server before the request is saved as paid.</span></li><li><span class="material-symbols-outlined">videocam</span><span>Confirmed video consultations appear in your Google Meet consultations.</span></li></ul></aside>
+    </div>
+  {% endif %}
+</section>
+{% if not submitted_request %}<script src="https://checkout.razorpay.com/v1/checkout.js"></script><script>
+(() => {
+  const form = document.getElementById('sessionRequestForm');
+  if (!form) return;
+
+  const pay = document.getElementById('payButton');
+  const status = document.getElementById('paymentStatus');
+  const availabilityMessage = document.getElementById('availabilityMessage');
+  const timeSelect = form.preferred_datetime;
+  const prices = {60: '100', 120: '1,500', 180: '4,000'};
+  let completedPayment;
+
+  const csrf = () => form.querySelector('[name=csrfmiddlewaretoken]').value;
+  const updateButton = () => {
+    pay.textContent = completedPayment
+      ? 'Retry payment confirmation'
+      : `Continue to payment · ₹${prices[form.duration_minutes.value]}`;
+  };
+  const showError = message => {
+    pay.disabled = false;
+    updateButton();
+    status.textContent = message;
+  };
+
+  async function confirmPayment() {
+    pay.disabled = true;
+    pay.textContent = 'Confirming payment…';
+    status.textContent = '';
+    try {
+      const response = await fetch(form.dataset.verifyUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf()},
+        body: JSON.stringify(completedPayment),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.redirect_url) {
+        throw new Error(result.error || 'Payment confirmation failed.');
+      }
+      window.location.href = result.redirect_url;
+    } catch {
+      showError('Payment confirmation failed. Retry confirmation to send the request without paying again.');
+    }
+  }
+
+  function updateAvailability() {
+    const duration = Number(form.duration_minutes.value);
+    const options = Array.from(timeSelect.options).slice(1);
+    for (const option of options) {
+      option.hidden = option.disabled = Number(option.dataset.minutes) < duration;
+    }
+    if (timeSelect.selectedOptions[0]?.disabled) timeSelect.value = '';
+    const hasTime = options.some(option => !option.disabled);
+    availabilityMessage.textContent = options.length && !hasTime
+      ? 'No times are available for this session length.'
+      : options.length ? '' : 'This doctor has no upcoming availability.';
+    updateButton();
+  }
+
+  form.querySelectorAll('[name=duration_minutes]').forEach(item => {
+    item.addEventListener('change', updateAvailability);
+  });
+  updateAvailability();
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (completedPayment) {
+      await confirmPayment();
+      return;
+    }
+
+    pay.disabled = true;
+    pay.textContent = 'Preparing secure payment…';
+    status.textContent = '';
+    try {
+      const response = await fetch(form.dataset.orderUrl, {
+        method: 'POST',
+        headers: {'X-CSRFToken': csrf()},
+        body: new FormData(form),
+      });
+      const order = await response.json();
+      if (!response.ok) throw new Error(order.error || 'Could not start payment.');
+
+      const checkout = new Razorpay({
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Oasis',
+        description: order.description,
+        order_id: order.order_id,
+        prefill: {email: '{{ request.user.email|escapejs }}'},
+        theme: {color: '#078897'},
+        handler: async payment => {
+          completedPayment = {...payment, request_id: order.request_id};
+          await confirmPayment();
+        },
+        modal: {ondismiss: () => {
+          if (!completedPayment) showError('Payment was cancelled. Your request was not sent.');
+        }},
+      });
+      checkout.open();
+    } catch (error) {
+      showError(error.message || 'Something went wrong. Please try again.');
+    }
+  });
+})();
+</script>{% endif %}
+{% endblock %}

@@ -71,5 +71,30 @@ get('ecStart').onclick=()=>{if(timer){remaining=Math.max(0,Math.ceil((deadline-D
 get('ecStart').addEventListener('click',()=>{if(selected===1&&timer){get('ecIllustration').classList.add('blink-running');get('ecStatus').textContent='Blink gently with the eyes. Keep breathing naturally and relax your shoulders.';}});
 get('ecStart').addEventListener('click',()=>{if(selected===0&&timer){get('ecIllustration').classList.add('palm-running');clock();}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&selected===1&&timer){remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));stop();clock();get('ecStart').textContent='Resume';get('ecStatus').textContent='Paused. Resume when ready.';}});
+// Optional spoken guidance uses the browser's own speech engine.
+const audioButton=get('ecAudio');
+const speechAvailable='speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+let voiceEnabled=false, lastSpokenCue='';
+function silenceVoice(){if(speechAvailable) window.speechSynthesis.cancel();}
+function speak(text){if(!voiceEnabled||!speechAvailable||!text)return;silenceVoice();const utterance=new SpeechSynthesisUtterance(text);utterance.rate=.92;window.speechSynthesis.speak(utterance);}
+if(!speechAvailable){audioButton.disabled=true;audioButton.title='Voice guidance is not available in this browser.';audioButton.querySelector('span:last-child').textContent='Voice unavailable';}
+audioButton.addEventListener('click',()=>{voiceEnabled=!voiceEnabled;audioButton.setAttribute('aria-pressed',String(voiceEnabled));audioButton.querySelector('.material-symbols-outlined').textContent=voiceEnabled?'volume_up':'volume_off';audioButton.querySelector('span:last-child').textContent=voiceEnabled?'Voice guidance on':'Voice guidance off';if(voiceEnabled)speak('Voice guidance on. '+exercises[selected].name+'. '+exercises[selected].description);else silenceVoice();});
+get('ecStart').addEventListener('click',()=>{if(!voiceEnabled)return;if(timer){lastSpokenCue='';speak(exercises[selected].name+'. '+exercises[selected].steps.join(' '));}else silenceVoice();});
+get('ecMoveStart').addEventListener('click',()=>{if(moveTimer)speak(get('ecMoveCue').textContent);else silenceVoice();});
+get('ecMoveNext').addEventListener('click',()=>speak(get('ecMoveCue').textContent));
+get('ecZigStart').addEventListener('click',()=>{if(zigAnimation.playState==='running')speak(exercises[3].steps.join(' '));else silenceVoice();});
+[get('ecStatus'),get('ecMoveCue'),get('ecZigStatus')].forEach(node=>new MutationObserver(()=>{const cue=node.textContent.trim();if(!voiceEnabled||cue===lastSpokenCue)return;const phaseCue=(node.id==='ecStatus'&&(cue.startsWith('Cup your palms')||cue.startsWith('Look at an object')||cue.startsWith('Exercise complete')))||(node.id==='ecMoveCue'&&moveTimer)||(node.id==='ecZigStatus'&&cue.startsWith('Complete'));if(phaseCue){lastSpokenCue=cue;speak(cue);}}).observe(node,{childList:true,characterData:true,subtree:true}));
+['ecBack','ecPrevious','ecNext','ecReset','ecMoveReset','ecZigReset'].forEach(id=>get(id).addEventListener('click',silenceVoice));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)silenceVoice();});window.addEventListener('pagehide',silenceVoice);
 window.addEventListener('pagehide',stop);renderCards(get('ecGrid'),exercises.map((_,i)=>i));
+const exerciseParams = new URLSearchParams(window.location.search);
+const requestedExercise = Number(exerciseParams.get('exercise'));
+if (exerciseParams.has('exercise') && Number.isInteger(requestedExercise) &&
+    requestedExercise >= 0 && requestedExercise < exercises.length) {
+    show(requestedExercise);
+    if (exerciseParams.get('start') === '1') {
+        const startControl = {2: 'ecMoveStart', 3: 'ecZigStart'}[requestedExercise] || 'ecStart';
+        get(startControl).click();
+    }
+}
 })();

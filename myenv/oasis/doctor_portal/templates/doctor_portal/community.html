@@ -66,6 +66,19 @@ document.querySelectorAll('.reply-to-person').forEach(button => button.addEventL
 .community .post-replies{margin-top:0}.community .post-replies>summary{list-style:none;display:none}.community .post-replies>summary::-webkit-details-marker{display:none}.community .post-replies[open]{margin-top:18px;padding-top:4px;border-top:1px solid #e2ebf1}.community .post-replies textarea{max-width:900px}.community .post-replies .reply{max-width:900px}
 @media(max-width:600px){.community article.community-card{padding-left:4px}.community .post-avatar{position:static;width:36px;height:36px;flex-shrink:0;font-size:14px}.community .post-header .tag{margin-left:0}.community .post-toolbar{gap:8px}.community h2.post-title{font-size:21px}}
 </style>
+<style>
+/* Open editorial layout, following the public Oasis landing page. */
+.community .community-layout .community-card{background:transparent;border:0;border-top:1px solid #cadcda;border-radius:0;box-shadow:none;padding:28px 4px;margin:0}
+.community .community-layout article.community-card{padding:32px 4px 32px 70px;border:0;border-top:1px solid #cadcda}
+.community .post-avatar{left:4px;top:32px}
+.community .community-heading h1{font-weight:500;letter-spacing:-.04em}.community .post-title{letter-spacing:-.035em}
+.community .post-replies[open]{border-top:1px solid #d5e4e2;margin-top:22px;padding-top:4px}
+.community .post-replies .reply{display:flex;gap:14px;max-width:900px;padding:20px 0;border:0;border-bottom:1px solid #e0eae9;background:transparent}
+.community .reply-avatar{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:50%;background:#dcebed;color:#087f8c;font-weight:600}
+.community .reply-content{flex:1;min-width:0}.community .reply-header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.community .reply-header time{margin-left:auto}.community .reply-content p{margin:8px 0;color:#37516b}.community .reply-actions button{background:transparent;color:#607590;padding:4px 0;font-size:12px}.community .reply-actions .material-symbols-outlined{font-size:16px}.community .reply-author-label{font-size:11px;color:#607590}
+.community .post-replies>form{max-width:900px;margin-top:24px;padding:0;background:transparent;border:0}.community .post-replies>form label{margin-top:0;font-weight:600}.community .post-replies>form textarea{display:block;max-width:none;background:transparent;border:1px solid #bfd4d3;border-radius:0}.community .post-replies>form button[type=submit]{background:#142d35;color:white;border-radius:0}.community .post-replies>form button[type=submit]:hover{background:#087f86}
+@media(max-width:600px){.community .community-layout article.community-card{padding:24px 4px}.community .post-avatar{position:static}.community .reply-header time{margin-left:0;width:100%}}
+</style>
 <section class="community">
 <header class="community-heading"><div><h1>Community</h1><p class="muted">A space for doctors and patients to learn, share, and connect.</p></div>{% if creating_post %}<a href="{{ request.path }}" class="action-link">Back to discussions</a>{% else %}<a href="?view=create" class="action-link primary">Create post</a>{% endif %}</header>
 <nav class="row" aria-label="Community views" style="margin:0 4px 20px"><a href="{{ request.path }}" class="action-link {% if not creating_post %}primary{% endif %}" {% if not creating_post %}aria-current="page"{% endif %}>Discussions</a><a href="?view=create" class="action-link {% if creating_post %}primary{% endif %}" {% if creating_post %}aria-current="page"{% endif %}>Create post</a></nav>

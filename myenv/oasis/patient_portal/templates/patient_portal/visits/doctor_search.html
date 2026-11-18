@@ -4,7 +4,22 @@
 
 {% block content %}{% load avatars %}
 {% load static %}
-<style>.ds-care-art{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:100px auto 24px;max-width:480px;width:85%;text-align:center;pointer-events:none}.ds-care-art img{width:100%;height:auto;max-height:300px;object-fit:contain}.ds-care-art p{font-size:12px;color:#71849a;line-height:1.6;margin:10px 0}.ds-care-art-profile{max-width:230px;margin-top:24px}.ds-care-art-profile img{max-height:120px}@media(max-height:750px){.ds-care-art{margin-top:48px}.ds-care-art img{max-height:240px}.ds-care-art-profile{display:none}}</style>
+<style>.ds-care-art{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:100px auto 24px;max-width:480px;width:85%;text-align:center;pointer-events:none}.ds-care-art img{width:100%;height:auto;max-height:300px;object-fit:contain}.ds-care-art p{font-size:12px;color:#71849a;line-height:1.6;margin:10px 0}.ds-care-art-profile{max-width:230px;margin-top:24px}.ds-care-art-profile img{max-height:120px}@media(max-height:750px){.ds-care-art{margin-top:48px}.ds-care-art img{max-height:240px}.ds-care-art-profile{display:none}}.ds-history .ds-consult-entry{margin:20px 0;padding:20px;border:1px solid #c8dfe2;border-radius:0;background:#fff;box-shadow:4px 4px 0 #dcefed}
+.ds-history .ds-consult-entry:last-of-type{margin-bottom:0}
+.ds-history .ds-consult-tabs{margin-bottom:16px}
+.ds-history .ds-consult-entry [role=tabpanel]{padding:14px 0 4px}
+.ds-history .ds-doctor-note{padding:13px 15px;border:1px solid #c8dfe2;border-left:1px solid #c8dfe2;background:#fff;box-shadow:3px 3px 0 #dcefed}
+.ds-meet-comprehensive .ds-meeting-detail{margin:0 0 24px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.ds-meeting-detail:last-of-type{margin-bottom:0}
+.ds-meeting-detail>header{margin-bottom:18px;padding-bottom:15px}
+.ds-meeting-detail>dl{gap:14px}
+.ds-meeting-detail>dl>div{padding:19px 20px;border:1px solid #c8dfe2;border-radius:0;background:#fff;box-shadow:4px 4px 0 #dcefed}
+.ds-meeting-detail>section{padding:19px 20px;border:1px solid #c8dfe2;border-radius:0;background:#fff;box-shadow:4px 4px 0 #dcefed}
+.ds-meeting-detail>footer{margin-top:22px;padding-top:16px}
+.ds-meet-empty{border-radius:0;background:#fff;box-shadow:4px 4px 0 #dcefed}
+@media(max-width:560px){.ds-history .ds-consult-entry{padding:16px}.ds-meeting-detail>dl{grid-template-columns:1fr}.ds-meeting-detail>dl>div,.ds-meeting-detail>section{padding:16px}}
+@media(max-width:560px){.ds-meet-header-row{align-items:flex-start;flex-direction:column}.ds-meet-header-row h3{margin-bottom:0}}
+</style>
 <style>
     .ds-workspace {
         display: flex;
@@ -39,9 +54,15 @@
         overflow: hidden;
     }
 
-    /* Doctor details are intentionally compact: show available profile data
-       at once instead of adding an inner scrolling region. */
-    .ds-right-pane > .ds-pane-body { overflow: hidden; }
+    .ds-left-pane > .ds-pane-body,
+    .ds-right-pane > .ds-pane-body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .ds-left-pane > .ds-pane-body::-webkit-scrollbar,
+    .ds-right-pane > .ds-pane-body::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
     .ds-pane-header {
         display: flex;
@@ -146,14 +167,28 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 20px 24px 14px;
+        position:relative;
+        overflow:hidden;
+        padding: 0 24px 18px;
         border-bottom: 1px solid var(--md-sys-color-surface-variant, #f1f3f4);
         flex-shrink: 0;
+        background:#fff;
     }
 
+    .ds-detail-cover {
+        width:calc(100% + 48px);
+        height:112px;
+        margin:0 -24px;
+        background:
+            linear-gradient(120deg,rgba(8,127,140,.9),rgba(55,105,185,.72)),
+            radial-gradient(circle at 80% 20%,rgba(255,255,255,.55),transparent 30%),
+            linear-gradient(135deg,#d9eff0,#dce8fa);
+        position:relative;
+    }
+    .ds-detail-cover::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,transparent 35%,rgba(16,47,82,.18)); }
     .ds-detail-avatar {
-        width: 80px;
-        height: 80px;
+        width: 88px;
+        height: 88px;
         border-radius: 50%;
         background: linear-gradient(135deg, #e8f0fe, #d2e3fc);
         display: flex;
@@ -161,9 +196,19 @@
         justify-content: center;
         font-size: 42px;
         color: var(--md-sys-color-primary, #1a73e8);
-        margin-bottom: 8px;
-        box-shadow: 0 4px 16px rgba(26, 115, 232, 0.15);
+        margin-top:-44px;
+        margin-bottom:10px;
+        border:5px solid #fff;
+        overflow:hidden;
+        position:relative;
+        z-index:1;
+        box-shadow: 0 5px 18px rgba(26, 65, 105, 0.2);
     }
+    .ds-detail-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+    .ds-detail-avatar .ds-avatar-fallback { display:grid; place-items:center; width:100%; height:100%; background:linear-gradient(135deg,#dcecff,#cce5e5); color:#087f8c; }
+    .ds-detail-avatar > [hidden] { display:none; }
+    .ds-detail-status { display:inline-flex; align-items:center; gap:5px; margin-bottom:8px; color:#087f8c; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.45px; }
+    .ds-detail-status::before { content:""; width:7px; height:7px; border-radius:50%; background:#1aaf83; }
 
     .ds-detail-name {
         font-size: 18px;
@@ -196,9 +241,10 @@
     .ds-detail-body {
         flex: 1;
         min-height: 0;
-        overflow: hidden;
+        overflow: visible;
         padding: 14px 24px 18px;
     }
+
 
     .ds-stat-grid {
         display: grid;
@@ -250,7 +296,7 @@
     }
 
     .ds-tool-btn {
-        min-height: 56px;
+        min-height: 72px;
         border: 0;
         border-radius: 12px;
         background: #edf3f8;
@@ -261,6 +307,9 @@
         position: relative;
         overflow: hidden;
         transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+        gap:4px;
+        padding:8px;
+        font:inherit;
     }
     .ds-tool-btn::after {
         content:"";
@@ -273,11 +322,24 @@
         transform:translate(-50%,-50%);
         transition:width .3s ease, height .3s ease;
     }
-    .ds-tool-btn:hover { background:#087f8c; color:#fff; box-shadow:0 4px 12px rgba(8,127,140,.24); transform:translateY(-1px); }
+    .ds-tool-btn:hover,
+    .ds-tool-btn:focus-visible { background:#087f8c; color:#fff; box-shadow:0 4px 12px rgba(8,127,140,.24); transform:translateY(-1px); }
+    .ds-tool-btn:hover,
+    .ds-tool-btn:focus-visible { color:#fff; }
+    .ds-tool-btn:hover .ds-tool-label,
+    .ds-tool-btn:hover .ds-tool-description,
+    .ds-tool-btn:focus-visible .ds-tool-label,
+    .ds-tool-btn:focus-visible .ds-tool-description { color:#fff !important; opacity:1; }
+    .ds-tool-btn:active { background:#066a75; color:#fff; transform:translateY(0); }
     .ds-tool-btn:active::after { width:150px; height:150px; transition:0s; }
     .ds-tool-btn.is-rippling::after { width:180px; height:180px; transition:width .18s ease, height .18s ease; }
     .ds-tool-btn:focus-visible { outline:3px solid rgba(8,127,140,.3); outline-offset:2px; }
-    .ds-tool-btn .material-symbols-outlined { font-size:24px; }
+    a.ds-tool-btn { text-decoration:none; }
+    .ds-tool-btn-form { display:contents; }
+    .ds-tool-btn-form .ds-tool-btn { width:100%; }
+    .ds-tool-btn .material-symbols-outlined { font-size:24px; color:inherit; transition:color .18s ease; }
+    .ds-tool-label { font-size:10px; font-weight:700; line-height:1.2; text-align:center; }
+    .ds-tool-description { display:block; max-width:110px; color:#71849a; font-size:9px; line-height:1.2; text-align:center; opacity:1; }
     .ds-tool-panel { display:flex; flex:1; min-height:0; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:26px; color:#607590; }
     .ds-tool-panel h3 { margin:12px 0 7px; color:#102f52; font-size:21px; }
     .ds-tool-panel p { max-width:390px; margin:0; line-height:1.5; }
@@ -604,6 +666,43 @@
 .ds-history-event{display:flex;gap:16px;padding:22px 0;border-bottom:1px solid #e2ebf1}.ds-history-event>.material-symbols-outlined{color:#087f8c;background:#e8f4f3;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-size:20px}.ds-history-event small{color:#607590;font-size:11px}.ds-history-event h4{font-size:15px;margin:9px 0}.ds-history-event p{font-size:13px;line-height:1.7}.ds-history-note{margin-top:22px!important;padding-top:16px;border-top:1px solid #dce7ef}
 .ds-report-scale{height:8px;background:#e5edf4;border-radius:8px;overflow:hidden;margin:12px 0}.ds-report-scale span{height:100%;display:block;background:#087f8c;border-radius:8px}.ds-report-scale.red span{background:#ca8a69}.ds-report-reference{font-size:12px;color:#607590;line-height:1.6;margin:8px 0}
 .ds-full-reports{width:100%;padding:20px 24px;color:#102f52;text-align:left;box-sizing:border-box}.ds-full-reports>header{padding-bottom:20px;border-bottom:1px solid #dce7ef}.ds-full-reports h3{font-size:23px;font-weight:500;margin:18px 0 8px}.ds-full-reports p{font-size:13px;color:#607590;line-height:1.7;margin:0}.ds-full-reports .ds-tool-back{margin:0;padding:0}.ds-full-report{padding:24px 0;border-bottom:1px solid #dce7ef}.ds-report-heading{display:flex;align-items:center;gap:12px}.ds-report-heading>.material-symbols-outlined{font-size:30px;color:#087f8c}.ds-report-heading h4{margin:0 0 6px;font-size:17px}.ds-report-heading small{color:#607590;font-size:12px}.ds-full-report h5{font-size:14px;margin:24px 0 12px;font-weight:600}.ds-report-facts{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;margin:12px 0}.ds-report-facts>div{padding:12px 0;border-bottom:1px solid #e2ebf1;min-width:0}.ds-report-facts dt{font-size:12px;color:#607590;line-height:1.5}.ds-report-facts dd{font-size:14px;margin:6px 0 0;overflow-wrap:anywhere}.ds-full-report .ds-report-metric{background:transparent;border-left:2px solid #a7cfcd;border-radius:0;text-align:left;padding:10px}.ds-full-report .ds-report-metric strong{font-size:22px;font-weight:500}.ds-full-report .ds-report-metric span{font-size:11px}.ds-full-report footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px;flex-wrap:wrap}.ds-full-report .ds-report-share{margin:0}.ds-report-status{font-size:12px;color:#087f8c}.ds-report-context{border-top:1px solid #dce7ef;margin-top:20px}@media(max-width:650px){.ds-full-reports{padding:16px}.ds-report-facts{gap:0 12px}}
+.ds-meet-empty{display:flex;align-items:center;gap:14px;margin:22px 0;padding:18px;border:1px dashed #b9d7d2;border-radius:16px;background:linear-gradient(135deg,#f3fbfa,#f7faff);color:#607590}.ds-meet-empty .material-symbols-outlined{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#d9f0ed;color:#087f8c;font-size:23px;flex-shrink:0}.ds-meet-empty strong{display:block;color:#102f52;font-size:14px;margin-bottom:4px}.ds-meet-empty p{font-size:12px!important;line-height:1.5!important}.ds-meet-refresh{display:inline-flex;align-items:center;gap:6px;margin-top:18px;padding:9px 13px;border:1px solid #b9d7d2;border-radius:20px;background:#fff;color:#087f8c;font:700 12px inherit;cursor:pointer}.ds-meet-refresh:hover{background:#e8f6f4;border-color:#087f8c}.ds-meet-refresh .material-symbols-outlined{font-size:17px}
+.ds-meet-comprehensive>header{margin-bottom:20px}
+.ds-meet-header-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.ds-meeting-detail{margin:0 0 20px;padding:22px;border:1px solid #d5e3eb;border-radius:18px;background:linear-gradient(145deg,#fff,#f8fbfc);box-shadow:0 8px 22px rgba(23,56,83,.06)}
+.ds-meeting-detail:last-of-type{margin-bottom:0}
+.ds-meeting-detail>header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:13px;margin:0 0 20px;padding:0 0 17px;border-bottom:1px solid #e1eaf0}
+.ds-meeting-detail>header>.material-symbols-outlined{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#e1f3f1;color:#087f8c;font-size:24px}
+.ds-meeting-detail>header h4{margin:0 0 6px;color:#102f52;font-size:18px;line-height:1.3}
+.ds-meeting-detail>header p{margin:0;color:#607590;font-size:13px}
+.ds-meeting-status{align-self:start;padding:6px 11px;border-radius:8px;background:#e7f5f3;color:#087f8c;font-size:12px;font-weight:600;white-space:nowrap}
+.ds-meeting-detail>dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 14px;margin:0}
+.ds-meeting-detail>dl>div{min-width:0;padding:13px 14px;border:1px solid #e1eaf0;border-radius:11px;background:#fff}
+.ds-meeting-detail dt{margin:0 0 6px;color:#71849a;font-size:11px;font-weight:500}
+.ds-meeting-detail dd{margin:0;color:#173c60;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.ds-meeting-detail>section{margin-top:16px;padding:15px 16px;border:1px solid #dce7ef;border-radius:12px;background:#f8fbfd}
+.ds-meeting-detail>section h5{margin:0 0 8px;color:#102f52;font-size:13px}
+.ds-meeting-notes{margin:0!important;color:#607590;line-height:1.6!important;white-space:pre-wrap;overflow-wrap:anywhere}
+.ds-meeting-detail>footer{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid #e1eaf0;color:#71849a;font-size:12px}
+.ds-meeting-join{display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:22px;background:#1a73e8;color:#fff;text-decoration:none;font-size:13px;font-weight:600;box-shadow:0 2px 4px rgba(26,115,232,.22)}
+.ds-meeting-join:hover{background:#1769d1;box-shadow:0 3px 8px rgba(26,115,232,.3)}
+.ds-meeting-join .material-symbols-outlined{display:grid;place-items:center;width:20px;height:20px;border-radius:6px;background:conic-gradient(from 220deg,#34a853 0 25%,#fbbc04 25% 48%,#ea4335 48% 72%,#4285f4 72% 100%);color:#fff;font-size:16px}
+.ds-request-session{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border:1px solid #c8dfe2;border-radius:22px;background:#fff;color:#087f8c;font:600 12px inherit;cursor:pointer;white-space:nowrap}.ds-request-session:hover{background:#eaf6f4;border-color:#087f8c}.ds-request-session .material-symbols-outlined{font-size:17px}
+@media(max-width:560px){.ds-meeting-detail{padding:16px;border-radius:15px}.ds-meeting-detail>header{grid-template-columns:auto minmax(0,1fr);gap:10px}.ds-meeting-status{grid-column:2;justify-self:start}.ds-meeting-detail>dl{grid-template-columns:1fr}.ds-meeting-detail>footer{align-items:flex-start;flex-direction:column}}
+.ds-full-reports:not(.ds-history):not(.ds-meet-comprehensive)>.ds-full-report{margin-top:20px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+.ds-full-reports:not(.ds-history):not(.ds-meet-comprehensive)>.ds-full-report h5{margin:28px 0 12px;padding-bottom:0;border-bottom:0;color:#102f52}
+.ds-full-reports:not(.ds-history):not(.ds-meet-comprehensive)>.ds-full-report>.ds-report-facts{gap:14px;margin:12px 0 24px}
+.ds-full-reports:not(.ds-history):not(.ds-meet-comprehensive)>.ds-full-report>.ds-report-facts>div{padding:19px 20px;border:1px solid #c8dfe2;border-radius:0;background:#fff;box-shadow:4px 4px 0 #dcefed}
+.ds-full-reports:not(.ds-history):not(.ds-meet-comprehensive)>.ds-full-report>.ds-report-facts dt{color:#71849a;font-size:11px}
+.ds-full-reports:not(.ds-history):not(.ds-meet-comprehensive)>.ds-full-report>.ds-report-facts dd{color:#173c60;font-size:14px}
+.ds-report-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:12px 0 24px}
+.ds-full-report .ds-report-metric{min-width:0;padding:19px 20px;border:1px solid #b9d7d2;border-left:1px solid #b9d7d2;border-radius:0;background:#fff;box-shadow:4px 4px 0 #dcefed;text-align:left}
+.ds-full-report .ds-report-metric strong{display:block;color:#087f8c;font-size:26px;font-weight:600;line-height:1.15}
+.ds-full-report .ds-report-metric span{display:block;margin-top:6px;color:#607590;font-size:12px}
+.ds-full-report .ds-report-scale{height:9px;margin:12px 0 20px;border:1px solid #d5e3eb;background:#eef4f7}
+.ds-full-report .ds-report-context{padding:16px;border:1px solid #dce7ef;border-radius:12px;background:#f8fbfd}
+.ds-full-report .ds-report-context h5{margin:0 0 9px;border:0;padding:0}
+@media(max-width:560px){.ds-report-metrics{grid-template-columns:1fr}.ds-full-reports:not(.ds-history):not(.ds-meet-comprehensive)>.ds-full-report>.ds-report-facts{grid-template-columns:1fr}}
 </style>
 
 <div class="ds-workspace" id="dsWorkspace">
@@ -614,9 +713,9 @@
                 <span class="material-symbols-outlined ds-pane-icon">group</span>
                 <div>
                     <h2 class="ds-pane-title">Your Doctor</h2>
-                    <p class="ds-pane-subtitle">
+                    {% if doctors %}<p class="ds-pane-subtitle">
                         Connected providers · {{ doctors|length }} profile{{ doctors|length|pluralize }}
-                    </p>
+                    </p>{% endif %}
                 </div>
             </div>
             <div class="ds-header-actions">
@@ -635,7 +734,7 @@
             <p id="dsGroupEmpty" hidden>No referred doctors yet.</p>
             {% if doctors %}
                 {% for doc in doctors %}
-                <div class="ds-doc-row{% if forloop.first %} active{% endif %}" id="doc-row-{{ forloop.counter }}" data-index="{{ forloop.counter }}" data-doctor-category="{{ doc.group }}" {% if doc.group == 'referred' %}hidden{% endif %}>
+                <div class="ds-doc-row{% if forloop.first %} active{% endif %}" id="doc-row-{{ forloop.counter }}" data-index="{{ forloop.counter }}" data-connection-id="{{ doc.connection_id }}" data-portal-doctor-id="{{ doc.portal_doctor_id|default_if_none:"" }}" data-doctor-category="{{ doc.group }}" {% if doc.group == 'referred' %}hidden{% endif %}>
                     <div class="ds-doc-avatar">{% avatar_url doc.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>
                         <span class="material-symbols-outlined">person</span>
                     </span>{% else %}
@@ -643,7 +742,7 @@
                     {% endif %}</div>
                     <div class="ds-doc-info">
                         <div class="ds-tile-identity">
-                        <div class="ds-doc-name">{{ doc.name }}</div>
+                        <div class="ds-doc-name">{{ doc.name }}</div>{% if doc.portal_doctor_id %}<small class="ds-doc-portal-id">Doctor ID {{ doc.portal_doctor_id }}</small>{% endif %}
                         <div class="ds-doc-sub">{{ doc.specialty }}</div>
                         {% if doc.experience %}<div class="ds-doc-sub">{{ doc.experience }}</div>{% endif %}
                         </div>
@@ -651,23 +750,15 @@
                         {% if doc.clinic_name %}<div class="ds-doc-sub">{{ doc.clinic_name }}{% if doc.clinic_address %} · {{ doc.clinic_address }}{% endif %}</div>{% endif %}
                         {% if doc.email %}<div class="ds-doc-sub ds-tile-contact"><span class="material-symbols-outlined" aria-hidden="true">mail</span><span>{{ doc.email }}</span></div>{% endif %}
                         {% if doc.phone %}<div class="ds-doc-sub ds-tile-contact"><span class="material-symbols-outlined" aria-hidden="true">call</span><span>{{ doc.phone }}</span></div>{% endif %}
-                        {% if doc.group == 'referred' %}<div class="ds-doc-sub">Referred by Dr. {{ doc.referring_name }}</div><div class="ds-doc-sub">{{ doc.referral_type }} · {{ doc.referral_status }}</div>{% endif %}
-                        </div>
-                        <div class="ds-tile-actions">
-                        {% if doc.message_url %}<a class="ds-tile-message" href="{{ doc.message_url }}" onclick="event.stopPropagation()"><span class="material-symbols-outlined">chat</span>Direct message</a>{% elif doc.doctor_id %}<form method="post" action="{% url 'direct_message_start' %}" onclick="event.stopPropagation()">{% csrf_token %}<input type="hidden" name="doctor_id" value="{{ doc.doctor_id }}"><button class="ds-tile-message" type="submit"><span class="material-symbols-outlined">chat</span>Direct message</button></form>{% endif %}
+                        {% if doc.group == 'referred' %}<div class="ds-doc-sub">Referred by Dr. {{ doc.referring_name }}</div>{% if doc.referring_doctor_id %}<small class="ds-doc-portal-id">Referring doctor ID {{ doc.referring_doctor_id }}</small>{% endif %}<div class="ds-doc-sub">{{ doc.referral_type }} · {{ doc.referral_status }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
                 {% endfor %}
                 <div class="ds-care-art"><img src="{% static 'images/care-team.svg' %}" alt="" aria-hidden="true"><p>Your care team, connected.<br>Choose a doctor to view your care details.</p></div>
             {% else %}
-                <div class="ds-empty">
-                    <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">search_off</span>
-                    <p style="font-size: 13px;">No doctors found{% if query %} for "{{ query }}"{% endif %}.</p>
-                    <a href="{% url 'find_doctor' %}" class="ds-back-btn">
-                        <span class="material-symbols-outlined" style="font-size: 15px;">arrow_back</span>
-                        Try again
-                    </a>
+                <div class="ds-care-art" style="margin:auto;">
+                    <img src="{% static 'images/care-team.svg' %}" alt="Care team illustration">
                 </div>
             {% endif %}
         </div>
@@ -682,8 +773,9 @@
                         {% if doctors %}{{ doctors.0.name }}{% else %}Doctor Info{% endif %}
                     </h2>
                     <p class="ds-pane-subtitle" id="detailPaneSubtitle">
-                        {% if doctors %}{{ doctors.0.specialty }}{% else %}Select a doctor from the left{% endif %}
+                        {{ doctors.0.specialty|default:"" }}
                     </p>
+                    <p class="ds-pane-subtitle" id="detailPaneDoctorId"{% if not doctors.0.portal_doctor_id %} hidden{% endif %}>{% if doctors.0.portal_doctor_id %}Doctor ID {{ doctors.0.portal_doctor_id }}{% endif %}</p>
                 </div>
             </div>
             <div class="ds-header-actions">
@@ -702,11 +794,11 @@
             <div class="ds-detail-view{% if forloop.first %} ds-detail-active{% endif %}" id="detail-{{ forloop.counter }}">
 
                 <div class="ds-detail-hero">
+                    <div class="ds-detail-cover" aria-hidden="true"></div>
                     <div class="ds-detail-avatar">
-                        {% avatar_url doc.email as photo %}{% if photo %}<img class="account-photo" src="{{ photo }}" alt="" referrerpolicy="no-referrer">{% else %}
-                        <span class="material-symbols-outlined">person</span>
-                        {% endif %}
+                        {% if doc.profile_image_url %}<img class="account-photo" src="{{ doc.profile_image_url }}" alt="{{ doc.name }}" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="ds-avatar-fallback" hidden><span class="material-symbols-outlined">person</span></span>{% else %}<span class="ds-avatar-fallback"><span class="material-symbols-outlined">person</span></span>{% endif %}
                     </div>
+                    <div class="ds-detail-status">Connected care provider</div>
                     <h2 class="ds-detail-name">{{ doc.name }}</h2>
                     <p class="ds-detail-specialty">{{ doc.specialty }}</p>
                     {% if doc.rating %}<span class="ds-rating-badge">
@@ -731,11 +823,18 @@
                                 <div class="ds-stat-value">{{ doc.rating }}</div>
                             </div>
                         </div>{% endif %}
-                        {% if doc.available %}<div class="ds-stat-card" style="grid-column: 1 / -1;">
+                        {% if doc.availability_windows or doc.available %}<div class="ds-stat-card" style="grid-column: 1 / -1;">
                             <span class="material-symbols-outlined">event_available</span>
                             <div>
                                 <div class="ds-stat-label">Availability</div>
-                                <div class="ds-stat-value">{{ doc.available }}</div>
+                                {% if doc.availability_windows %}
+                                    <div>{{ availability_timezone }}</div>
+                                    {% for window in doc.availability_windows %}
+                                        <div class="ds-stat-value">{{ window.starts_at|date:"D, j M Y, g:i A" }} – {{ window.ends_at|date:"D, j M Y, g:i A" }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="ds-stat-value">{{ doc.available }}</div>
+                                {% endif %}
                             </div>
                         </div>{% endif %}
                         {% if doc.clinic_name %}
@@ -753,33 +852,22 @@
                             <div><div class="ds-stat-label">Contact</div><div class="ds-stat-value">{{ doc.phone }}</div></div>
                         </div>
                         {% endif %}
-                        <div class="ds-stat-card" style="grid-column: 1 / -1;">
-                            <span class="material-symbols-outlined">mail</span>
-                            <div>
-                                <div class="ds-stat-label">Connected with</div>
-                                <div class="ds-stat-value">{{ doc.email }}</div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="ds-actions">
-                        {% if doc.source == 'oasis_doctor_portal' %}<button type="button" class="ds-tool-btn" data-doctor-tool="meet" data-doctor-name="{{ doc.name }}" data-meet-url="{% url 'patient_google_meet' %}?connection={{ doc.connection_id }}&amp;format=json" title="View scheduled Google Meet consultations" aria-label="View scheduled Google Meet consultations"><span class="material-symbols-outlined">videocam</span></button>{% else %}<button type="button" class="ds-tool-btn" data-doctor-tool="meet-unavailable" data-doctor-name="{{ doc.name }}" title="Google Meet becomes available when this doctor connects their Calendar" aria-label="Google Meet unavailable"><span class="material-symbols-outlined">videocam</span></button>{% endif %}
-                        {% if doc.source == 'oasis_doctor_portal' %}<button type="button" class="ds-tool-btn" data-doctor-tool="files" data-doctor-name="{{ doc.name }}" data-reports-url="{% url 'digital_reports' %}?connection={{ doc.connection_id }}" title="Share digital reports" aria-label="Share digital reports"><span class="material-symbols-outlined">folder_open</span></button>{% else %}<button type="button" class="ds-tool-btn" data-doctor-tool="files-unavailable" data-doctor-name="{{ doc.name }}" title="Digital reports are available for Oasis doctor connections" aria-label="Digital reports unavailable"><span class="material-symbols-outlined">folder_open</span></button>{% endif %}
-                        <button type="button" class="ds-tool-btn" data-doctor-tool="history" data-doctor-name="{{ doc.name }}" data-history-url="{% url 'consultation_history' %}?{% if doc.group == 'referred' %}referral={{ doc.referral_id }}{% else %}connection={{ doc.connection_id }}{% endif %}" title="Consultation history" aria-label="Consultation history"><span class="material-symbols-outlined">history</span></button>
-                        <button type="button" class="ds-tool-btn" data-doctor-tool="pinned" data-doctor-name="{{ doc.name }}" title="Pinned details" aria-label="Pinned details"><span class="material-symbols-outlined">push_pin</span></button>
+                        {% if doc.source == 'oasis_doctor_portal' %}<button type="button" class="ds-tool-btn" data-doctor-tool="meet" data-doctor-name="{{ doc.name }}" data-doctor-id="{{ doc.doctor_id }}" data-message-url="{{ doc.message_url }}" data-meet-url="{% url 'patient_google_meet' %}?connection={{ doc.connection_id }}&amp;format=json" title="View scheduled Google Meet consultations" aria-label="View scheduled Google Meet consultations"><span class="material-symbols-outlined">videocam</span><span class="ds-tool-label">Video consultations</span><span class="ds-tool-description">View dates and join links</span></button>{% else %}<button type="button" class="ds-tool-btn" data-doctor-tool="meet-unavailable" data-doctor-name="{{ doc.name }}" title="Google Meet becomes available when this doctor connects their Calendar" aria-label="Google Meet unavailable"><span class="material-symbols-outlined">videocam</span><span class="ds-tool-label">Video consultations</span><span class="ds-tool-description">Check appointment availability</span></button>{% endif %}
+                        {% if doc.source == 'oasis_doctor_portal' %}<button type="button" class="ds-tool-btn" data-doctor-tool="files" data-doctor-name="{{ doc.name }}" data-reports-url="{% url 'digital_reports' %}?connection={{ doc.connection_id }}" title="Share digital reports" aria-label="Share digital reports"><span class="material-symbols-outlined">folder_open</span><span class="ds-tool-label">Digital reports</span><span class="ds-tool-description">Review and share assessments</span></button>{% else %}<button type="button" class="ds-tool-btn" data-doctor-tool="files-unavailable" data-doctor-name="{{ doc.name }}" title="Digital reports are available for Oasis doctor connections" aria-label="Digital reports unavailable"><span class="material-symbols-outlined">folder_open</span><span class="ds-tool-label">Digital reports</span><span class="ds-tool-description">Available for portal doctors</span></button>{% endif %}
+                        <button type="button" class="ds-tool-btn" data-doctor-tool="history" data-doctor-name="{{ doc.name }}" data-history-url="{% url 'consultation_history' %}?{% if doc.group == 'referred' %}referral={{ doc.referral_id }}{% else %}connection={{ doc.connection_id }}{% endif %}" title="Consultation history" aria-label="Consultation history"><span class="material-symbols-outlined">history</span><span class="ds-tool-label">Visit history</span><span class="ds-tool-description">See previous visits and notes</span></button>
+                        
+                        {% if doc.message_url %}<a class="ds-tool-btn" href="{{ doc.message_url }}" title="Open secure messages with {{ doc.name }}" aria-label="Open secure messages"><span class="material-symbols-outlined">chat</span><span class="ds-tool-label">Secure messages</span><span class="ds-tool-description">Ask questions and share updates</span></a>{% elif doc.doctor_id %}<form method="post" action="{% url 'direct_message_start' %}" class="ds-tool-btn-form">{% csrf_token %}<input type="hidden" name="doctor_id" value="{{ doc.doctor_id }}"><button type="submit" class="ds-tool-btn" title="Start secure messages with {{ doc.name }}" aria-label="Start secure messages"><span class="material-symbols-outlined">chat</span><span class="ds-tool-label">Secure messages</span><span class="ds-tool-description">Ask questions and share updates</span></button></form>{% endif %}
                     </div>
                     <div class="ds-care-art ds-care-art-profile"><img src="{% static 'images/care-connect.svg' %}" alt="" aria-hidden="true"><p>Stay connected with your care team.</p></div>
                 </div>
             </div>
             {% endfor %}
         {% else %}
-            <div class="ds-empty">
-                <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.3;">person_search</span>
-                <p>No doctors to display.</p>
-                <a href="{% url 'find_doctor' %}" class="ds-back-btn">
-                    <span class="material-symbols-outlined" style="font-size: 15px;">arrow_back</span>
-                    Back to Search
-                </a>
+            <div class="ds-care-art" style="margin:auto;">
+                <img src="{% static 'images/care-connect.svg' %}" alt="Care connection illustration">
             </div>
         {% endif %}
         </div>
@@ -866,6 +954,10 @@
 
         const titleEl = document.getElementById('detailPaneTitle');
         const subtitleEl = document.getElementById('detailPaneSubtitle');
+        const doctorIdEl = document.getElementById('detailPaneDoctorId');
+        const doctorId = row?.dataset.portalDoctorId;
+        doctorIdEl.hidden = !doctorId;
+        doctorIdEl.textContent = doctorId ? 'Doctor ID ' + doctorId : '';
         if (titleEl && doctorData[index]) titleEl.textContent = doctorData[index].name;
         if (subtitleEl && doctorData[index]) subtitleEl.textContent = doctorData[index].specialty;
 
@@ -940,7 +1032,12 @@
 
     const FRESH_SEARCH_FLAG = 'cleareye_doctor_fresh_search';
     let isFreshSearch = false;
-    const requestJustSent = new URLSearchParams(window.location.search).get('request') === 'sent';
+    const query = new URLSearchParams(window.location.search);
+    const requestJustSent = query.get('request') === 'sent';
+    const videoConnection = query.get('video_connection');
+    const selectedConnection = videoConnection || query.get('profile_connection');
+    const requestedDoctor = selectedConnection && Array.from(document.querySelectorAll('[data-connection-id]'))
+        .find(row => row.dataset.connectionId === selectedConnection);
     try {
         isFreshSearch = sessionStorage.getItem(FRESH_SEARCH_FLAG) === '1';
         if (isFreshSearch) sessionStorage.removeItem(FRESH_SEARCH_FLAG);
@@ -948,7 +1045,7 @@
 
     // A sent request must always return the user to the two sibling panes,
     // even if they were both closed before the request was submitted.
-    const saved = (isFreshSearch || requestJustSent) ? null : loadState();
+    const saved = (isFreshSearch || requestJustSent || requestedDoctor) ? null : loadState();
     if (requestJustSent) {
         try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     }
@@ -957,7 +1054,7 @@
     if (saved && saved.view === 'empty') {
         try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     }
-    restoreWorkspace(saved && saved.view === 'workspace' && saved.mode ? saved.mode : 'all', false);
+    restoreWorkspace(Object.keys(doctorData).length && saved && saved.view === 'workspace' && saved.mode ? saved.mode : 'all', false);
     if (saved && saved.selectedDoc && document.getElementById('doc-row-' + saved.selectedDoc)) {
         selectDoctor(saved.selectedDoc, false);
     }
@@ -1071,18 +1168,29 @@
                 const zone = item.timezone || 'Asia/Kolkata';
                 const dateOptions = {dateStyle:'full', timeZone:zone}, timeOptions = {timeStyle:'short', timeZone:zone};
                 const duration = validStart && validEnd ? Math.round((end-start)/60000) : null;
+                const durationLabel = duration > 0 && duration <= 480 ? `${duration} minutes` : 'Not specified';
                 const invitation = {accepted:'Accepted',declined:'Declined',tentative:'Tentative',needsAction:'Awaiting your response'}[item.invitation_status] || 'Not provided';
                 let join = ''; try { const url = new URL(item.meet_url); if(url.protocol==='https:' && url.hostname==='meet.google.com') join = `<a class="ds-meeting-join" href="${escapeHtml(url.href)}" target="_blank" rel="noopener"><span class="material-symbols-outlined">videocam</span>Join Google Meet</a>`; } catch {}
-                return `<article class="ds-meeting-detail"><header><span class="material-symbols-outlined">event</span><div><h4>${escapeHtml(item.title)}</h4><p>${validStart?escapeHtml(start.toLocaleDateString([],dateOptions)):escapeHtml(item.start)}</p></div><span class="ds-meeting-status">${escapeHtml(item.status)}</span></header><dl><div><dt>Doctor</dt><dd>Dr. ${escapeHtml(item.doctor_name || payload.doctor_name)}</dd></div><div><dt>Doctor email</dt><dd>${escapeHtml(item.doctor_email || 'Not provided')}</dd></div><div><dt>Time</dt><dd>${validStart?escapeHtml(start.toLocaleTimeString([],timeOptions)):'Not provided'}${validEnd?' – '+escapeHtml(end.toLocaleTimeString([],timeOptions)):''}</dd></div><div><dt>Duration</dt><dd>${duration>0?duration+' minutes':'Not provided'}</dd></div><div><dt>Timezone</dt><dd>${escapeHtml(zone)}</dd></div><div><dt>Your invitation</dt><dd>${escapeHtml(invitation)}</dd></div></dl><section><h5>Meeting notes</h5><p class="ds-meeting-notes">${escapeHtml(item.description || 'No meeting notes were added by your doctor.')}</p></section><footer>${join}<span>Opens Google Meet in a new tab</span></footer></article>`;
+                return `<article class="ds-meeting-detail"><header><span class="material-symbols-outlined">event</span><div><h4>${escapeHtml(item.title)}</h4><p>${validStart?escapeHtml(start.toLocaleDateString([],dateOptions)):escapeHtml(item.start)}</p></div><span class="ds-meeting-status">${escapeHtml(item.status)}</span></header><dl><div><dt>Doctor</dt><dd>Dr. ${escapeHtml(item.doctor_name || payload.doctor_name)}</dd></div><div><dt>Doctor email</dt><dd>${escapeHtml(item.doctor_email || 'Not provided')}</dd></div><div><dt>Time</dt><dd>${validStart?escapeHtml(start.toLocaleTimeString([],timeOptions)):'Not provided'}${validEnd?' – '+escapeHtml(end.toLocaleTimeString([],timeOptions)):''}</dd></div><div><dt>Duration</dt><dd>${durationLabel}</dd></div><div><dt>Timezone</dt><dd>${escapeHtml(zone)}</dd></div><div><dt>Your invitation</dt><dd>${escapeHtml(invitation)}</dd></div></dl><section><h5>Meeting notes</h5><p class="ds-meeting-notes">${escapeHtml(item.description || 'No meeting notes were added by your doctor.')}</p></section><footer>${join}<button type="button" class="ds-request-session" data-request-session>Request a new session</button><span>Opens Google Meet in a new tab</span></footer></article>`;
             }).join('');
-            detailPane.innerHTML = `<section class="ds-full-reports ds-meet-comprehensive"><header><button class="ds-tool-back" type="button" data-doctor-tool="back"><span class="material-symbols-outlined">arrow_back</span>Doctor details</button><h3>Your scheduled consultations</h3><p>Meeting details and invitations from your doctor’s Google Calendar.</p></header>${payload.notice?`<p>${escapeHtml(payload.notice)}</p>`:''}${eventCards || '<p>No upcoming consultations have been scheduled with this doctor.</p>'}</section>`;
+            detailPane.innerHTML = `<section class="ds-full-reports ds-meet-comprehensive"><header><button class="ds-tool-back" type="button" data-doctor-tool="back"><span class="material-symbols-outlined">arrow_back</span>Doctor details</button><div class="ds-meet-header-row"><h3>Your scheduled consultations</h3><button type="button" class="ds-request-session" data-request-session><span class="material-symbols-outlined">event</span>Request a new session</button></div><p>Meeting details and invitations from your doctor’s Google Calendar.</p></header>${payload.notice?`<p>${escapeHtml(payload.notice)}</p>`:''}${eventCards || '<div class="ds-meet-empty"><span class="material-symbols-outlined">event_busy</span><div><strong>No consultations scheduled yet</strong><p>Your doctor has not added an upcoming video consultation. New invitations will appear here automatically.</p></div></div>'}</section>`;
+            detailPane.querySelectorAll('[data-request-session]').forEach(requestButton => requestButton.addEventListener('click', () => {
+                if (payload.request_session_url) {
+                    window.location.href = payload.request_session_url;
+                    return;
+                }
+            }));
             const refresh = document.createElement('button');
-            refresh.type = 'button'; refresh.className = 'ds-tool-back'; refresh.dataset.doctorTool = 'meet'; refresh.dataset.meetUrl = button.dataset.meetUrl; refresh.textContent = 'Refresh meetings';
+            refresh.type = 'button'; refresh.className = 'ds-meet-refresh'; refresh.dataset.doctorTool = 'meet'; refresh.dataset.meetUrl = button.dataset.meetUrl; refresh.innerHTML = '<span class="material-symbols-outlined">refresh</span>Refresh consultations';
             detailPane.append(refresh);
         } catch (_) {
             showToolPanel('videocam_off', 'Google Meet', 'Google Meet details could not be loaded right now. Please try again.');
         }
     });
+    if (requestedDoctor) {
+        selectDoctor(requestedDoctor.dataset.index, false);
+        if (videoConnection) detailPane?.querySelector('[data-doctor-tool="meet"]')?.click();
+    }
     detailPane?.addEventListener('keydown', event => {
         const tab=event.target.closest('[data-consult-tab]');
         if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;

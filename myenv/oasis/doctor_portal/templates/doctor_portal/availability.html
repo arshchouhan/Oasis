@@ -1,0 +1,42 @@
+<section class="availability-page" data-availability-panel>
+<style>
+    .availability-page{color:#10284a;font-size:14px}
+    .availability-page h3{margin:0 0 12px;font-size:15px}
+    .availability-card{padding:16px;margin:16px 0;background:#fff;border:1px solid #d5e5e9;border-radius:12px}
+    .availability-fields{display:grid;gap:12px}
+    .availability-field{display:grid;gap:6px}
+    .availability-field input{width:100%;box-sizing:border-box;font:inherit;padding:10px;border:1px solid #abcbd1;border-radius:8px}
+    .availability-page button{padding:9px 14px;border:1px solid #087f8c;border-radius:8px;font:inherit;cursor:pointer}
+    .availability-add{margin-top:16px;color:#fff;background:#087f8c}
+    .availability-list{padding:0;list-style:none}
+    .availability-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #d5e5e9}
+    .availability-list button{color:#087f8c;background:#fff}
+    .availability-page .errorlist{color:#a33a3a;margin:0;padding-left:20px}
+</style>
+    <p>Times are in {{ availability_timezone }}.</p>
+    <p data-availability-error role="alert" hidden></p>
+    <form method="post" action="{% url 'doctor_availability' %}" class="availability-card">
+        {% csrf_token %}
+        <h3>Add an available time</h3>
+        {{ form.non_field_errors }}
+        <div class="availability-fields">
+            {% for field in form %}
+                <div class="availability-field">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>
+            {% endfor %}
+        </div>
+        <button class="availability-add" type="submit">Add availability</button>
+    </form>
+    <section class="availability-card">
+        <h3>Upcoming availability</h3>
+        <ul class="availability-list">
+            {% for window in windows %}
+                <li>
+                    <span>{{ window.starts_at|date:"D, j M Y, g:i A" }} – {{ window.ends_at|date:"D, j M Y, g:i A" }}</span>
+                    <form method="post" action="{% url 'doctor_availability' %}">{% csrf_token %}<button type="submit" name="remove" value="{{ window.pk }}" aria-label="Remove availability on {{ window.starts_at|date:'j M Y, g:i A' }}">Remove</button></form>
+                </li>
+            {% empty %}
+                <li>No upcoming availability.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</section>

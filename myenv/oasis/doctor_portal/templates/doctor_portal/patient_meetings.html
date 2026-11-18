@@ -1,5 +1,9 @@
 <section class="patient-scheduled-meetings" aria-label="Scheduled meetings" style="margin-top:24px;border-top:1px solid #dce7ef;padding-top:18px;text-align:left">
 <h4 style="margin:0 0 14px;color:#102f52">Scheduled meetings</h4>
 <div class="patient-meeting-list">
-{% for meeting in meetings %}<article style="padding:14px 0;border-bottom:1px solid #e2ebf1"><strong>{{ meeting.title }}</strong><p style="margin:6px 0;color:#607590"><time datetime="{{ meeting.start }}">{{ meeting.start }}</time></p><a href="{{ meeting.meet_url }}" target="_blank" rel="noopener" style="color:#087f8c">Join Google Meet</a></article>{% empty %}<p class="patient-meetings-empty" style="color:#607590">{{ meeting_notice|default:'No upcoming meetings scheduled with this patient.' }}</p>{% endfor %}
+{% for meeting in meetings %}<article class="meeting-card"><strong>{{ meeting.title }}</strong><dl class="meeting-card-details">
+    <div><dt>Doctor</dt><dd>{{ meeting.doctor_name }}</dd></div>
+    <div><dt>Patient</dt><dd>{{ meeting.patient_names|join:", " }}</dd></div>
+    <div><dt>Time</dt><dd><time datetime="{{ meeting.start }}">{{ meeting.start }}</time>{% if meeting.end %} to <time datetime="{{ meeting.end }}">{{ meeting.end }}</time>{% endif %}</dd></div>
+</dl><a href="{{ meeting.meet_url }}" target="_blank" rel="noopener" class="meeting-card-join">Join Google Meet</a></article>{% empty %}<p class="patient-meetings-empty" style="color:#607590">{{ meeting_notice|default:'No upcoming meetings scheduled with this patient.' }}</p>{% endfor %}
 </div></section>
